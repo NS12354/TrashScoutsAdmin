@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, rm, writeFile } from "fs/promises";
 import path from "path";
-import { put } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
 
 const UPLOAD_ROOT = path.join(process.cwd(), "public", "uploads");
 
@@ -37,6 +37,41 @@ export async function saveUploadedFile(file: File, subdir = "") {
   const buf = Buffer.from(await file.arrayBuffer());
   await writeFile(fullPath, buf);
   return `/uploads/${subdir ? subdir + "/" : ""}${filename}`;
+}
+
+// Best-effort deletion of previously-saved files. Mirrors saveUploadedFile:
+// Vercel Blob URLs go through `del()`, local /uploads paths get unlinked.
+// Never throws — a failed cleanup leaves an orphaned file (wasted storage)
+// but must not break the request that triggered it.
+export async function deleteUploadedFiles(urls: string[]): Promise<void> {
+  const blobUrls: string[] = [];
+  const localPaths: string[] = [];
+
+  for (const url of urls) {
+    if (!url) continue;
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      blobUrls.push(url);
+    } else if (url.startsWith("/uploads/")) {
+      // Map "/uploads/issues/abc.jpg" → "<cwd>/public/uploads/issues/abc.jpg"
+      localPaths.push(path.join(process.cwd(), "public", url));
+    }
+  }
+
+  if (blobUrls.length > 0 && process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      await del(blobUrls);
+    } catch (err) {
+      console.error("[uploads] blob delete failed:", err);
+    }
+  }
+
+  for (const p of localPaths) {
+    try {
+      await rm(p, { force: true });
+    } catch (err) {
+      console.error("[uploads] local delete failed:", p, err);
+    }
+  }
 }
 
 function guessExt(mime: string) {

@@ -28,6 +28,19 @@ export function IssueRow({
   const [deleting, setDeleting] = useState(false);
 
   async function update(next: string) {
+    // Resolving purges the report's photos to save storage. Warn first if
+    // there are any, so evidence isn't lost by an accidental status change.
+    if (
+      next === "RESOLVED" &&
+      issue.photos.length > 0 &&
+      !window.confirm(
+        `Mark this report resolved? Its ${issue.photos.length} photo${
+          issue.photos.length === 1 ? "" : "s"
+        } will be permanently deleted to save storage.`,
+      )
+    ) {
+      return;
+    }
     setStatus(next);
     startTransition(async () => {
       const res = await fetch(`/api/admin/issues/${issue.id}`, {
