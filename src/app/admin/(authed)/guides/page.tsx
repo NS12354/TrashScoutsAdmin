@@ -15,12 +15,12 @@ export default async function AdminGuidesPage() {
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">Guides</h1>
       <p className="mt-1 text-sm text-zinc-500">
-        Shared content shown on every property's <strong>Waste Guide</strong>{" "}
-        and <strong>HHW</strong> page. Changes go live on the next resident
-        page load.
+        These two guides appear on every property&apos;s pages. Edit on the
+        left, see exactly what residents will see on the right. Changes go live
+        the moment you hit <strong>Save changes</strong>.
       </p>
 
-      <div className="mt-6 space-y-6">
+      <div className="mt-6 space-y-8">
         {waste ? (
           <GuideEditor
             slug="waste"
