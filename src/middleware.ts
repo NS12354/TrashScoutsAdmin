@@ -6,10 +6,12 @@ const COOKIE_NAME = "ts_admin_session";
 // Public auth endpoints — never gate these, otherwise login is impossible.
 const PUBLIC_PATHS = new Set<string>([
   "/admin/login",
+  "/admin/signup",
   "/admin/forgot",
   "/admin/set-password",
   "/api/admin/auth/login",
   "/api/admin/auth/logout",
+  "/api/admin/auth/signup",
   "/api/admin/auth/forgot-password",
   "/api/admin/auth/set-password",
   "/api/admin/auth/google/start",

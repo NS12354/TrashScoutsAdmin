@@ -124,6 +124,15 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
         >
           {busy ? "Signing in…" : "Sign in"}
         </button>
+        <p className="text-center text-sm text-zinc-500">
+          New employee?{" "}
+          <Link
+            href="/admin/signup"
+            className="font-medium text-zinc-900 hover:underline"
+          >
+            Create your account
+          </Link>
+        </p>
       </form>
     </div>
   );

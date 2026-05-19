@@ -8,6 +8,8 @@ type Admin = {
   email: string;
   name: string;
   createdAt: Date | string;
+  // Kept on the type for compatibility with the DB shape, but no longer
+  // surfaced — self-signup activates users immediately.
   passwordSetAt: Date | string | null;
 };
 
@@ -21,21 +23,17 @@ export function AdminRow({
   totalAdmins: number;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<"none" | "delete" | "resend">("none");
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resendNotice, setResendNotice] = useState<string | null>(null);
-  const [resendLink, setResendLink] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   const canDelete = !isYou && totalAdmins > 1;
-  const pending = !admin.passwordSetAt;
 
   async function remove() {
     const ok = window.confirm(
       `Remove admin “${admin.name}” (${admin.email})? They'll lose access immediately.`,
     );
     if (!ok) return;
-    setBusy("delete");
+    setBusy(true);
     setError(null);
     try {
       const res = await fetch(`/api/admin/users/${admin.id}`, {
@@ -48,45 +46,7 @@ export function AdminRow({
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Delete failed");
-      setBusy("none");
-    }
-  }
-
-  async function newInviteLink() {
-    setBusy("resend");
-    setError(null);
-    setResendNotice(null);
-    setResendLink(null);
-    setCopied(false);
-    try {
-      const res = await fetch(`/api/admin/users/${admin.id}/resend-invite`, {
-        method: "POST",
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "Couldn't generate a new link");
-      }
-      const data = await res.json();
-      if (!data.link) throw new Error("Server didn't return an invite link");
-      setResendNotice(
-        `Fresh link for ${admin.email}. Any previous link is now invalid.`,
-      );
-      setResendLink(data.link);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't generate a new link");
-    } finally {
-      setBusy("none");
-    }
-  }
-
-  async function copyLink() {
-    if (!resendLink) return;
-    try {
-      await navigator.clipboard.writeText(resendLink);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* clipboard write rejected — user can still select manually */
+      setBusy(false);
     }
   }
 
@@ -103,64 +63,28 @@ export function AdminRow({
               you
             </span>
           )}
-          {pending && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-              Pending invite
-            </span>
-          )}
         </div>
         <div className="truncate text-sm text-zinc-500">{admin.email}</div>
         <div className="text-xs text-zinc-400">
-          Added {new Date(admin.createdAt).toLocaleDateString()}
+          Joined {new Date(admin.createdAt).toLocaleDateString()}
         </div>
-        {resendNotice && (
-          <div className="mt-1 space-y-1">
-            <div className="text-xs text-emerald-700">{resendNotice}</div>
-            {resendLink && (
-              <div className="flex flex-wrap items-center gap-2">
-                <code className="flex-1 min-w-0 truncate rounded bg-zinc-100 px-2 py-1 font-mono text-[11px] text-zinc-700">
-                  {resendLink}
-                </code>
-                <button
-                  type="button"
-                  onClick={copyLink}
-                  className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
-                >
-                  {copied ? "Copied" : "Copy"}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1">
-        <div className="flex gap-2">
-          {pending && !isYou && (
-            <button
-              type="button"
-              onClick={newInviteLink}
-              disabled={busy !== "none"}
-              className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50 disabled:opacity-60"
-            >
-              {busy === "resend" ? "…" : "New invite link"}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={remove}
-            disabled={busy !== "none" || !canDelete}
-            title={
-              isYou
-                ? "You can't remove your own account"
-                : totalAdmins <= 1
-                  ? "Can't remove the last admin"
-                  : undefined
-            }
-            className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-red-600 ring-1 ring-red-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {busy === "delete" ? "…" : "Remove"}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={remove}
+          disabled={busy || !canDelete}
+          title={
+            isYou
+              ? "You can't remove your own account"
+              : totalAdmins <= 1
+                ? "Can't remove the last admin"
+                : undefined
+          }
+          className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-red-600 ring-1 ring-red-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {busy ? "…" : "Remove"}
+        </button>
         {error && <span className="text-xs text-red-600">{error}</span>}
       </div>
     </li>
