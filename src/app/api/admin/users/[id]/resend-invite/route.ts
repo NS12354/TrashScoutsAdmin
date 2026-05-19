@@ -3,11 +3,14 @@ import { getSession } from "@/lib/auth";
 import { isSuperAdmin } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import { invalidateActiveTokens, issueToken } from "@/lib/passwordTokens";
-import { sendPasswordEmail } from "@/lib/email";
 import { SITE_URL } from "@/lib/brand";
 
 export const runtime = "nodejs";
 
+// Regenerates the one-time setup link for a pending admin. Any previous
+// invite link for this user becomes invalid. The new link is returned to
+// the calling super-admin so they can share it manually — no server-side
+// email is sent.
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -26,31 +29,15 @@ export async function POST(
     return NextResponse.json({ error: "Admin not found" }, { status: 404 });
   }
   if (user.passwordSetAt) {
-    // Already activated. Resending an "invite" would be confusing — point
-    // the inviter at the forgot-password flow if a reset is what they want.
     return NextResponse.json(
-      { error: "This admin has already activated. Use Forgot password instead." },
+      { error: "This admin has already activated. They can sign in normally." },
       { status: 400 },
     );
   }
 
-  // Any old invite link should stop working once a fresh one is in flight.
   await invalidateActiveTokens(user.id, "invite");
-  const { raw, expiresAt } = await issueToken(user.id, "invite");
+  const { raw } = await issueToken(user.id, "invite");
   const link = `${SITE_URL}/admin/set-password?token=${raw}`;
 
-  const sendResult = await sendPasswordEmail({
-    to: user.email,
-    name: user.name,
-    link,
-    purpose: "invite",
-    expiresAt,
-  });
-
-  return NextResponse.json({
-    ok: true,
-    sent: sendResult.ok,
-    skipped: sendResult.skipped ?? false,
-    link,
-  });
+  return NextResponse.json({ ok: true, link });
 }

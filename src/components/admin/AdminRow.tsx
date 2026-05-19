@@ -52,7 +52,7 @@ export function AdminRow({
     }
   }
 
-  async function resendInvite() {
+  async function newInviteLink() {
     setBusy("resend");
     setError(null);
     setResendNotice(null);
@@ -64,21 +64,16 @@ export function AdminRow({
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "Resend failed");
+        throw new Error(j.error || "Couldn't generate a new link");
       }
       const data = await res.json();
+      if (!data.link) throw new Error("Server didn't return an invite link");
       setResendNotice(
-        data.skipped
-          ? "Email is not configured — copy the link below and share it manually."
-          : data.sent
-            ? `Invite re-sent to ${admin.email}.`
-            : "Email send failed — copy the link below and share it manually.",
+        `Fresh link for ${admin.email}. Any previous link is now invalid.`,
       );
-      // Surface the link whenever the email didn't actually deliver, so the
-      // admin always has a fallback path to share the invite.
-      if (!data.sent) setResendLink(data.link ?? null);
+      setResendLink(data.link);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Resend failed");
+      setError(err instanceof Error ? err.message : "Couldn't generate a new link");
     } finally {
       setBusy("none");
     }
@@ -143,11 +138,11 @@ export function AdminRow({
           {pending && !isYou && (
             <button
               type="button"
-              onClick={resendInvite}
+              onClick={newInviteLink}
               disabled={busy !== "none"}
               className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50 disabled:opacity-60"
             >
-              {busy === "resend" ? "…" : "Resend invite"}
+              {busy === "resend" ? "…" : "New invite link"}
             </button>
           )}
           <button

@@ -5,7 +5,6 @@ import { getSession } from "@/lib/auth";
 import { isSuperAdmin } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import { issueToken } from "@/lib/passwordTokens";
-import { sendPasswordEmail } from "@/lib/email";
 import { SITE_URL } from "@/lib/brand";
 
 export const runtime = "nodejs";
@@ -17,10 +16,11 @@ type CreateBody = {
   name?: string;
 };
 
-// Creates a new admin in "invite pending" state and emails them a link to
-// pick their own password. No password is set by the inviter — a random
-// unusable placeholder fills the bcrypt column until the user completes
-// setup. `passwordSetAt` stays null, which login refuses.
+// Creates a new admin in "invite pending" state. No password is set by the
+// inviter — a random unusable placeholder fills the bcrypt column until the
+// invitee completes setup. The super-admin receives a one-time setup link in
+// the response and shares it manually (Slack, SMS, etc) — no email is sent
+// from the server, so we don't need a verified Resend domain to work.
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) {
@@ -57,28 +57,8 @@ export async function POST(req: NextRequest) {
     select: { id: true, email: true, name: true, createdAt: true },
   });
 
-  const { raw, expiresAt } = await issueToken(user.id, "invite");
+  const { raw } = await issueToken(user.id, "invite");
   const link = `${SITE_URL}/admin/set-password?token=${raw}`;
 
-  const sendResult = await sendPasswordEmail({
-    to: user.email,
-    name: user.name,
-    link,
-    purpose: "invite",
-    expiresAt,
-  });
-
-  return NextResponse.json({
-    user,
-    invite: {
-      sent: sendResult.ok,
-      skipped: sendResult.skipped ?? false,
-      // Always surface the raw link to the inviting super-admin so they can
-      // share it manually when email delivery fails (e.g. Resend in sandbox
-      // mode, an unverified domain, the recipient on a deny-list). The
-      // response only goes to an authenticated super-admin over TLS — they
-      // could see invite tokens in the DB anyway.
-      link,
-    },
-  });
+  return NextResponse.json({ user, invite: { link } });
 }

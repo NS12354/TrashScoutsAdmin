@@ -11,15 +11,16 @@ export function AddAdminForm() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<{
     email: string;
-    sent: boolean;
-    skipped: boolean;
-    link?: string;
+    name: string;
+    link: string;
   } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setNotice(null);
+    setCopied(false);
     if (!email.trim() || !name.trim()) {
       setError("Email and name are required");
       return;
@@ -36,11 +37,13 @@ export function AddAdminForm() {
         throw new Error(j.error || "Could not add admin");
       }
       const data = await res.json();
+      if (!data.invite?.link) {
+        throw new Error("Server didn't return an invite link");
+      }
       setNotice({
         email: data.user.email,
-        sent: !!data.invite?.sent,
-        skipped: !!data.invite?.skipped,
-        link: data.invite?.link,
+        name: data.user.name,
+        link: data.invite.link,
       });
       setEmail("");
       setName("");
@@ -52,6 +55,17 @@ export function AddAdminForm() {
     }
   }
 
+  async function copyLink() {
+    if (!notice?.link) return;
+    try {
+      await navigator.clipboard.writeText(notice.link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* user can still select the text manually */
+    }
+  }
+
   return (
     <form
       onSubmit={submit}
@@ -59,8 +73,9 @@ export function AddAdminForm() {
     >
       <div className="font-medium">Add an admin</div>
       <p className="text-xs text-zinc-500">
-        We&apos;ll email them a link to choose their own password. They show
-        up as <strong>Pending invite</strong> until they finish setup.
+        Add their email and name. We&apos;ll give you a one-time setup link to
+        share with them however you like (Slack, text, email). They&apos;ll set
+        their own password on first visit.
       </p>
       <input
         type="email"
@@ -82,34 +97,24 @@ export function AddAdminForm() {
         </div>
       )}
       {notice && (
-        <div
-          className={`space-y-2 rounded-lg px-3 py-2 text-sm ring-1 ${
-            notice.sent
-              ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
-              : "bg-amber-50 text-amber-900 ring-amber-200"
-          }`}
-        >
+        <div className="space-y-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900 ring-1 ring-emerald-200">
           <div>
-            {notice.sent
-              ? `Invite emailed to ${notice.email}.`
-              : `Admin created — but the email didn't go out (Resend may be in sandbox mode, or the domain isn't verified). Copy the invite link below and share it with them manually.`}
+            <strong>{notice.name}</strong> added. Send this link to{" "}
+            <strong>{notice.email}</strong> — it expires in 7 days and can only
+            be used once.
           </div>
-          {notice.link && (
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <code className="flex-1 min-w-0 break-all rounded bg-white/80 px-2 py-1 font-mono text-xs">
-                {notice.link}
-              </code>
-              <button
-                type="button"
-                onClick={() => {
-                  if (notice.link) navigator.clipboard?.writeText(notice.link);
-                }}
-                className="shrink-0 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
-              >
-                Copy
-              </button>
-            </div>
-          )}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <code className="min-w-0 flex-1 break-all rounded bg-white/80 px-2 py-1 font-mono text-xs">
+              {notice.link}
+            </code>
+            <button
+              type="button"
+              onClick={copyLink}
+              className="shrink-0 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+            >
+              {copied ? "Copied" : "Copy link"}
+            </button>
+          </div>
         </div>
       )}
       <button
@@ -117,7 +122,7 @@ export function AddAdminForm() {
         disabled={busy}
         className="w-full rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
       >
-        {busy ? "Sending invite…" : "Send invite"}
+        {busy ? "Creating…" : "Create admin + get link"}
       </button>
     </form>
   );
