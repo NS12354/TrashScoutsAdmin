@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function SignupForm() {
+export function SignupForm({ allowedDomains }: { allowedDomains: string[] }) {
   const router = useRouter();
+  const domainHint = allowedDomains.map((d) => `@${d}`).join(" or ");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
@@ -58,7 +59,7 @@ export function SignupForm() {
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
         />
         <span className="mt-1 block text-xs text-zinc-500">
-          Must be a <strong>@trashscouts.com</strong> address.
+          Must be a <strong>{domainHint}</strong> address.
         </span>
       </label>
       <label className="block">

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
-import { isAllowedSignupEmail } from "@/lib/permissions";
+import { ALLOWED_SIGNUP_DOMAINS, isAllowedSignupEmail } from "@/lib/permissions";
 
 export const runtime = "nodejs";
 
@@ -34,10 +34,12 @@ export async function POST(req: NextRequest) {
     );
   }
   if (!isAllowedSignupEmail(email)) {
+    const domains = Array.from(ALLOWED_SIGNUP_DOMAINS)
+      .map((d) => `@${d}`)
+      .join(" or ");
     return NextResponse.json(
       {
-        error:
-          "Self sign-up is restricted to @trashscouts.com emails. Ask an existing admin to add you.",
+        error: `Self sign-up is restricted to ${domains} emails. Ask an existing admin to add you.`,
       },
       { status: 403 },
     );

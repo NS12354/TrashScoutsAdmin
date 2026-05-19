@@ -3,12 +3,15 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { SignupForm } from "@/components/admin/SignupForm";
 import { BRAND_NAME } from "@/lib/brand";
+import { ALLOWED_SIGNUP_DOMAINS } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSignupPage() {
   // Already signed in? Skip the form and drop them in the dashboard.
   if (await getSession()) redirect("/admin");
+
+  const allowedDomains = Array.from(ALLOWED_SIGNUP_DOMAINS);
 
   return (
     <main className="mx-auto w-full max-w-md px-5 py-16">
@@ -22,7 +25,7 @@ export default async function AdminSignupPage() {
         New employee? Set up your dashboard account in a minute.
       </p>
       <div className="rounded-2xl border border-zinc-200 bg-white p-5">
-        <SignupForm />
+        <SignupForm allowedDomains={allowedDomains} />
       </div>
     </main>
   );

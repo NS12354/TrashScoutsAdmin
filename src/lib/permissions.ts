@@ -14,6 +14,7 @@ export const SUPER_ADMIN_EMAILS = new Set<string>([
 // To restrict further or add SSO later, this is the single hook to change.
 export const ALLOWED_SIGNUP_DOMAINS = new Set<string>([
   "trashscouts.com",
+  "revisent.com",
 ]);
 
 export function isSuperAdmin(session: Session | null): boolean {
