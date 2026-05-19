@@ -213,27 +213,36 @@ export function IssueForm({
         </div>
       </div>
 
-      <Field label="Name & contact" optional>
-        <div className="space-y-2">
-          <input
-            type="text"
-            name="reporterName"
-            placeholder="Your name"
-            value={reporter.name}
-            onChange={(e) => setReporter((r) => ({ ...r, name: e.target.value }))}
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-[15px] text-zinc-900 placeholder:text-zinc-400"
-          />
-          <input
-            type="text"
-            name="reporterContact"
-            placeholder="Email or phone (for follow-up)"
-            value={reporter.contact}
-            onChange={(e) =>
-              setReporter((r) => ({ ...r, contact: e.target.value }))
-            }
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-[15px] text-zinc-900 placeholder:text-zinc-400"
-          />
-        </div>
+      <Field label="Your name">
+        <input
+          type="text"
+          name="reporterName"
+          required
+          autoComplete="name"
+          placeholder="Full name"
+          value={reporter.name}
+          onChange={(e) => setReporter((r) => ({ ...r, name: e.target.value }))}
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-[15px] text-zinc-900 placeholder:text-zinc-400"
+        />
+      </Field>
+
+      <Field label="Email">
+        <input
+          type="email"
+          name="reporterContact"
+          required
+          autoComplete="email"
+          inputMode="email"
+          placeholder="email@example.com"
+          value={reporter.contact}
+          onChange={(e) =>
+            setReporter((r) => ({ ...r, contact: e.target.value }))
+          }
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-[15px] text-zinc-900 placeholder:text-zinc-400"
+        />
+        <span className="mt-1 block text-xs text-zinc-500">
+          We&apos;ll use this to follow up with you if needed.
+        </span>
       </Field>
 
       {error && (
