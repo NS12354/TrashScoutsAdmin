@@ -23,7 +23,6 @@ export default async function AdminLayout({
             <NavLink href="/admin">Overview</NavLink>
             <NavLink href="/admin/properties">Properties</NavLink>
             <NavLink href="/admin/porters">Porters</NavLink>
-            <NavLink href="/admin/guides">Guides</NavLink>
             <NavLink href="/admin/issues">Reports</NavLink>
             {canManageAdmins && <NavLink href="/admin/admins">Admins</NavLink>}
           </nav>
@@ -43,7 +42,6 @@ export default async function AdminLayout({
           <NavLink href="/admin">Overview</NavLink>
           <NavLink href="/admin/properties">Properties</NavLink>
           <NavLink href="/admin/porters">Porters</NavLink>
-          <NavLink href="/admin/guides">Guides</NavLink>
           <NavLink href="/admin/issues">Reports</NavLink>
           {canManageAdmins && <NavLink href="/admin/admins">Admins</NavLink>}
         </nav>

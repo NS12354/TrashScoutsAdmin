@@ -91,10 +91,10 @@ export async function getPorter(id: string | undefined): Promise<Porter | null> 
   };
 }
 
-// Guides live in the DB (one row each, slug="waste" and slug="hhw") so admins
-// can edit them through /admin/guides. If a row is missing (fresh DB without
-// seed), fall back to the original hardcoded content so the resident pages
-// never break.
+// Guides live in the DB (one row each, slug="waste" and slug="hhw"), seeded
+// from the hardcoded defaults. If a row is missing (fresh DB without seed),
+// fall back to the original hardcoded content so the resident pages never
+// break.
 export async function getWasteGuide(): Promise<Guide> {
   const row = await prisma.guide.findUnique({ where: { slug: "waste" } });
   return row
