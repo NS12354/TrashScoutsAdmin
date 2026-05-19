@@ -51,6 +51,6 @@ export async function POST(
     ok: true,
     sent: sendResult.ok,
     skipped: sendResult.skipped ?? false,
-    link: process.env.NODE_ENV === "production" ? undefined : link,
+    link,
   });
 }

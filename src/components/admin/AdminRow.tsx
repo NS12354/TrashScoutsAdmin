@@ -24,6 +24,8 @@ export function AdminRow({
   const [busy, setBusy] = useState<"none" | "delete" | "resend">("none");
   const [error, setError] = useState<string | null>(null);
   const [resendNotice, setResendNotice] = useState<string | null>(null);
+  const [resendLink, setResendLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const canDelete = !isYou && totalAdmins > 1;
   const pending = !admin.passwordSetAt;
@@ -54,6 +56,8 @@ export function AdminRow({
     setBusy("resend");
     setError(null);
     setResendNotice(null);
+    setResendLink(null);
+    setCopied(false);
     try {
       const res = await fetch(`/api/admin/users/${admin.id}/resend-invite`, {
         method: "POST",
@@ -65,15 +69,29 @@ export function AdminRow({
       const data = await res.json();
       setResendNotice(
         data.skipped
-          ? "Created a fresh link (email skipped — see admin form for link)."
+          ? "Email is not configured — copy the link below and share it manually."
           : data.sent
             ? `Invite re-sent to ${admin.email}.`
-            : "Created a fresh link but email send failed.",
+            : "Email send failed — copy the link below and share it manually.",
       );
+      // Surface the link whenever the email didn't actually deliver, so the
+      // admin always has a fallback path to share the invite.
+      if (!data.sent) setResendLink(data.link ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Resend failed");
     } finally {
       setBusy("none");
+    }
+  }
+
+  async function copyLink() {
+    if (!resendLink) return;
+    try {
+      await navigator.clipboard.writeText(resendLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard write rejected — user can still select manually */
     }
   }
 
@@ -101,7 +119,23 @@ export function AdminRow({
           Added {new Date(admin.createdAt).toLocaleDateString()}
         </div>
         {resendNotice && (
-          <div className="mt-1 text-xs text-emerald-700">{resendNotice}</div>
+          <div className="mt-1 space-y-1">
+            <div className="text-xs text-emerald-700">{resendNotice}</div>
+            {resendLink && (
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="flex-1 min-w-0 truncate rounded bg-zinc-100 px-2 py-1 font-mono text-[11px] text-zinc-700">
+                  {resendLink}
+                </code>
+                <button
+                  type="button"
+                  onClick={copyLink}
+                  className="rounded-md bg-white px-2 py-0.5 text-[11px] font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+                >
+                  {copied ? "Copied" : "Copy"}
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1">

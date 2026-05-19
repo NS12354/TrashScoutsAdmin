@@ -73,9 +73,12 @@ export async function POST(req: NextRequest) {
     invite: {
       sent: sendResult.ok,
       skipped: sendResult.skipped ?? false,
-      // Dev-only fallback so the admin can copy the link if email isn't
-      // configured. Stripped in production to keep the raw token off-wire.
-      link: process.env.NODE_ENV === "production" ? undefined : link,
+      // Always surface the raw link to the inviting super-admin so they can
+      // share it manually when email delivery fails (e.g. Resend in sandbox
+      // mode, an unverified domain, the recipient on a deny-list). The
+      // response only goes to an authenticated super-admin over TLS — they
+      // could see invite tokens in the DB anyway.
+      link,
     },
   });
 }

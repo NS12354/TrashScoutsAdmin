@@ -82,17 +82,32 @@ export function AddAdminForm() {
         </div>
       )}
       {notice && (
-        <div className="space-y-1 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 ring-1 ring-emerald-200">
+        <div
+          className={`space-y-2 rounded-lg px-3 py-2 text-sm ring-1 ${
+            notice.sent
+              ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+              : "bg-amber-50 text-amber-900 ring-amber-200"
+          }`}
+        >
           <div>
-            {notice.skipped
-              ? `Admin created. Email is not configured locally — copy the link below to share it manually.`
-              : notice.sent
-                ? `Invite emailed to ${notice.email}.`
-                : `Admin created but the email failed to send. Use Resend invite to try again.`}
+            {notice.sent
+              ? `Invite emailed to ${notice.email}.`
+              : `Admin created — but the email didn't go out (Resend may be in sandbox mode, or the domain isn't verified). Copy the invite link below and share it with them manually.`}
           </div>
           {notice.link && (
-            <div className="break-all rounded bg-white/70 px-2 py-1 font-mono text-xs">
-              {notice.link}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <code className="flex-1 min-w-0 break-all rounded bg-white/80 px-2 py-1 font-mono text-xs">
+                {notice.link}
+              </code>
+              <button
+                type="button"
+                onClick={() => {
+                  if (notice.link) navigator.clipboard?.writeText(notice.link);
+                }}
+                className="shrink-0 rounded-md bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+              >
+                Copy
+              </button>
             </div>
           )}
         </div>
