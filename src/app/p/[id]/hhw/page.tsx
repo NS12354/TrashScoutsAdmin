@@ -4,12 +4,9 @@ import { HHWCategoryGrid } from "@/components/HHWCategoryGrid";
 import { HHWDropoffList } from "@/components/HHWDropoffList";
 import { HHW_CATEGORIES } from "@/lib/hhwCategories";
 import { GuideRenderer } from "@/components/GuideRenderer";
-import { getAllProperties, getHHWGeneralGuide, getProperty } from "@/lib/data";
+import { getHHWGeneralGuide, getProperty } from "@/lib/data";
 
-export function generateStaticParams() {
-  return getAllProperties().map((p) => ({ id: p.id }));
-}
-
+export const dynamic = "force-dynamic";
 
 export default async function HHWPage({
   params,
@@ -17,10 +14,10 @@ export default async function HHWPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const property = getProperty(id);
+  const property = await getProperty(id);
   if (!property) return notFound();
 
-  const generalGuide = getHHWGeneralGuide();
+  const generalGuide = await getHHWGeneralGuide();
 
   return (
     <>

@@ -1,164 +1,221 @@
-# Deploy Trash Scouts
+# Deploy Trash Scouts (resident app + admin dashboard)
 
-Two services, ~15 minutes:
-1. **Vercel** — hosts the app, gives you HTTPS (which the camera + geolocation features require).
-2. **Resend** — actually sends the issue-report emails to Trash Scouts.
+Four services, ~30 min:
 
-That's it. No database, no auth, no analytics, no CAPTCHA, no error-tracking
-service. Resident-facing pages are statically pre-rendered at build time and
-served from Vercel's edge — they cost effectively zero to run.
+1. **Vercel** — hosts the app, gives you HTTPS
+2. **Neon** — hosted Postgres database (free tier)
+3. **Resend** — issue-report emails
+4. **Vercel Blob** — photo storage (porter headshots, setup photos, issue photos)
 
 ---
 
 ## 1. Push to GitHub
 
-In the project folder:
-
 ```bash
-git init
-git add .
-git commit -m "Initial Trash Scouts resident app"
-```
-
-Create a private repo at [github.com/new](https://github.com/new), then:
-
-```bash
+git init && git add . && git commit -m "Initial Trash Scouts platform"
+# Create a repo at https://github.com/new, then:
 git remote add origin https://github.com/YOUR_USERNAME/trashscouts.git
-git branch -M main
-git push -u origin main
+git branch -M main && git push -u origin main
 ```
 
-(Optional) The included `.github/workflows/ci.yml` runs lint + tests +
-build on every push. You can ignore it if you don't care; it just makes
-broken pushes obvious.
+---
+
+## 2. Create the Postgres database (Neon)
+
+1. Sign up at [neon.tech](https://neon.tech) (free, GitHub login works).
+2. **Create Project** → name `trashscouts` → region near your users.
+3. Copy the **Connection string** (looks like
+   `postgresql://USER:PWD@ep-xxx.aws.neon.tech/neondb?sslmode=require`).
+4. Keep this tab open.
 
 ---
 
-## 2. Deploy to Vercel
+## 3. Set up Google OAuth (admin login)
 
-1. Sign up at [vercel.com](https://vercel.com) with your GitHub account.
-2. **Add New… → Project** → import the repo.
-3. Vercel auto-detects Next.js — leave the build settings alone.
-4. Open **Environment Variables** and add (minimum):
-   - `NEXT_PUBLIC_SITE_URL` → leave blank for now; come back and set it
-     to your `https://yourapp.vercel.app` URL after the first deploy.
-   - `NOTIFICATION_EMAIL` → `nayan@revisent.com` for now (change later).
-5. Click **Deploy**. Takes ~2 minutes.
+The admin dashboard signs in via Google. Access is restricted to a hard-coded
+allowlist in `src/lib/auth.ts`:
 
-You now have an HTTPS URL like `trashscouts-xyz.vercel.app`. Open it on
-your phone — geolocation and camera permissions work because Vercel
-provides HTTPS automatically.
-
----
-
-## 3. Wire Resend
-
-Without this, issue submissions just log to the Vercel function console
-— no actual emails go out.
-
-1. Sign up at [resend.com](https://resend.com) (free, 3k emails/month).
-2. **API Keys → Create API Key** → copy the value.
-3. In Vercel: **Project Settings → Environment Variables** → add:
-   - `RESEND_API_KEY` → the key you just copied
-   - `EMAIL_FROM` → `Trash Scouts <onboarding@resend.dev>` for testing
-4. **Deployments → ⋯ → Redeploy** the latest deployment so the env vars
-   take effect.
-
-Test by opening `/p/1919-market/report` on the live URL and submitting a
-test issue with your email in the contact field.
-
-**Domain verification** (optional but recommended): once testing works,
-go to Resend → **Domains → Add domain** → paste your trashscouts.com (or
-whatever) → add the DNS records they show you. After ~10 min, change
-`EMAIL_FROM` to `Trash Scouts <noreply@trashscouts.com>` and redeploy.
-Now emails come from your domain instead of `resend.dev` — much more
-trustworthy.
-
----
-
-## 4. (Optional) Buy a real domain
-
-In Vercel: **Project Settings → Domains → Add**. Either buy through
-Vercel or point an existing domain at `cname.vercel-dns.com`. Update
-`NEXT_PUBLIC_SITE_URL` afterwards.
-
----
-
-## 5. Print + post QR codes
-
-Each property has a stable URL: `https://yourapp.vercel.app/p/<id>`.
-
-| Building | URL path |
-|---|---|
-| 1919 Market Street | `/p/1919-market` |
-| 378 Embarcadero West | `/p/378-embarcadero` |
-| 1955 Broadway | `/p/1955-broadway` |
-| 950 Shorepoint Court | `/p/950-shorepoint` |
-
-The app generates QR PNGs for you:
-
-`https://yourapp.vercel.app/api/qr?path=/p/<id>&size=800&download=1`
-
-Or print one master QR pointing at `https://yourapp.vercel.app/` — the
-home page lists all four buildings and the resident taps theirs.
-
----
-
-## Filling in real data
-
-Everything residents see lives in `src/data/`. Edit, commit, push —
-Vercel redeploys in ~90 seconds.
-
-| What | File |
-|---|---|
-| Add/edit a property | `src/data/properties.ts` |
-| Add a schedule | `src/data/properties.ts` (the `schedule` array) |
-| Add setup photos | `public/setup/<file>` + reference under `setupPhotos` |
-| Add a porter / change tenure | `src/data/porters.ts` |
-| Add a porter headshot | `public/porters/<file>` + add `photoUrl` |
-| Edit waste/HHW guide text | `src/data/guides.ts` |
-| Edit HHW drop-off list | `src/lib/hhwDropoffs.ts` |
-
-Schedule example:
-
-```ts
-schedule: [
-  { dayOfWeek: 1, binType: "TRASH",     action: "PULL_OUT", timeWindow: "6pm - 9pm" },
-  { dayOfWeek: 2, binType: "TRASH",     action: "RETURN",   timeWindow: "8am - 11am" },
-  { dayOfWeek: 3, binType: "RECYCLING", action: "PULL_OUT", timeWindow: "6pm - 9pm" },
-],
+```
+nayan@revisent.com
+chris@revisent.com
+pedrito@trashscouts.com
 ```
 
-`dayOfWeek`: 0 = Sunday … 6 = Saturday.
+(Edit that file to add/remove emails — change goes live on the next deploy.)
+
+To get the OAuth credentials:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/), create a
+   new project (or use an existing one).
+2. **APIs & Services → OAuth consent screen** → External → fill in app name
+   ("Trash Scouts Admin"), support email, your contact email. Skip scopes
+   (the defaults are fine).
+3. **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
+   - Application type: **Web application**
+   - Authorized redirect URIs (add both):
+     - `http://localhost:3000/api/auth/callback/google` (for local dev)
+     - `https://yourapp.vercel.app/api/auth/callback/google` (and your custom
+       domain when you have one)
+4. Copy the **Client ID** and **Client Secret**.
+
+## 4. Local dev setup
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local`:
+
+```
+DATABASE_URL="<paste the Neon string>"
+NEXTAUTH_URL="http://localhost:3000"
+AUTH_SECRET="<run: openssl rand -base64 48>"
+GOOGLE_CLIENT_ID="<from Google Cloud>"
+GOOGLE_CLIENT_SECRET="<from Google Cloud>"
+```
+
+Then once:
+
+```bash
+npm install
+npm run db:push        # creates the schema in Neon
+npm run db:seed        # seeds the 4 properties + Sergio
+```
+
+Verify locally:
+
+```bash
+npm run dev
+```
+
+- Resident app: [http://localhost:3000](http://localhost:3000)
+- Admin: [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
+  → click **Sign in with Google** → must use one of the allowlisted emails
 
 ---
+
+## 5. Deploy to Vercel
+
+1. Vercel.com → **Add New → Project** → import the repo.
+2. Leave Next.js defaults.
+3. **Environment Variables** — paste these:
+
+   ```
+   DATABASE_URL              (Neon URL)
+   AUTH_SECRET               (48-char secret)
+   GOOGLE_CLIENT_ID          (from Google Cloud)
+   GOOGLE_CLIENT_SECRET      (from Google Cloud)
+   NEXTAUTH_URL              (leave blank for now)
+   NEXT_PUBLIC_SITE_URL      (leave blank for now)
+   RESEND_API_KEY            (from Resend, see next step)
+   EMAIL_FROM                Trash Scouts <onboarding@resend.dev>
+   NOTIFICATION_EMAIL        nayan@revisent.com
+   NEXT_PUBLIC_BRAND_LOGO    /brand/logo.jpg
+   ```
+
+4. Click **Deploy** (~2 min). Vercel runs `prisma generate` automatically.
+5. After the first deploy, set both `NEXTAUTH_URL` and `NEXT_PUBLIC_SITE_URL`
+   to your `https://yourapp.vercel.app` URL and redeploy.
+6. Back in Google Cloud Console → your OAuth client → add the production
+   `https://yourapp.vercel.app/api/auth/callback/google` URL to the
+   authorized redirect URIs.
+
+---
+
+## 6. Wire Resend
+
+1. [resend.com](https://resend.com) → **API Keys** → create → copy.
+2. Paste into Vercel env vars as `RESEND_API_KEY`. Redeploy.
+
+---
+
+## 7. Wire Vercel Blob (photo storage)
+
+Photos uploaded through the admin (porter headshots, setup photos) and
+issue submissions would otherwise disappear between requests on Vercel.
+
+1. Vercel project → **Storage → Create → Blob** → name `trashscouts-photos`.
+2. Vercel auto-adds `BLOB_READ_WRITE_TOKEN` to env vars.
+3. Redeploy.
+
+---
+
+## 8. Subdomain integration with trashscouts.com
+
+Vercel project → **Settings → Domains → Add** → enter your subdomain
+(e.g. `app.trashscouts.com`). Vercel shows you a CNAME record like:
+
+```
+CNAME app  →  cname.vercel-dns.com
+```
+
+Add that record at whoever manages DNS for trashscouts.com. Once it
+resolves (~5–30 min), Vercel auto-provisions HTTPS.
+
+For the admin dashboard at `admin.trashscouts.com`, add a second CNAME
+the same way (`CNAME admin → cname.vercel-dns.com`) and add it as a
+second domain to the same Vercel project. Both routes serve from the
+same deployment.
+
+---
+
+## 9. First-time admin checklist
+
+Once everything is live:
+
+1. Visit `https://yourdomain/admin/login` → **Sign in with Google** using
+   one of the allowlisted emails.
+2. **Properties** → review the seeded 4 buildings, edit the schedules to
+   include real time windows when Trash Scouts shares them.
+3. **Porters** → upload Sergio's real headshot if not already in place.
+4. **Setup photos** → upload 2-3 photos per building.
+5. **Print QR codes** → click any property → **View QR** → Download PNG.
+
+To add or remove admins later, edit `ALLOWED_EMAILS` in
+`src/lib/auth.ts` and push the change.
+
+---
+
+## Adding a new building (steady-state operation)
+
+This is the whole point of the admin dashboard:
+
+1. Log in to `admin.trashscouts.com`.
+2. Click **+ Add Property**.
+3. Fill in the form (address, porter, photos, schedule).
+4. Click **Generate QR Code**.
+5. Download the QR PNG and print + post in the trash room.
+
+That's it. No code change, no developer involved.
+
+---
+
 
 ## When you change the code
 
 After every push to `main`:
-1. CI runs (lint + typecheck + tests + build).
-2. Vercel auto-deploys if CI passes (~90s).
+1. GitHub Actions CI runs (lint + typecheck + tests + build).
+2. Vercel auto-deploys if CI passes (~90 sec).
+3. PRs get preview deployments at unique URLs.
 
-PRs get a preview deployment automatically.
+## Where things live
 
-## When something breaks
-
-- **Issue submissions silently failing**: check Vercel **Functions →
-  Logs** — look for `[email] Resend rejected send` lines. Usually means a
-  bad email address in the reporter's contact field, or the Resend
-  account isn't verified.
-- **Camera button doesn't work on phone**: confirm the URL is `https://`,
-  not `http://`. Camera + geolocation need HTTPS.
-- **Build fails**: GitHub Actions and Vercel both email you. Most often
-  it's a typo in `src/data/`.
+- Resident app code: `src/app/p/*`, `src/app/page.tsx`
+- Admin code: `src/app/admin/*`
+- Resident-side data accessors: `src/lib/data.ts` (reads from DB)
+- API routes: `src/app/api/*`
+- Database schema: `prisma/schema.prisma`
+- Brand strings: `src/lib/brand.ts`
+- HHW dropoff facilities: `src/lib/hhwDropoffs.ts`
+- Guide text: `src/data/guides.ts` (waste + HHW general — same for all)
 
 ## Local development
 
 ```bash
-cp .env.example .env.local         # fill in any keys you have
-npm install
-npm run dev                         # http://localhost:3000
-npm test                            # run the unit tests
-npm run typecheck                   # strict TypeScript
-npm run build                       # production build
+npm run dev              # http://localhost:3000
+npm test                 # unit tests
+npm run typecheck        # strict TS check
+npm run ci               # full pipeline
+npm run db:push          # push schema changes to your DB
+npm run db:seed          # re-seed (idempotent for properties)
 ```

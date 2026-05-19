@@ -1,12 +1,9 @@
 import { notFound } from "next/navigation";
 import { BrandHeader } from "@/components/BrandHeader";
 import { SetupPhotoGrid } from "@/components/SetupPhotoGrid";
-import { getAllProperties, getProperty } from "@/lib/data";
+import { getProperty } from "@/lib/data";
 
-export function generateStaticParams() {
-  return getAllProperties().map((p) => ({ id: p.id }));
-}
-
+export const dynamic = "force-dynamic";
 
 export default async function SetupPhotosPage({
   params,
@@ -14,7 +11,7 @@ export default async function SetupPhotosPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const property = getProperty(id);
+  const property = await getProperty(id);
   if (!property) return notFound();
 
   const photos = (property.setupPhotos ?? []).map((p, i) => ({

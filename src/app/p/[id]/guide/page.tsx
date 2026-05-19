@@ -1,12 +1,9 @@
 import { notFound } from "next/navigation";
 import { BrandHeader } from "@/components/BrandHeader";
 import { GuideRenderer } from "@/components/GuideRenderer";
-import { getAllProperties, getProperty, getWasteGuide } from "@/lib/data";
+import { getProperty, getWasteGuide } from "@/lib/data";
 
-export function generateStaticParams() {
-  return getAllProperties().map((p) => ({ id: p.id }));
-}
-
+export const dynamic = "force-dynamic";
 
 export default async function WasteGuidePage({
   params,
@@ -14,10 +11,10 @@ export default async function WasteGuidePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const property = getProperty(id);
+  const property = await getProperty(id);
   if (!property) return notFound();
 
-  const guide = getWasteGuide();
+  const guide = await getWasteGuide();
 
   return (
     <>

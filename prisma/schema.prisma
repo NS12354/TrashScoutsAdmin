@@ -1,0 +1,136 @@
+// Trash Scouts platform schema. Postgres in prod (Neon free tier), same in
+// local dev — Prisma's provider is fixed at this file, so use one DB engine.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Admins ──────────────────────────────────────────────────────────
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  password       String // bcrypt hash; never the user's plaintext
+  name           String
+  createdAt      DateTime  @default(now())
+  // Set when the user first chooses a password (via invite or reset). Null
+  // means "invite pending" — they were added by another admin but haven't
+  // completed setup yet. Password login refuses if this is null; Google SSO
+  // bypasses it (and stamps it on first successful SSO sign-in).
+  passwordSetAt  DateTime?
+  // Google `sub` claim — stable identifier independent of email changes.
+  // Stamped on first successful SSO; future SSO logins prefer it over email.
+  googleSubject  String?   @unique
+
+  resetTokens    PasswordResetToken[]
+}
+
+// Tokens for password setup (invite) + password reset (forgot). Same shape
+// for both — the raw token is never stored, only its sha256 hash. Single-use:
+// `usedAt` is set when consumed and the row is then ignored.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  purpose   String // "invite" | "reset"
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// ─── Porters (Trash Scout field staff) ──────────────────────────────
+model Porter {
+  id        String   @id @default(cuid())
+  name      String
+  title     String? // e.g. "Field Supervisor since 2020"
+  photoUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  properties Property[]
+}
+
+// ─── Properties (buildings) ─────────────────────────────────────────
+model Property {
+  id              String   @id @default(cuid())
+  slug            String   @unique // url-safe identifier, e.g. "1919-market"
+  name            String
+  address         String
+  latitude        Float?
+  longitude       Float?
+  hhwInstructions String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  porterId String?
+  porter   Porter? @relation(fields: [porterId], references: [id])
+
+  setupPhotos  SetupPhoto[]
+  schedule     ScheduleItem[]
+  issues       Issue[]
+}
+
+// ─── Setup photos (per property) ────────────────────────────────────
+model SetupPhoto {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  url        String
+  caption    String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+// ─── Service schedule rows (per property) ───────────────────────────
+model ScheduleItem {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  dayOfWeek  Int // 0 = Sunday … 6 = Saturday
+  binType    String // "TRASH" | "RECYCLING" | "ORGANICS" | "OTHER"
+  action     String // "PULL_OUT" | "RETURN"
+  timeWindow String?
+  notes      String?
+  createdAt  DateTime @default(now())
+}
+
+// ─── Issue reports submitted by residents ───────────────────────────
+model Issue {
+  id              String   @id @default(cuid())
+  propertyId      String
+  property        Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  category        String // BROKEN_BIN | BULKY_ITEM | ODOR | OVERFLOW | CHUTE_CLOG | OTHER
+  description     String?
+  reporterName    String?
+  reporterContact String?
+  status          String   @default("OPEN") // OPEN | IN_PROGRESS | RESOLVED
+  photos          IssuePhoto[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model IssuePhoto {
+  id      String @id @default(cuid())
+  issueId String
+  issue   Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  url     String
+}
+
+// ─── Shared guides (waste + HHW) ────────────────────────────────────
+// Two seeded rows: slug="waste" and slug="hhw". Resident pages render
+// these via parseSections — see src/lib/parseSections.ts. Content is
+// markdown-lite: "## Heading" + "- bullet".
+model Guide {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String
+  updatedAt DateTime @updatedAt
+}

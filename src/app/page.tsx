@@ -2,14 +2,16 @@ import Link from "next/link";
 import { BrandHeader } from "@/components/BrandHeader";
 import { getAllProperties } from "@/lib/data";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Trash Scouts",
   description:
     "Find your building and get your trash schedule, porter, and reporting tools.",
 };
 
-export default function Home() {
-  const properties = getAllProperties();
+export default async function Home() {
+  const properties = await getAllProperties();
 
   return (
     <div className="min-h-screen bg-surface-tint text-zinc-900">
@@ -32,11 +34,10 @@ export default function Home() {
                 href={`/p/${p.id}`}
                 className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200 transition hover:shadow-md hover:ring-zinc-300"
               >
-                <div className="min-w-0">
-                  <div className="font-semibold text-zinc-900">{p.name}</div>
-                  <div className="mt-0.5 text-sm text-zinc-500">{p.address}</div>
+                <div className="min-w-0 truncate font-medium text-zinc-900">
+                  {p.address}
                 </div>
-                <span className="text-zinc-400" aria-hidden>
+                <span className="shrink-0 text-zinc-400" aria-hidden>
                   →
                 </span>
               </Link>

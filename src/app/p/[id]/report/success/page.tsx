@@ -1,11 +1,7 @@
 import Link from "next/link";
 import { BrandHeader } from "@/components/BrandHeader";
-import { getAllProperties } from "@/lib/data";
 
-export function generateStaticParams() {
-  return getAllProperties().map((p) => ({ id: p.id }));
-}
-
+export const dynamic = "force-dynamic";
 
 export default async function SuccessPage({
   params,

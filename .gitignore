@@ -29,6 +29,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# user-uploaded files (local dev only; prod uploads go to Vercel Blob)
+/public/uploads/
+
 # env files
 .env*
 !.env.example

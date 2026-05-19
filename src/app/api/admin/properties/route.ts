@@ -1,0 +1,85 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { slugify } from "@/lib/slug";
+
+export const runtime = "nodejs";
+
+type ScheduleRowIn = {
+  dayOfWeek: number;
+  binType: string;
+  action: string;
+  timeWindow?: string | null;
+};
+type PhotoIn = { url: string; caption?: string | null };
+
+type CreateBody = {
+  name: string;
+  address: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  hhwInstructions?: string | null;
+  porterId?: string | null;
+  schedule?: ScheduleRowIn[];
+  setupPhotos?: PhotoIn[];
+};
+
+async function uniqueSlug(base: string): Promise<string> {
+  let slug = base;
+  let i = 1;
+  while (await prisma.property.findUnique({ where: { slug } })) {
+    i += 1;
+    slug = `${base}-${i}`;
+  }
+  return slug;
+}
+
+export async function POST(req: NextRequest) {
+  if (!(await getSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const body = (await req.json()) as CreateBody;
+
+  if (!body.name?.trim() || !body.address?.trim()) {
+    return NextResponse.json(
+      { error: "Name and address are required" },
+      { status: 400 },
+    );
+  }
+
+  const slug = await uniqueSlug(slugify(body.address));
+
+  const created = await prisma.property.create({
+    data: {
+      slug,
+      name: body.name.trim(),
+      address: body.address.trim(),
+      latitude: body.latitude ?? null,
+      longitude: body.longitude ?? null,
+      hhwInstructions: body.hhwInstructions?.trim() || null,
+      porterId: body.porterId || null,
+      schedule: body.schedule
+        ? {
+            create: body.schedule.map((s) => ({
+              dayOfWeek: s.dayOfWeek,
+              binType: s.binType,
+              action: s.action,
+              timeWindow: s.timeWindow || null,
+            })),
+          }
+        : undefined,
+      setupPhotos: body.setupPhotos
+        ? {
+            create: body.setupPhotos.map((p, i) => ({
+              url: p.url,
+              caption: p.caption || null,
+              sortOrder: i,
+            })),
+          }
+        : undefined,
+    },
+    select: { id: true, slug: true },
+  });
+
+  return NextResponse.json({ id: created.id, slug: created.slug });
+}

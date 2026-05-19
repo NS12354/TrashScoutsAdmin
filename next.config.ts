@@ -34,7 +34,7 @@ const SECURITY_HEADERS = [
       "font-src 'self' data: https://fonts.gstatic.com",
       "img-src 'self' data: blob:",
       "media-src 'self' blob:",
-      "connect-src 'self'",
+      "connect-src 'self' https://nominatim.openstreetmap.org",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

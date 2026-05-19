@@ -3,12 +3,10 @@ import Image from "next/image";
 import { BrandHeader } from "@/components/BrandHeader";
 import { TileIcons, TileNav } from "@/components/TileNav";
 import { BRAND_NAME } from "@/lib/brand";
-import { getAllProperties, getPorter, getProperty } from "@/lib/data";
+import { getPorter, getProperty } from "@/lib/data";
 import type { Porter } from "@/data/types";
 
-export function generateStaticParams() {
-  return getAllProperties().map((p) => ({ id: p.id }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function PropertyHome({
   params,
@@ -16,9 +14,9 @@ export default async function PropertyHome({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const property = getProperty(id);
+  const property = await getProperty(id);
   if (!property) return notFound();
-  const porter = getPorter(property.porterId);
+  const porter = await getPorter(property.porterId);
 
   const tiles = [
     {
