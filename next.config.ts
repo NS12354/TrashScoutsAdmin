@@ -32,7 +32,7 @@ const SECURITY_HEADERS = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "img-src 'self' data: blob:",
+      "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
       "media-src 'self' blob:",
       "connect-src 'self' https://nominatim.openstreetmap.org",
       "frame-ancestors 'none'",
@@ -46,6 +46,13 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Photos uploaded in admin live on Vercel Blob in prod (and on /public/uploads
+  // locally). Both need to be allowlisted for next/image optimization.
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "**.public.blob.vercel-storage.com" },
+    ],
+  },
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },

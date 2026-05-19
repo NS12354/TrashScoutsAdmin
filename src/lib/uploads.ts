@@ -22,6 +22,15 @@ export async function saveUploadedFile(file: File, subdir = "") {
     return blob.url;
   }
 
+  // Production on Vercel has a read-only filesystem, so falling back to
+  // /public/uploads will silently fail at writeFile. Surface a clear error
+  // instead so admin sees what to fix.
+  if (process.env.VERCEL) {
+    throw new Error(
+      "Photo storage isn't configured. Enable Vercel Blob in your project's Storage tab — it auto-injects BLOB_READ_WRITE_TOKEN.",
+    );
+  }
+
   const dir = path.join(UPLOAD_ROOT, subdir);
   await mkdir(dir, { recursive: true });
   const fullPath = path.join(dir, filename);

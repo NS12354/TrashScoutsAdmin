@@ -28,6 +28,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const url = await saveUploadedFile(file, subdir);
-  return NextResponse.json({ url });
+  try {
+    const url = await saveUploadedFile(file, subdir);
+    return NextResponse.json({ url });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Upload failed";
+    console.error("[upload] saveUploadedFile threw:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
