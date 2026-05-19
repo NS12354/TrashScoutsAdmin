@@ -49,6 +49,16 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: SECURITY_HEADERS }];
   },
+  // Resident-facing routes (the QR-scan target at /p/<slug>/...) aren't part
+  // of this deployment yet — we only want the admin dashboard live. Bounce
+  // the root and every /p/* path to the login screen. Drop these two rules
+  // when resident pages should go live again.
+  async redirects() {
+    return [
+      { source: "/", destination: "/admin/login", permanent: false },
+      { source: "/p/:slug*", destination: "/admin/login", permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;
