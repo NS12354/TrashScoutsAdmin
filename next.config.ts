@@ -32,7 +32,7 @@ const SECURITY_HEADERS = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com",
+      "img-src 'self' data: blob: https://*.supabase.co",
       "media-src 'self' blob:",
       "connect-src 'self' https://nominatim.openstreetmap.org",
       "frame-ancestors 'none'",
@@ -46,11 +46,12 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  // Photos uploaded in admin live on Vercel Blob in prod (and on /public/uploads
-  // locally). Both need to be allowlisted for next/image optimization.
+  // Photos uploaded in admin live in Supabase Storage in prod (and on
+  // /public/uploads locally). The Supabase project host must be allowlisted
+  // for next/image optimization.
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "**.public.blob.vercel-storage.com" },
+      { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
   async headers() {

@@ -1,33 +1,46 @@
 import { randomBytes } from "crypto";
 import { mkdir, rm, writeFile } from "fs/promises";
 import path from "path";
-import { del, put } from "@vercel/blob";
+import {
+  SUPABASE_BUCKET,
+  getSupabase,
+  isSupabaseConfigured,
+  supabasePathFromUrl,
+} from "./supabase";
 
 const UPLOAD_ROOT = path.join(process.cwd(), "public", "uploads");
 
 // Saves an uploaded file and returns a public URL.
-// - If BLOB_READ_WRITE_TOKEN is set (Vercel prod), routes to Vercel Blob.
+// - If Supabase is configured, uploads to the Supabase Storage bucket.
 // - Otherwise (local dev), writes to /public/uploads/<subdir>/<filename>.
 export async function saveUploadedFile(file: File, subdir = "") {
   const ext = path.extname(file.name) || guessExt(file.type);
   const id = randomBytes(8).toString("hex");
   const filename = `${Date.now()}-${id}${ext}`;
+  const key = `${subdir ? subdir + "/" : ""}${filename}`;
 
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const key = `${subdir ? subdir + "/" : ""}${filename}`;
-    const blob = await put(key, file, {
-      access: "public",
-      addRandomSuffix: false,
-    });
-    return blob.url;
+  if (isSupabaseConfigured()) {
+    const supabase = getSupabase();
+    const buf = Buffer.from(await file.arrayBuffer());
+    const { error } = await supabase.storage
+      .from(SUPABASE_BUCKET)
+      .upload(key, buf, {
+        contentType: file.type || "application/octet-stream",
+        upsert: false,
+      });
+    if (error) {
+      throw new Error(`Supabase upload failed: ${error.message}`);
+    }
+    const { data } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(key);
+    return data.publicUrl;
   }
 
-  // Production on Vercel has a read-only filesystem, so falling back to
-  // /public/uploads will silently fail at writeFile. Surface a clear error
-  // instead so admin sees what to fix.
+  // Production (Vercel) has a read-only filesystem, so the /public/uploads
+  // fallback can't work there. Surface a clear error instead of failing
+  // cryptically at writeFile.
   if (process.env.VERCEL) {
     throw new Error(
-      "Photo storage isn't configured. Enable Vercel Blob in your project's Storage tab — it auto-injects BLOB_READ_WRITE_TOKEN.",
+      "Photo storage isn't configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (and create the storage bucket).",
     );
   }
 
@@ -36,32 +49,37 @@ export async function saveUploadedFile(file: File, subdir = "") {
   const fullPath = path.join(dir, filename);
   const buf = Buffer.from(await file.arrayBuffer());
   await writeFile(fullPath, buf);
-  return `/uploads/${subdir ? subdir + "/" : ""}${filename}`;
+  return `/uploads/${key}`;
 }
 
 // Best-effort deletion of previously-saved files. Mirrors saveUploadedFile:
-// Vercel Blob URLs go through `del()`, local /uploads paths get unlinked.
-// Never throws — a failed cleanup leaves an orphaned file (wasted storage)
-// but must not break the request that triggered it.
+// Supabase URLs are removed from the bucket, local /uploads paths are
+// unlinked. Never throws — a failed cleanup leaves an orphaned file (wasted
+// storage) but must not break the request that triggered it.
 export async function deleteUploadedFiles(urls: string[]): Promise<void> {
-  const blobUrls: string[] = [];
+  const supabaseKeys: string[] = [];
   const localPaths: string[] = [];
 
   for (const url of urls) {
     if (!url) continue;
     if (url.startsWith("http://") || url.startsWith("https://")) {
-      blobUrls.push(url);
+      const key = supabasePathFromUrl(url);
+      if (key) supabaseKeys.push(key);
+      // Non-Supabase remote URLs (e.g. legacy Vercel Blob) are left as-is.
     } else if (url.startsWith("/uploads/")) {
-      // Map "/uploads/issues/abc.jpg" → "<cwd>/public/uploads/issues/abc.jpg"
       localPaths.push(path.join(process.cwd(), "public", url));
     }
   }
 
-  if (blobUrls.length > 0 && process.env.BLOB_READ_WRITE_TOKEN) {
+  if (supabaseKeys.length > 0 && isSupabaseConfigured()) {
     try {
-      await del(blobUrls);
+      const supabase = getSupabase();
+      const { error } = await supabase.storage
+        .from(SUPABASE_BUCKET)
+        .remove(supabaseKeys);
+      if (error) console.error("[uploads] supabase delete failed:", error.message);
     } catch (err) {
-      console.error("[uploads] blob delete failed:", err);
+      console.error("[uploads] supabase delete threw:", err);
     }
   }
 
