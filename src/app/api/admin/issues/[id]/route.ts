@@ -20,21 +20,10 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
+  // Status changes never touch photos — they're kept for the record
+  // (disputes, recurring issues at a property). Photos are only removed
+  // when the whole report is deleted (see DELETE below).
   await prisma.issue.update({ where: { id }, data: { status } });
-
-  // When a report is resolved we no longer need its photos — purge them to
-  // keep Blob storage flat. Delete the rows first (so the admin UI stops
-  // showing them immediately), then best-effort clean up the blob files.
-  if (status === "RESOLVED") {
-    const photos = await prisma.issuePhoto.findMany({
-      where: { issueId: id },
-      select: { url: true },
-    });
-    if (photos.length > 0) {
-      await prisma.issuePhoto.deleteMany({ where: { issueId: id } });
-      await deleteUploadedFiles(photos.map((p) => p.url));
-    }
-  }
 
   return NextResponse.json({ ok: true });
 }
