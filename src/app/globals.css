@@ -111,54 +111,28 @@ body {
   position: relative;
   min-height: 100vh;
   color: var(--fx-text);
-  letter-spacing: -0.011em;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #06080a;
+  background-color: #07090a;
   background-image:
-    radial-gradient(1200px 600px at 50% -16%, rgba(57, 181, 74, 0.13), transparent 64%),
-    radial-gradient(900px 700px at 100% 0%, rgba(57, 181, 74, 0.05), transparent 62%),
-    linear-gradient(rgba(57, 181, 74, 0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(57, 181, 74, 0.028) 1px, transparent 1px);
-  background-size: auto, auto, 46px 46px, 46px 46px;
+    radial-gradient(1100px 560px at 50% -12%, rgba(57, 181, 74, 0.16), transparent 62%),
+    radial-gradient(800px 600px at 100% 0%, rgba(57, 181, 74, 0.06), transparent 60%),
+    linear-gradient(rgba(57, 181, 74, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57, 181, 74, 0.045) 1px, transparent 1px);
+  background-size: auto, auto, 42px 42px, 42px 42px;
   background-attachment: fixed;
 }
 
-/* Smooth, premium micro-motion across interactive surfaces. */
-.admin-shell a,
-.admin-shell button,
-.admin-shell input,
-.admin-shell select,
-.admin-shell textarea,
-.admin-shell .rounded-2xl,
-.admin-shell .rounded-xl {
-  transition:
-    background-color 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.28s cubic-bezier(0.2, 0.7, 0.2, 1),
-    transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1),
-    color 0.15s ease;
-}
-
-/* Tighter, more confident headings. */
-.admin-shell h1 { letter-spacing: -0.025em; }
-.admin-shell h2, .admin-shell h3 { letter-spacing: -0.015em; }
-
 /* ---- Panels / cards (bg-white is the dominant container class) ---- */
 .admin-shell .bg-white {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0) 38%),
-    var(--fx-panel);
-  -webkit-backdrop-filter: blur(16px) saturate(115%);
-  backdrop-filter: blur(16px) saturate(115%);
+  background: var(--fx-panel);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 .admin-shell .rounded-2xl.bg-white,
 .admin-shell .rounded-xl.bg-white {
-  border-color: transparent;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 0 0 1px var(--fx-line),
-    0 26px 64px -30px rgba(0, 0, 0, 0.9);
+    0 18px 50px -20px rgba(0, 0, 0, 0.8);
 }
 
 /* ---- Secondary dark surfaces ---- */
@@ -261,24 +235,12 @@ body {
 .admin-shell .hover\:bg-zinc-100:hover { background: rgba(57, 181, 74, 0.08); }
 .admin-shell .hover\:bg-red-50:hover { background: rgba(239, 68, 68, 0.16); }
 
-/* ---- Card hover: smooth lift + brighter edge glow ---- */
+/* ---- Card hover lift glow ---- */
 .admin-shell .hover\:shadow-sm:hover {
-  transform: translateY(-2px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 0 1px rgba(57, 181, 74, 0.32),
-    0 0 28px -8px var(--fx-glow),
-    0 34px 70px -32px rgba(0, 0, 0, 0.92);
-}
-
-/* ---- Buttons: subtle press + lift feedback ---- */
-.admin-shell button:active,
-.admin-shell a.bg-brand:active {
-  transform: translateY(0.5px) scale(0.997);
-}
-.admin-shell .bg-brand:hover {
-  filter: brightness(1.06);
-  box-shadow: 0 0 0 1px rgba(57, 181, 74, 0.6), 0 0 30px -2px var(--fx-glow);
+    0 0 0 1px var(--fx-line),
+    0 0 24px -6px var(--fx-glow),
+    0 18px 50px -20px rgba(0, 0, 0, 0.8);
 }
 
 /* ---- Reusable frame pieces (used by the rewritten layout) ---- */
@@ -334,15 +296,4 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .admin-livedot { animation: none; }
-  .admin-shell a,
-  .admin-shell button,
-  .admin-shell .rounded-2xl,
-  .admin-shell .rounded-xl {
-    transition: none;
-  }
-  .admin-shell .hover\:shadow-sm:hover,
-  .admin-shell button:active,
-  .admin-shell a.bg-brand:active {
-    transform: none;
-  }
 }
