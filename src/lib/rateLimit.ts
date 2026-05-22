@@ -54,3 +54,14 @@ setInterval(() => {
     if (bucket.resetAt <= now) buckets.delete(key);
   }
 }, 60_000).unref?.();
+
+// Best-effort client IP. Vercel sets x-vercel-forwarded-for (untamperable by
+// the client); fall back to standard proxy headers in dev / other hosts.
+export function getClientIp(req: Request): string {
+  const h = req.headers;
+  const vercel = h.get("x-vercel-forwarded-for");
+  if (vercel) return vercel.split(",")[0]?.trim() || "anon";
+  const fwd = h.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0]?.trim() || "anon";
+  return h.get("x-real-ip") || "anon";
+}

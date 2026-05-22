@@ -2,10 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
+import { getClientIp, rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
+// Throttle login attempts to blunt password brute-forcing: 10 tries per IP
+// per 10 minutes. Generous for a fat-fingered admin, tight against a bot.
+const LOGIN_LIMIT = { limit: 10, windowMs: 10 * 60 * 1000 };
+
 export async function POST(req: NextRequest) {
+  const limit = rateLimit(`login:${getClientIp(req)}`, LOGIN_LIMIT);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: `Too many attempts — try again in ${limit.resetIn} seconds.` },
+      { status: 429, headers: { "Retry-After": String(limit.resetIn) } },
+    );
+  }
+
   const { email, password } = await req.json();
   if (!email || !password) {
     return NextResponse.json({ error: "Missing credentials" }, { status: 400 });

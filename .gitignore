@@ -29,8 +29,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# user-uploaded files (local dev only; prod uploads go to Vercel Blob)
+# user-uploaded files (local dev only; prod uploads go to Supabase Storage)
 /public/uploads/
+
+# local AI/agent tooling state — not part of the app
+/.agents/
+/.claude/
+/.goose/
+/skills-lock.json
 
 # env files
 .env*

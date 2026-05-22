@@ -3,8 +3,12 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { ALLOWED_SIGNUP_DOMAINS, isAllowedSignupEmail } from "@/lib/permissions";
+import { getClientIp, rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
+
+// Cap account creation per IP to stop bulk/abusive signups.
+const SIGNUP_LIMIT = { limit: 5, windowMs: 60 * 60 * 1000 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LEN = 8;
@@ -22,6 +26,14 @@ type SignupBody = {
 // signed in via the standard session cookie — same end state as the old
 // invite + set-password flow.
 export async function POST(req: NextRequest) {
+  const limit = rateLimit(`signup:${getClientIp(req)}`, SIGNUP_LIMIT);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: `Too many attempts — try again in ${limit.resetIn} seconds.` },
+      { status: 429, headers: { "Retry-After": String(limit.resetIn) } },
+    );
+  }
+
   const body = (await req.json().catch(() => ({}))) as SignupBody;
   const email = body.email?.trim().toLowerCase();
   const name = body.name?.trim();
