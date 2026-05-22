@@ -83,3 +83,217 @@ body {
     stroke-dashoffset: 0;
   }
 }
+
+/* ============================================================
+   ADMIN DASHBOARD — futuristic "neon green command center" theme.
+   Scoped to .admin-shell so the resident-facing app keeps the clean
+   light Trash Scouts brand. These rules are intentionally UNLAYERED
+   so they win over Tailwind's layered utility classes that the admin
+   components already use (bg-white, text-zinc-*, border-zinc-*, …) —
+   in the CSS cascade, unlayered styles beat any @layer regardless of
+   specificity. So we re-skin the whole admin without rewriting every
+   component's classes.
+   ============================================================ */
+.admin-shell {
+  --fx-green: #39b54a;
+  --fx-green-bright: #57e06a;
+  --fx-glow: rgba(57, 181, 74, 0.45);
+  --fx-line: rgba(57, 181, 74, 0.20);
+  --fx-line-soft: rgba(140, 160, 150, 0.14);
+  --fx-text: #e8f6ea;
+  --fx-text-2: #cdd6cf;
+  --fx-text-3: #aab4ad;
+  --fx-dim: #7c8a82;
+  --fx-dim-2: #5f6b64;
+  --fx-panel: rgba(16, 21, 19, 0.72);
+  --fx-panel-2: rgba(26, 33, 30, 0.66);
+
+  position: relative;
+  min-height: 100vh;
+  color: var(--fx-text);
+  background-color: #07090a;
+  background-image:
+    radial-gradient(1100px 560px at 50% -12%, rgba(57, 181, 74, 0.16), transparent 62%),
+    radial-gradient(800px 600px at 100% 0%, rgba(57, 181, 74, 0.06), transparent 60%),
+    linear-gradient(rgba(57, 181, 74, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57, 181, 74, 0.045) 1px, transparent 1px);
+  background-size: auto, auto, 42px 42px, 42px 42px;
+  background-attachment: fixed;
+}
+
+/* ---- Panels / cards (bg-white is the dominant container class) ---- */
+.admin-shell .bg-white {
+  background: var(--fx-panel);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.admin-shell .rounded-2xl.bg-white,
+.admin-shell .rounded-xl.bg-white {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 1px var(--fx-line),
+    0 18px 50px -20px rgba(0, 0, 0, 0.8);
+}
+
+/* ---- Secondary dark surfaces ---- */
+.admin-shell .bg-zinc-50,
+.admin-shell .bg-zinc-100,
+.admin-shell .bg-zinc-200,
+.admin-shell [class*="bg-zinc-50/"] {
+  background: var(--fx-panel-2);
+}
+
+/* ---- Dark "primary" buttons (search, etc.) become outlined neon ---- */
+.admin-shell .bg-zinc-900,
+.admin-shell .bg-zinc-700 {
+  background: rgba(57, 181, 74, 0.12);
+  box-shadow: inset 0 0 0 1px var(--fx-line);
+}
+
+/* ---- Brand green buttons get a glow ---- */
+.admin-shell .bg-brand {
+  background: linear-gradient(180deg, var(--fx-green-bright), var(--fx-green));
+  color: #04140a;
+  box-shadow: 0 0 0 1px rgba(57, 181, 74, 0.5), 0 0 22px -2px var(--fx-glow);
+}
+.admin-shell .hover\:bg-brand-dark:hover,
+.admin-shell .bg-brand-dark {
+  background: linear-gradient(180deg, var(--fx-green), #2a9938);
+  color: #04140a;
+}
+
+/* ---- Borders / rings → faint neon hairlines ---- */
+.admin-shell .border-zinc-100,
+.admin-shell .border-zinc-200,
+.admin-shell .border-zinc-300,
+.admin-shell .divide-zinc-100 > * + *,
+.admin-shell .ring-zinc-200 {
+  border-color: var(--fx-line-soft);
+}
+.admin-shell .ring-zinc-200 {
+  --tw-ring-color: var(--fx-line-soft);
+  box-shadow: 0 0 0 1px var(--fx-line-soft);
+}
+.admin-shell .border-brand,
+.admin-shell .ring-brand {
+  border-color: var(--fx-green);
+  --tw-ring-color: var(--fx-green);
+}
+
+/* ---- Text colors ---- */
+.admin-shell .text-zinc-900 { color: var(--fx-text); }
+.admin-shell .text-zinc-700 { color: var(--fx-text-2); }
+.admin-shell .text-zinc-600 { color: var(--fx-text-3); }
+.admin-shell .text-zinc-500 { color: var(--fx-dim); }
+.admin-shell .text-zinc-400 { color: var(--fx-dim-2); }
+.admin-shell .text-brand-dark { color: var(--fx-green-bright); }
+
+/* ---- Form controls ---- */
+.admin-shell input,
+.admin-shell textarea,
+.admin-shell select {
+  background: rgba(0, 0, 0, 0.35);
+  border-color: var(--fx-line-soft);
+  color: var(--fx-text);
+}
+.admin-shell input::placeholder,
+.admin-shell textarea::placeholder {
+  color: var(--fx-dim-2);
+}
+.admin-shell input:focus,
+.admin-shell textarea:focus,
+.admin-shell select:focus {
+  border-color: var(--fx-green);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(57, 181, 74, 0.18);
+}
+.admin-shell select option {
+  background: #0c100e;
+  color: var(--fx-text);
+}
+
+/* ---- Status/alert tints → translucent dark versions ---- */
+.admin-shell .bg-red-50 { background: rgba(239, 68, 68, 0.12); }
+.admin-shell .ring-red-200 { box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3); --tw-ring-color: rgba(239,68,68,0.3); }
+.admin-shell .text-red-600,
+.admin-shell .text-red-700,
+.admin-shell .text-red-800 { color: #fca5a5; }
+.admin-shell .bg-emerald-50 { background: rgba(57, 181, 74, 0.12); }
+.admin-shell .ring-emerald-200 { box-shadow: 0 0 0 1px rgba(57, 181, 74, 0.3); --tw-ring-color: rgba(57,181,74,0.3); }
+.admin-shell .text-emerald-700,
+.admin-shell .text-emerald-800,
+.admin-shell .text-emerald-900 { color: var(--fx-green-bright); }
+.admin-shell .bg-amber-50,
+.admin-shell .bg-amber-100 { background: rgba(245, 158, 11, 0.13); }
+.admin-shell .ring-amber-200 { box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3); --tw-ring-color: rgba(245,158,11,0.3); }
+.admin-shell .text-amber-700,
+.admin-shell .text-amber-800,
+.admin-shell .text-amber-900 { color: #fcd34d; }
+
+/* ---- Hover surfaces ---- */
+.admin-shell .hover\:bg-zinc-50:hover,
+.admin-shell .hover\:bg-zinc-100:hover { background: rgba(57, 181, 74, 0.08); }
+.admin-shell .hover\:bg-red-50:hover { background: rgba(239, 68, 68, 0.16); }
+
+/* ---- Card hover lift glow ---- */
+.admin-shell .hover\:shadow-sm:hover {
+  box-shadow:
+    0 0 0 1px var(--fx-line),
+    0 0 24px -6px var(--fx-glow),
+    0 18px 50px -20px rgba(0, 0, 0, 0.8);
+}
+
+/* ---- Reusable frame pieces (used by the rewritten layout) ---- */
+.admin-topbar {
+  background: rgba(8, 11, 10, 0.7);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--fx-line);
+  box-shadow: 0 1px 0 rgba(57, 181, 74, 0.08), 0 12px 40px -24px rgba(57, 181, 74, 0.5);
+}
+.admin-wordmark {
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 18px var(--fx-glow);
+}
+.admin-navlink {
+  position: relative;
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  color: var(--fx-dim);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.admin-navlink:hover { color: var(--fx-text); background: rgba(57, 181, 74, 0.08); }
+.admin-navlink[data-active="true"] {
+  color: var(--fx-green-bright);
+  background: rgba(57, 181, 74, 0.12);
+  box-shadow: inset 0 0 0 1px var(--fx-line);
+}
+.admin-navlink[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: -1px;
+  height: 1px;
+  background: var(--fx-green-bright);
+  box-shadow: 0 0 8px var(--fx-green-bright);
+}
+.admin-chip {
+  border: 1px solid var(--fx-line);
+  border-radius: 0.6rem;
+  background: rgba(57, 181, 74, 0.06);
+}
+/* status dot */
+.admin-livedot {
+  width: 7px; height: 7px; border-radius: 9999px;
+  background: var(--fx-green-bright);
+  box-shadow: 0 0 10px var(--fx-green-bright);
+  animation: admin-pulse 2s ease-in-out infinite;
+}
+@keyframes admin-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-livedot { animation: none; }
+}

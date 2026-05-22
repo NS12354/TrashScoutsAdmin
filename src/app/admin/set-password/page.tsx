@@ -15,12 +15,13 @@ export default async function SetPasswordPage({
   const row = raw ? await findActiveToken(raw) : null;
 
   return (
-    <main className="mx-auto w-full max-w-md px-5 py-16">
+    <div className="admin-shell">
+    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-5 py-16">
       <Link href="/admin/login" className="text-sm text-zinc-500 hover:underline">
         ← Sign in
       </Link>
-      <h1 className="mt-3 text-2xl font-semibold tracking-tight">
-        {BRAND_NAME} admin
+      <h1 className="admin-wordmark mt-3 text-2xl font-semibold tracking-tight">
+        {BRAND_NAME} <span style={{ color: "var(--fx-green-bright)" }}>admin</span>
       </h1>
       <p className="mb-6 mt-1 text-sm text-zinc-500">
         {row?.purpose === "reset"
@@ -60,5 +61,6 @@ export default async function SetPasswordPage({
         )}
       </div>
     </main>
+    </div>
   );
 }
