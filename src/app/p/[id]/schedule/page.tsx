@@ -1,12 +1,7 @@
 import { notFound } from "next/navigation";
 import { BrandHeader } from "@/components/BrandHeader";
 import { NextPickup } from "@/components/NextPickup";
-import {
-  ACTION_LABEL,
-  BIN_COLOR,
-  BIN_LABEL,
-  DAY_NAMES,
-} from "@/lib/format";
+import { BIN_COLOR, BIN_LABEL, DAY_NAMES } from "@/lib/format";
 import { getProperty } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -59,31 +54,31 @@ export default async function SchedulePage({
                   {d.name}
                 </div>
                 <ul className="mt-2 space-y-1.5">
-                  {d.items.map((item) => (
-                    <li
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 text-[15px]"
-                    >
-                      <div className="flex min-w-0 items-center gap-2">
-                        <span
-                          className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${BIN_COLOR[item.binType] ?? "bg-zinc-200 text-zinc-700"}`}
-                        >
-                          {BIN_LABEL[item.binType] ?? item.binType}
-                        </span>
-                        <span className="text-zinc-800">
-                          Bins{" "}
-                          <span className="font-semibold">
-                            {ACTION_LABEL[item.action] ?? item.action}
+                  {d.items.map((item) => {
+                    const direction = item.action === "PULL_OUT" ? "out" : "in";
+                    return (
+                      <li
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 text-[15px]"
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${BIN_COLOR[item.binType] ?? "bg-zinc-200 text-zinc-700"}`}
+                          >
+                            {BIN_LABEL[item.binType] ?? item.binType}
+                          </span>
+                          <span className="font-medium text-zinc-800">
+                            {direction}
                           </span>
                         </span>
-                      </div>
-                      {item.timeWindow && (
-                        <span className="shrink-0 text-sm text-zinc-500">
-                          {item.timeWindow}
-                        </span>
-                      )}
-                    </li>
-                  ))}
+                        {item.timeWindow && (
+                          <span className="shrink-0 font-semibold text-zinc-900">
+                            {item.timeWindow}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </li>
             ))}

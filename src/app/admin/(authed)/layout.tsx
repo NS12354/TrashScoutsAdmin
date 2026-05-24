@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { BRAND_NAME } from "@/lib/brand";
 import { requireSession } from "@/lib/auth";
+
+const BRAND_LOGO = process.env.NEXT_PUBLIC_BRAND_LOGO || "";
 import { isSuperAdmin } from "@/lib/permissions";
 import { LogoutButton } from "@/components/admin/LogoutButton";
 
@@ -16,8 +18,13 @@ export default async function AdminLayout({
     <div className="min-h-screen bg-zinc-50 text-zinc-900">
       <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <Link href="/admin" className="font-semibold tracking-tight">
-            {BRAND_NAME} <span className="text-zinc-400">/ Admin</span>
+          <Link href="/admin" aria-label={BRAND_NAME}>
+            {BRAND_LOGO ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={BRAND_LOGO} alt={BRAND_NAME} className="h-9 w-auto" />
+            ) : (
+              <span className="font-semibold tracking-tight">{BRAND_NAME}</span>
+            )}
           </Link>
           <nav className="hidden gap-1 text-sm sm:flex">
             <NavLink href="/admin">Overview</NavLink>

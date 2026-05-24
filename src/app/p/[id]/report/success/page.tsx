@@ -52,7 +52,7 @@ export default async function SuccessPage({
           href={`/p/${id}/hhw`}
           className="rounded-xl bg-white px-4 py-3 text-center text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
         >
-          Read the HHW guide
+          Read the Household Hazardous Waste guide
         </Link>
       </div>
     </>

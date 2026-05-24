@@ -24,7 +24,7 @@ export default async function HHWPage({
       <BrandHeader backHref={`/p/${id}`} />
       <div className="mb-4">
         <h1 className="text-xl font-semibold tracking-tight">
-          Hazardous waste guide
+          Household Hazardous Waste
         </h1>
         <p className="mt-1 text-sm text-zinc-500">{property.name}</p>
       </div>
@@ -40,7 +40,7 @@ export default async function HHWPage({
         </div>
       ) : (
         <div className="mb-4 rounded-2xl bg-white p-4 text-sm text-zinc-500 shadow-sm ring-1 ring-zinc-200">
-          No property-specific HHW rules yet.
+          No property-specific Household Hazardous Waste rules yet.
         </div>
       )}
 
@@ -49,10 +49,7 @@ export default async function HHWPage({
       </h2>
       <HHWCategoryGrid categories={HHW_CATEGORIES} />
 
-      <HHWDropoffList
-        referenceLat={property.latitude}
-        referenceLng={property.longitude}
-      />
+      <HHWDropoffList />
 
       <details className="mt-5 rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200">
         <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-zinc-700">

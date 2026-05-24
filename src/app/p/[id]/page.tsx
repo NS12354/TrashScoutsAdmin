@@ -40,7 +40,7 @@ export default async function PropertyHome({
     {
       href: `/p/${id}/hhw`,
       number: 4,
-      label: "Hazardous Waste Guide",
+      label: "Household Hazardous Waste",
       icon: TileIcons.Warning,
     },
     {
@@ -53,7 +53,7 @@ export default async function PropertyHome({
 
   return (
     <>
-      <BrandHeader backHref="/" />
+      <BrandHeader />
 
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">
         Welcome,{" "}

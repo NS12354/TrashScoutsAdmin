@@ -574,7 +574,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       {/* 5. HHW instructions */}
       <Section
         number={5}
-        title="Property-specific HHW instructions (optional)"
+        title="Property-specific Household Hazardous Waste instructions (optional)"
       >
         <textarea
           rows={4}
