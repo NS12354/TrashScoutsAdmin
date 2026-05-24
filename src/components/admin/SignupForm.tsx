@@ -56,7 +56,7 @@ export function SignupForm({ allowedDomains }: { allowedDomains: string[] }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@trashscouts.com"
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+          className="w-full input"
         />
         <span className="mt-1 block text-xs text-zinc-500">
           Must be a <strong>{domainHint}</strong> address.
@@ -70,7 +70,7 @@ export function SignupForm({ allowedDomains }: { allowedDomains: string[] }) {
           autoComplete="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+          className="w-full input"
         />
       </label>
       <label className="block">
@@ -81,7 +81,7 @@ export function SignupForm({ allowedDomains }: { allowedDomains: string[] }) {
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+          className="w-full input"
         />
         <span className="mt-1 block text-xs text-zinc-500">
           At least 8 characters.
@@ -95,7 +95,7 @@ export function SignupForm({ allowedDomains }: { allowedDomains: string[] }) {
           autoComplete="new-password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+          className="w-full input"
         />
       </label>
       {error && (
@@ -106,7 +106,7 @@ export function SignupForm({ allowedDomains }: { allowedDomains: string[] }) {
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded-xl bg-brand px-4 py-3 font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+        className="w-full btn-primary"
       >
         {busy ? "Creating account…" : "Create account"}
       </button>

@@ -23,7 +23,7 @@ export default async function AdminsPage() {
           </p>
           <Link
             href="/admin"
-            className="mt-4 inline-block rounded-xl bg-white px-4 py-2 text-sm font-medium text-amber-900 ring-1 ring-amber-200 hover:bg-amber-100"
+            className="mt-4 inline-block text-sm text-zinc-500 hover:underline"
           >
             ← Back to overview
           </Link>

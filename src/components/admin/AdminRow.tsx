@@ -81,7 +81,7 @@ export function AdminRow({
                 ? "Can't remove the last admin"
                 : undefined
           }
-          className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-red-600 ring-1 ring-red-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="btn-sm-danger disabled:cursor-not-allowed"
         >
           {busy ? "…" : "Remove"}
         </button>

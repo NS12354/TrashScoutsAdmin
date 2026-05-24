@@ -54,13 +54,13 @@ export default async function PropertyQRPage({
       <div className="mt-6 flex justify-center gap-2">
         <Link
           href={`/admin/properties/${property.id}`}
-          className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+          className="btn-secondary"
         >
           Edit this property
         </Link>
         <Link
           href="/admin/properties/new"
-          className="rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+          className="btn-primary"
         >
           + Add another
         </Link>

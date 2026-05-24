@@ -295,7 +295,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. 1919 Market Street"
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+            className="w-full input"
           />
         </Field>
         <Field label="Address">
@@ -308,13 +308,13 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
               }}
               onBlur={tryGeocode}
               placeholder="1919 Market St, Oakland, CA 94607"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+              className="w-full input"
             />
             <button
               type="button"
               onClick={tryGeocode}
               disabled={!address.trim() || geoStatus === "checking"}
-              className="shrink-0 rounded-lg bg-white px-3 py-2.5 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50 disabled:opacity-50"
+              className="shrink-0 btn-secondary"
             >
               {geoStatus === "checking" ? "Checking…" : "Verify"}
             </button>
@@ -344,7 +344,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
             <select
               value={porterId}
               onChange={(e) => setPorterId(e.target.value)}
-              className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+              className="flex-1 input"
             >
               <option value="">— No porter assigned —</option>
               {porters.map((p) => (
@@ -357,7 +357,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
             <button
               type="button"
               onClick={() => setAddingPorter(true)}
-              className="rounded-lg bg-white px-3 py-2.5 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+              className="btn-secondary"
             >
               + Add new porter
             </button>
@@ -369,13 +369,13 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
               value={newPorterName}
               onChange={(e) => setNewPorterName(e.target.value)}
               placeholder="Full name"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
+              className="w-full input"
             />
             <input
               value={newPorterTitle}
               onChange={(e) => setNewPorterTitle(e.target.value)}
               placeholder="Title (e.g. Field Supervisor)"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
+              className="w-full input"
             />
             <input
               type="file"
@@ -388,14 +388,14 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
                 type="button"
                 onClick={savePorter}
                 disabled={!newPorterName.trim()}
-                className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+                className="btn-primary"
               >
                 Save porter
               </button>
               <button
                 type="button"
                 onClick={() => setAddingPorter(false)}
-                className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+                className="btn-secondary"
               >
                 Cancel
               </button>
@@ -565,7 +565,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
         <button
           type="button"
           onClick={addScheduleRow}
-          className="rounded-lg bg-white px-3 py-2 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+          className="btn-secondary"
         >
           + Add row
         </button>
@@ -581,7 +581,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
           value={hhwInstructions}
           onChange={(e) => setHhwInstructions(e.target.value)}
           placeholder="Example: Battery + medication drop bin in the lobby. Paint and electronics go to the Oakland HHW facility on E. 7th."
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+          className="w-full input"
         />
       </Section>
 
@@ -595,7 +595,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
         <button
           type="button"
           onClick={() => router.push("/admin")}
-          className="rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+          className="btn-secondary"
         >
           Cancel
         </button>
@@ -603,7 +603,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
           type="button"
           onClick={submit}
           disabled={submitting}
-          className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+          className="btn-primary"
         >
           {submitting
             ? "Saving…"

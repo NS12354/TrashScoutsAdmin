@@ -309,7 +309,7 @@ function PageLink({
   return (
     <Link
       href={href}
-      className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+      className="btn-secondary"
     >
       {label}
     </Link>

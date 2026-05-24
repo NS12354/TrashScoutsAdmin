@@ -55,7 +55,7 @@ export default async function AdminHome({
         <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
         <Link
           href="/admin/properties/new"
-          className="rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+          className="btn-primary"
         >
           + Add Property
         </Link>
@@ -79,18 +79,18 @@ export default async function AdminHome({
           name="q"
           defaultValue={query}
           placeholder="Search properties by name, address, or city…"
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm placeholder:text-zinc-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+          className="w-full input"
         />
         <button
           type="submit"
-          className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+          className="btn-secondary"
         >
           Search
         </button>
         {query && (
           <Link
             href="/admin"
-            className="rounded-lg bg-white px-3 py-2 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+            className="btn-secondary"
           >
             Clear
           </Link>

@@ -36,7 +36,7 @@ export default async function EditPropertyPage({
         </div>
         <Link
           href={`/admin/properties/${property.id}/qr`}
-          className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+          className="btn-secondary"
         >
           View QR
         </Link>

@@ -137,7 +137,7 @@ export function PorterCard({ porter }: { porter: Porter }) {
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+            className="btn-sm"
           >
             Edit
           </button>
@@ -145,7 +145,7 @@ export function PorterCard({ porter }: { porter: Porter }) {
             type="button"
             onClick={remove}
             disabled={busy}
-            className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-red-600 ring-1 ring-red-200 hover:bg-red-50 disabled:opacity-60"
+            className="btn-sm-danger"
           >
             {busy ? "…" : "Delete"}
           </button>
@@ -177,13 +177,13 @@ export function PorterCard({ porter }: { porter: Porter }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Full name"
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm"
+            className="w-full input"
           />
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title (e.g. Field Supervisor)"
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm"
+            className="w-full input"
           />
           <input
             type="file"
@@ -216,7 +216,7 @@ export function PorterCard({ porter }: { porter: Porter }) {
           type="button"
           onClick={cancelEdit}
           disabled={busy}
-          className="rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50 disabled:opacity-60"
+          className="btn-secondary"
         >
           Cancel
         </button>
@@ -224,7 +224,7 @@ export function PorterCard({ porter }: { porter: Porter }) {
           type="button"
           onClick={save}
           disabled={busy}
-          className="rounded-lg bg-brand px-4 py-1.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+          className="btn-primary"
         >
           {busy ? "Saving…" : "Save"}
         </button>

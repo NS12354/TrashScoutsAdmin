@@ -109,7 +109,7 @@ function FilterSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm"
+        className="w-full input"
       >
         <option value="">{allLabel}</option>
         {options.map((o) => (

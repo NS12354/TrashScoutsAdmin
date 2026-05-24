@@ -44,13 +44,13 @@ export function ForgotPasswordForm() {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+          className="w-full input"
         />
       </label>
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded-xl bg-brand px-4 py-3 font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+        className="w-full btn-primary"
       >
         {busy ? "Sending…" : "Send reset link"}
       </button>

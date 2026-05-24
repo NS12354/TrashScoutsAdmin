@@ -49,14 +49,14 @@ export function QRBlock({
               <>
                 <a
                   href={downloadUrl}
-                  className="rounded-md bg-brand px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-dark"
+                  className="btn-primary"
                 >
                   ⬇ Download PNG
                 </a>
                 <button
                   type="button"
                   onClick={() => navigator.clipboard.writeText(residentUrl)}
-                  className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+                  className="btn-secondary"
                 >
                   Copy URL
                 </button>
@@ -64,7 +64,7 @@ export function QRBlock({
                   href={residentUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+                  className="btn-secondary"
                 >
                   Open resident page ↗
                 </a>

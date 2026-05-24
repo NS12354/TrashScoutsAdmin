@@ -68,7 +68,7 @@ export function SetPasswordForm({
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+          className="w-full input"
         />
         <span className="mt-1 block text-xs text-zinc-500">
           Must be at least 8 characters.
@@ -82,7 +82,7 @@ export function SetPasswordForm({
           autoComplete="new-password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+          className="w-full input"
         />
       </label>
       {error && (
@@ -93,7 +93,7 @@ export function SetPasswordForm({
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded-xl bg-brand px-4 py-3 font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+        className="w-full btn-primary"
       >
         {busy
           ? "Saving…"

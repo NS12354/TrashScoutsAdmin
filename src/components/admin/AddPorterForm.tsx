@@ -63,13 +63,13 @@ export function AddPorterForm() {
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Full name"
-        className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
+        className="w-full input"
       />
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Title (e.g. Field Supervisor)"
-        className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
+        className="w-full input"
       />
       <input
         type="file"
@@ -85,7 +85,7 @@ export function AddPorterForm() {
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
+        className="w-full btn-primary"
       >
         {busy ? "Saving…" : "Add porter"}
       </button>
