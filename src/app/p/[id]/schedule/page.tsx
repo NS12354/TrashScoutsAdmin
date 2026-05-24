@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { BrandHeader } from "@/components/BrandHeader";
-import { NextPickup } from "@/components/NextPickup";
 import { BIN_COLOR, BIN_LABEL, DAY_NAMES } from "@/lib/format";
 import { getProperty } from "@/lib/data";
 
@@ -71,8 +70,6 @@ export default async function SchedulePage({
         </h1>
         <p className="mt-1 text-sm capitalize text-zinc-500">{property.name}</p>
       </div>
-
-      <NextPickup schedule={schedule} />
 
       {scheduleByDay.length === 0 ? (
         <div className="mt-4 rounded-2xl bg-white px-4 py-8 text-center text-sm text-zinc-500 shadow-sm ring-1 ring-zinc-200">
