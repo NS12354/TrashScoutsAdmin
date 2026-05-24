@@ -23,8 +23,8 @@ export const BIN_COLOR: Record<string, string> = {
 };
 
 export const ACTION_LABEL: Record<string, string> = {
-  PULL_OUT: "Out",
-  RETURN: "In",
+  PULL_OUT: "Put out",
+  RETURN: "Bring in",
 };
 
 export const ISSUE_CATEGORIES: Array<{ value: string; label: string }> = [
