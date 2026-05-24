@@ -1,36 +1,53 @@
 import Link from "next/link";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { issueCategoryLabel } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminHome() {
-  const [propertyCount, porterCount, openIssues, propertiesWithOpen, recent] =
+export default async function AdminHome({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
+  const query = (q ?? "").trim();
+
+  const where: Prisma.PropertyWhereInput | undefined = query
+    ? {
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { address: { contains: query, mode: "insensitive" } },
+        ],
+      }
+    : undefined;
+
+  const [porterCount, openIssues, properties, totalProperties] =
     await Promise.all([
-      prisma.property.count(),
       prisma.porter.count(),
       prisma.issue.count({ where: { status: "OPEN" } }),
-      // For "needs attention": properties + their open-issue counts.
       prisma.property.findMany({
-        select: {
-          id: true,
-          name: true,
-          _count: { select: { issues: { where: { status: "OPEN" } } } },
+        where,
+        include: {
+          porter: true,
+          _count: {
+            select: {
+              schedule: true,
+              setupPhotos: true,
+              issues: { where: { status: "OPEN" } },
+            },
+          },
         },
       }),
-      // Recent open reports feed.
-      prisma.issue.findMany({
-        where: { status: "OPEN" },
-        orderBy: { createdAt: "desc" },
-        take: 6,
-        include: { property: { select: { name: true } } },
-      }),
+      prisma.property.count(),
     ]);
 
-  const needsAttention = propertiesWithOpen
-    .filter((p) => p._count.issues > 0)
-    .sort((a, b) => b._count.issues - a._count.issues)
-    .slice(0, 5);
+  // Properties with open reports float to the top so the ones needing
+  // attention are first; the rest fall back to alphabetical.
+  const sorted = [...properties].sort((a, b) => {
+    if (b._count.issues !== a._count.issues)
+      return b._count.issues - a._count.issues;
+    return a.name.localeCompare(b.name);
+  });
 
   return (
     <div>
@@ -46,7 +63,7 @@ export default async function AdminHome() {
 
       {/* Stat tiles */}
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Stat label="Properties" value={propertyCount} href="/admin/properties" />
+        <Stat label="Properties" value={totalProperties} href="/admin" />
         <Stat label="Porters" value={porterCount} href="/admin/porters" />
         <Stat
           label="Open issues"
@@ -55,86 +72,94 @@ export default async function AdminHome() {
         />
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Needs attention */}
-        <section className="rounded-2xl border border-zinc-200 bg-white p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold tracking-tight">
-              Needs attention
-            </h2>
-            <Link
-              href="/admin/issues?status=OPEN"
-              className="text-xs font-medium text-zinc-500 hover:text-zinc-900 hover:underline"
-            >
-              All open reports
-            </Link>
-          </div>
-          {needsAttention.length === 0 ? (
-            <p className="mt-3 text-sm text-zinc-500">
-              ✓ No open reports — all clear.
-            </p>
-          ) : (
-            <ul className="mt-3 space-y-1.5">
-              {needsAttention.map((p) => (
-                <li key={p.id}>
-                  <Link
-                    href={`/admin/issues?property=${p.id}&status=OPEN`}
-                    className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-zinc-50"
-                  >
-                    <span className="min-w-0 truncate text-sm text-zinc-800">
-                      {p.name}
-                    </span>
-                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
-                      {p._count.issues} open
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+      {/* Search */}
+      <form method="GET" action="/admin" className="mt-6 flex items-center gap-2">
+        <input
+          type="search"
+          name="q"
+          defaultValue={query}
+          placeholder="Search properties by name, address, or city…"
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm placeholder:text-zinc-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+        />
+        <button
+          type="submit"
+          className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+        >
+          Search
+        </button>
+        {query && (
+          <Link
+            href="/admin"
+            className="rounded-lg bg-white px-3 py-2 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+          >
+            Clear
+          </Link>
+        )}
+      </form>
 
-        {/* Recent reports */}
-        <section className="rounded-2xl border border-zinc-200 bg-white p-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold tracking-tight">
-              Recent reports
-            </h2>
-            <Link
-              href="/admin/issues"
-              className="text-xs font-medium text-zinc-500 hover:text-zinc-900 hover:underline"
-            >
-              All reports
+      <ul className="mt-4 space-y-2">
+        {sorted.length === 0 && (
+          <li className="rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-10 text-center text-sm text-zinc-500">
+            {query ? (
+              <>
+                No properties matched <strong>“{query}”</strong>.{" "}
+                <Link href="/admin" className="font-medium text-brand-dark hover:underline">
+                  Clear search
+                </Link>
+                .
+              </>
+            ) : (
+              <>
+                No properties yet. Click <strong>+ Add Property</strong> to
+                create the first one.
+              </>
+            )}
+          </li>
+        )}
+        {sorted.map((p) => (
+          <li
+            key={p.id}
+            className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white p-4 hover:shadow-sm"
+          >
+            <Link href={`/admin/properties/${p.id}`} className="min-w-0 flex-1">
+              <div className="font-medium">{p.name}</div>
+              <div className="text-sm text-zinc-500">{p.address}</div>
+              <div className="mt-1 text-xs text-zinc-400">
+                {p.porter?.name ?? "No porter"} · {p._count.schedule} schedule
+                row{p._count.schedule === 1 ? "" : "s"} · {p._count.setupPhotos}{" "}
+                photo{p._count.setupPhotos === 1 ? "" : "s"}
+              </div>
             </Link>
-          </div>
-          {recent.length === 0 ? (
-            <p className="mt-3 text-sm text-zinc-500">No reports yet.</p>
-          ) : (
-            <ul className="mt-3 divide-y divide-zinc-100">
-              {recent.map((iss) => (
-                <li key={iss.id}>
-                  <Link
-                    href={`/admin/issues?property=${iss.propertyId}&status=OPEN`}
-                    className="flex items-center justify-between gap-3 py-2 hover:bg-zinc-50"
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-zinc-800">
-                        {issueCategoryLabel(iss.category)}
-                      </span>
-                      <span className="block truncate text-xs text-zinc-500">
-                        {iss.property.name}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-xs text-zinc-400">
-                      {new Date(iss.createdAt).toLocaleDateString()}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Link
+                href={`/admin/issues?property=${p.id}&status=OPEN`}
+                className={`rounded-md px-2.5 py-1 text-xs font-medium ring-1 ${
+                  p._count.issues > 0
+                    ? "bg-amber-50 text-amber-800 ring-amber-200 hover:bg-amber-100"
+                    : "bg-zinc-50 text-zinc-700 ring-zinc-200 hover:bg-zinc-100"
+                }`}
+              >
+                {p._count.issues > 0
+                  ? `View ${p._count.issues} open report${p._count.issues === 1 ? "" : "s"}`
+                  : "View reports"}
+              </Link>
+              <Link
+                href={`/admin/properties/${p.id}/qr`}
+                className="rounded-md bg-zinc-50 px-2.5 py-1 text-xs font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
+              >
+                QR ↓
+              </Link>
+              <Link
+                href={`/admin/properties/${p.id}`}
+                aria-label={`Edit ${p.name}`}
+                className="text-zinc-400 hover:text-zinc-600"
+              >
+                →
+              </Link>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

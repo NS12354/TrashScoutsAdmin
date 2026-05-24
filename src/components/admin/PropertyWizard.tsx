@@ -594,7 +594,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       <div className="flex justify-end gap-3 border-t border-zinc-200 pt-4">
         <button
           type="button"
-          onClick={() => router.push("/admin/properties")}
+          onClick={() => router.push("/admin")}
           className="rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
         >
           Cancel

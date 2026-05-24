@@ -29,7 +29,7 @@ export function DeletePropertyButton({
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error || "Delete failed");
       }
-      router.push("/admin/properties");
+      router.push("/admin");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Delete failed");

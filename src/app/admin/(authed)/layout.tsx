@@ -28,7 +28,6 @@ export default async function AdminLayout({
           </Link>
           <nav className="hidden gap-1 text-sm sm:flex">
             <NavLink href="/admin">Overview</NavLink>
-            <NavLink href="/admin/properties">Properties</NavLink>
             <NavLink href="/admin/porters">Porters</NavLink>
             <NavLink href="/admin/issues">Reports</NavLink>
             {canManageAdmins && <NavLink href="/admin/admins">Admins</NavLink>}
@@ -47,7 +46,6 @@ export default async function AdminLayout({
         </div>
         <nav className="flex gap-1 overflow-x-auto border-t border-zinc-100 px-2 py-2 text-sm sm:hidden">
           <NavLink href="/admin">Overview</NavLink>
-          <NavLink href="/admin/properties">Properties</NavLink>
           <NavLink href="/admin/porters">Porters</NavLink>
           <NavLink href="/admin/issues">Reports</NavLink>
           {canManageAdmins && <NavLink href="/admin/admins">Admins</NavLink>}

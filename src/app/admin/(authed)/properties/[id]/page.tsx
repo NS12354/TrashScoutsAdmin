@@ -24,7 +24,7 @@ export default async function EditPropertyPage({
   return (
     <div>
       <Link
-        href="/admin/properties"
+        href="/admin"
         className="text-sm text-zinc-500 hover:underline"
       >
         ← All properties
