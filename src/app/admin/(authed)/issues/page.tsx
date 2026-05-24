@@ -121,7 +121,7 @@ export default async function AdminIssuesPage({
                   : "bg-white text-zinc-600 hover:bg-zinc-50"
               }`}
             >
-              Flat list
+              All
             </Link>
           </div>
 
