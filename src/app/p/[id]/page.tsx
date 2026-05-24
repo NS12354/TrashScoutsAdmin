@@ -87,7 +87,7 @@ function PorterCard({ porter }: { porter: Porter | null }) {
             src={porter.photoUrl}
             alt={porter.name}
             fill
-            className="object-contain"
+            className="object-cover object-center"
             sizes="448px"
             priority
           />
