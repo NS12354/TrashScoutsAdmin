@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
-import { ALLOWED_SIGNUP_DOMAINS, isSuperAdmin } from "@/lib/permissions";
+import { isSuperAdmin } from "@/lib/permissions";
 import { AdminRow } from "@/components/admin/AdminRow";
 
 export const dynamic = "force-dynamic";
@@ -43,36 +43,12 @@ export default async function AdminsPage() {
     },
   });
 
-  const allowedDomains = Array.from(ALLOWED_SIGNUP_DOMAINS);
-
   return (
     <div>
       <h1 className="text-2xl font-semibold tracking-tight">Admins</h1>
       <p className="mt-1 text-sm text-zinc-500">
         Everyone who can sign in to this dashboard.
       </p>
-
-      <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-        <div className="font-medium">Onboarding new employees</div>
-        <p className="mt-1">
-          Anyone with an email at{" "}
-          {allowedDomains.map((d, i) => (
-            <span key={d}>
-              {i > 0 && ", "}
-              <strong>@{d}</strong>
-            </span>
-          ))}{" "}
-          can create their own account at{" "}
-          <Link
-            href="/admin/signup"
-            className="font-medium underline hover:no-underline"
-          >
-            /admin/signup
-          </Link>
-          . Share that URL with new hires — no invite step needed. Existing
-          admins show up below as soon as they finish signing up.
-        </p>
-      </div>
 
       <div className="mt-6 rounded-2xl border border-zinc-200 bg-white">
         <ul className="divide-y divide-zinc-100">
