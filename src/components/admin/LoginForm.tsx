@@ -12,6 +12,8 @@ const SSO_ERROR_MESSAGES: Record<string, string> = {
   email_unverified: "Your Google email isn't verified. Verify it with Google and retry.",
   not_authorized:
     "This Google account isn't authorized for this dashboard. Ask an existing admin to invite your email.",
+  domain:
+    "Only trashscouts.com and revisent.com Google accounts can sign in.",
   cancelled: "Sign-in was cancelled.",
   google_error: "Google ran into an issue. Try again in a moment.",
 };

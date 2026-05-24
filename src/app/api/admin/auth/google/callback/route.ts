@@ -11,6 +11,7 @@ import {
 import { createSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SITE_URL } from "@/lib/brand";
+import { isAllowedSignupEmail } from "@/lib/permissions";
 
 export const runtime = "nodejs";
 
@@ -68,6 +69,10 @@ export async function GET(req: NextRequest) {
     return back("identity");
   }
   if (!identity.emailVerified) return back("email_unverified");
+
+  // Hard domain gate: only @trashscouts.com / @revisent.com Google accounts
+  // may sign in, regardless of what's already in the User table.
+  if (!isAllowedSignupEmail(identity.email)) return back("domain");
 
   // Lookup: prefer a previously-stamped subject (stable across email changes),
   // then fall back to email. We never auto-provision new admins via SSO.
