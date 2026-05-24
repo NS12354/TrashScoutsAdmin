@@ -8,6 +8,19 @@ import { DAY_NAMES } from "@/lib/format";
 const BIN_TYPES = ["TRASH", "RECYCLING", "ORGANICS", "OTHER"] as const;
 const ACTIONS = ["PULL_OUT", "RETURN"] as const;
 
+// Time-of-day options in 30-minute increments (12-hour labels).
+const TIME_OPTIONS: string[] = (() => {
+  const out: string[] = [];
+  for (let h = 0; h < 24; h++) {
+    for (const m of [0, 30]) {
+      const hour12 = h % 12 === 0 ? 12 : h % 12;
+      const ampm = h < 12 ? "AM" : "PM";
+      out.push(`${hour12}:${m === 0 ? "00" : "30"} ${ampm}`);
+    }
+  }
+  return out;
+})();
+
 type Porter = {
   id: string;
   name: string;
@@ -87,6 +100,16 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  // Address confirmation: geocode the typed address and show the matched
+  // place back to the admin so they can confirm it's correct. lat/lng are
+  // stored silently for the backend — no longer shown as fields.
+  const [geoStatus, setGeoStatus] = useState<
+    "idle" | "checking" | "ok" | "notfound"
+  >(initial?.latitude != null ? "ok" : "idle");
+  const [geoMatch, setGeoMatch] = useState<string>(
+    initial?.latitude != null ? initial.address : "",
+  );
+
   useEffect(() => {
     fetch("/api/admin/porters")
       .then((r) => r.json())
@@ -94,24 +117,35 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       .catch(() => {});
   }, []);
 
-  // Naive coord auto-fill: only if address has commas (looks complete) and
-  // user hasn't manually typed coords. Uses public Nominatim, fine for a
-  // few admin saves per day.
+  // Geocode the address (public Nominatim) to (a) confirm it resolves to a
+  // real place — shown back to the admin for double-checking — and (b) fill
+  // lat/lng silently for the backend. Runs on blur and via the Verify button.
   async function tryGeocode() {
-    if (!address.includes(",")) return;
-    if (latitude && longitude) return;
+    const q = address.trim();
+    if (!q) {
+      setGeoStatus("idle");
+      setGeoMatch("");
+      return;
+    }
+    setGeoStatus("checking");
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&addressdetails=1`,
         { headers: { "Accept-Language": "en" } },
       );
       const data = await res.json();
       if (Array.isArray(data) && data[0]?.lat && data[0]?.lon) {
         setLatitude(data[0].lat);
         setLongitude(data[0].lon);
+        setGeoMatch(data[0].display_name ?? q);
+        setGeoStatus("ok");
+      } else {
+        setGeoStatus("notfound");
+        setGeoMatch("");
       }
     } catch {
-      /* ignore */
+      setGeoStatus("notfound");
+      setGeoMatch("");
     }
   }
 
@@ -265,32 +299,42 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
           />
         </Field>
         <Field label="Address">
-          <input
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            onBlur={tryGeocode}
-            placeholder="1919 Market St, Oakland, CA 94607"
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
-          />
+          <div className="flex gap-2">
+            <input
+              value={address}
+              onChange={(e) => {
+                setAddress(e.target.value);
+                if (geoStatus !== "idle") setGeoStatus("idle");
+              }}
+              onBlur={tryGeocode}
+              placeholder="1919 Market St, Oakland, CA 94607"
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5"
+            />
+            <button
+              type="button"
+              onClick={tryGeocode}
+              disabled={!address.trim() || geoStatus === "checking"}
+              className="shrink-0 rounded-lg bg-white px-3 py-2.5 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50 disabled:opacity-50"
+            >
+              {geoStatus === "checking" ? "Checking…" : "Verify"}
+            </button>
+          </div>
+
+          {/* Address double-confirmation */}
+          {geoStatus === "ok" && (
+            <div className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 ring-1 ring-emerald-200">
+              <span className="font-medium">✓ Address found.</span> Please
+              confirm this is the right place:
+              <div className="mt-1 text-emerald-900">{geoMatch}</div>
+            </div>
+          )}
+          {geoStatus === "notfound" && (
+            <div className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 ring-1 ring-amber-200">
+              ⚠ Couldn&apos;t locate that address. Double-check spelling, city,
+              and ZIP — you can still save, but the location won&apos;t be set.
+            </div>
+          )}
         </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Latitude (auto-filled)">
-            <input
-              value={latitude}
-              onChange={(e) => setLatitude(e.target.value)}
-              placeholder="37.8083"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
-            />
-          </Field>
-          <Field label="Longitude (auto-filled)">
-            <input
-              value={longitude}
-              onChange={(e) => setLongitude(e.target.value)}
-              placeholder="-122.2741"
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
-            />
-          </Field>
-        </div>
       </Section>
 
       {/* 2. Trash Scout */}
@@ -330,7 +374,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
             <input
               value={newPorterTitle}
               onChange={(e) => setNewPorterTitle(e.target.value)}
-              placeholder="Title (e.g. Field Supervisor since 2020)"
+              placeholder="Title (e.g. Field Supervisor)"
               className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
             />
             <input
@@ -430,7 +474,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
                   <th className="px-2 pb-2">Day</th>
                   <th className="px-2 pb-2">Bin</th>
                   <th className="px-2 pb-2">Action</th>
-                  <th className="px-2 pb-2">Time window</th>
+                  <th className="px-2 pb-2">Time</th>
                   <th className="px-2 pb-2"></th>
                 </tr>
               </thead>
@@ -488,14 +532,20 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
                       </select>
                     </td>
                     <td className="px-2 py-1">
-                      <input
+                      <select
                         value={r.timeWindow}
                         onChange={(e) =>
                           updateScheduleRow(r.key, { timeWindow: e.target.value })
                         }
-                        placeholder="6pm – 9pm"
-                        className="w-32 rounded-md border border-zinc-300 bg-white px-2 py-1"
-                      />
+                        className="w-28 rounded-md border border-zinc-300 bg-white px-2 py-1"
+                      >
+                        <option value="">— time —</option>
+                        {TIME_OPTIONS.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className="px-2 py-1 text-right">
                       <button

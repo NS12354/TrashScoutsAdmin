@@ -68,7 +68,7 @@ export function AddPorterForm() {
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Title (e.g. Field Supervisor since 2020)"
+        placeholder="Title (e.g. Field Supervisor)"
         className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2"
       />
       <input
