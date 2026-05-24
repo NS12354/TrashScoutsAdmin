@@ -27,7 +27,13 @@ export default async function PropertiesListPage({
       orderBy: { createdAt: "asc" },
       include: {
         porter: true,
-        _count: { select: { schedule: true, setupPhotos: true, issues: true } },
+        _count: {
+          select: {
+            schedule: true,
+            setupPhotos: true,
+            issues: { where: { status: "OPEN" } },
+          },
+        },
       },
     }),
     query ? prisma.property.count() : Promise.resolve(null),
@@ -118,19 +124,21 @@ export default async function PropertiesListPage({
                 schedule row{p._count.schedule === 1 ? "" : "s"} ·{" "}
                 {p._count.setupPhotos} photo
                 {p._count.setupPhotos === 1 ? "" : "s"}
-                {p._count.issues > 0 && (
-                  <>
-                    {" "}
-                    ·{" "}
-                    <span className="font-semibold text-amber-700">
-                      {p._count.issues} report
-                      {p._count.issues === 1 ? "" : "s"}
-                    </span>
-                  </>
-                )}
               </div>
             </Link>
-            <div className="flex shrink-0 items-center gap-3">
+            <div className="flex shrink-0 items-center gap-2">
+              <Link
+                href={`/admin/issues?property=${p.id}&status=OPEN`}
+                className={`rounded-md px-2.5 py-1 text-xs font-medium ring-1 ${
+                  p._count.issues > 0
+                    ? "bg-amber-50 text-amber-800 ring-amber-200 hover:bg-amber-100"
+                    : "bg-zinc-50 text-zinc-700 ring-zinc-200 hover:bg-zinc-100"
+                }`}
+              >
+                {p._count.issues > 0
+                  ? `View ${p._count.issues} open report${p._count.issues === 1 ? "" : "s"}`
+                  : "View reports"}
+              </Link>
               <Link
                 href={`/admin/properties/${p.id}/qr`}
                 className="rounded-md bg-zinc-50 px-2.5 py-1 text-xs font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-100"
