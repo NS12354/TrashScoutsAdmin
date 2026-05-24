@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { randomBytes } from "crypto";
+import bcrypt from "bcryptjs";
 import {
   GOOGLE_NEXT_COOKIE,
   GOOGLE_STATE_COOKIE,
@@ -16,9 +18,10 @@ import { isAllowedSignupEmail } from "@/lib/permissions";
 export const runtime = "nodejs";
 
 // Step 2 of Google SSO. Validates the state cookie, exchanges the code for
-// an id_token, verifies it against Google's JWKs, and matches the verified
-// identity to an existing admin User row. We never auto-create admins —
-// only emails already in the User table can sign in. If matched, we mint a
+// an id_token, and verifies it against Google's JWKs. Sign-in is gated to the
+// allowed email domains (permissions.ts); a verified identity on one of those
+// domains with no account yet is auto-provisioned as an admin on first
+// sign-in — same open-to-domain policy as password signup. We then mint a
 // session cookie via the same createSession() the password flow uses, so
 // middleware + the rest of the dashboard don't know SSO was involved.
 export async function GET(req: NextRequest) {
@@ -75,23 +78,42 @@ export async function GET(req: NextRequest) {
   if (!isAllowedSignupEmail(identity.email)) return back("domain");
 
   // Lookup: prefer a previously-stamped subject (stable across email changes),
-  // then fall back to email. We never auto-provision new admins via SSO.
+  // then fall back to email.
   let user = await prisma.user.findUnique({
     where: { googleSubject: identity.subject },
   });
   if (!user) {
     user = await prisma.user.findUnique({ where: { email: identity.email } });
   }
-  if (!user) return back("not_authorized");
 
-  // Stamp googleSubject on first SSO sign-in. Also stamp passwordSetAt so
-  // SSO-only users aren't blocked by the password-login pending check and
-  // can use Forgot password later if they ever want a local password.
-  const patch: { googleSubject?: string; passwordSetAt?: Date } = {};
-  if (!user.googleSubject) patch.googleSubject = identity.subject;
-  if (!user.passwordSetAt) patch.passwordSetAt = new Date();
-  if (Object.keys(patch).length > 0) {
-    user = await prisma.user.update({ where: { id: user.id }, data: patch });
+  if (!user) {
+    // No account yet, but the email is on an allowed domain (gated above), so
+    // auto-provision an admin — same open-to-domain policy as password signup.
+    // `password` is required, so store a random unguessable hash: the user
+    // signs in via Google and can set a real password later via Forgot
+    // password (passwordSetAt is stamped, which that flow requires).
+    const randomHash = await bcrypt.hash(
+      randomBytes(32).toString("base64url"),
+      10,
+    );
+    user = await prisma.user.create({
+      data: {
+        email: identity.email,
+        name: identity.name,
+        password: randomHash,
+        googleSubject: identity.subject,
+        passwordSetAt: new Date(),
+      },
+    });
+  } else {
+    // Existing account: stamp googleSubject on first SSO sign-in, and
+    // passwordSetAt so SSO-only users aren't blocked by the pending check.
+    const patch: { googleSubject?: string; passwordSetAt?: Date } = {};
+    if (!user.googleSubject) patch.googleSubject = identity.subject;
+    if (!user.passwordSetAt) patch.passwordSetAt = new Date();
+    if (Object.keys(patch).length > 0) {
+      user = await prisma.user.update({ where: { id: user.id }, data: patch });
+    }
   }
 
   await createSession({
