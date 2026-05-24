@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { BRAND_NAME } from "@/lib/brand";
+import { BRAND_NAME, BRAND_LOGO } from "@/lib/brand";
 import { requireSession } from "@/lib/auth";
-
-const BRAND_LOGO = process.env.NEXT_PUBLIC_BRAND_LOGO || "";
 import { isSuperAdmin } from "@/lib/permissions";
 import { LogoutButton } from "@/components/admin/LogoutButton";
 

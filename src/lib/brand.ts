@@ -1,5 +1,7 @@
 // Single source of truth for brand strings. Swap these and everything updates.
 export const BRAND_NAME = process.env.NEXT_PUBLIC_BRAND_NAME || "Trash Scouts";
+// Optional logo URL. Empty string means fall back to the BRAND_NAME text.
+export const BRAND_LOGO = process.env.NEXT_PUBLIC_BRAND_LOGO || "";
 export const BRAND_LEGAL_NAME =
   process.env.NEXT_PUBLIC_BRAND_LEGAL_NAME || BRAND_NAME;
 export const SUPPORT_EMAIL =
