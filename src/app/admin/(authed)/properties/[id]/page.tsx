@@ -31,8 +31,8 @@ export default async function EditPropertyPage({
       </Link>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{property.name}</h1>
-          <p className="text-sm text-zinc-500">{property.address}</p>
+          <h1 className="text-2xl font-semibold tracking-tight capitalize">{property.name}</h1>
+          <p className="text-sm capitalize text-zinc-500">{property.address}</p>
         </div>
         <Link
           href={`/admin/properties/${property.id}/qr`}

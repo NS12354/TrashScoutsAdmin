@@ -57,10 +57,10 @@ export default async function PropertyHome({
 
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">
         Welcome,{" "}
-        <span className="text-brand-dark">{property.name}</span>{" "}
+        <span className="capitalize text-brand-dark">{property.name}</span>{" "}
         resident
       </h1>
-      <p className="mt-1 text-sm text-zinc-500">{property.address}</p>
+      <p className="mt-1 text-sm capitalize text-zinc-500">{property.address}</p>
 
       <PorterCard porter={porter} />
 
@@ -87,7 +87,7 @@ function PorterCard({ porter }: { porter: Porter | null }) {
             src={porter.photoUrl}
             alt={porter.name}
             fill
-            className="object-cover"
+            className="object-contain"
             sizes="448px"
             priority
           />
@@ -101,9 +101,9 @@ function PorterCard({ porter }: { porter: Porter | null }) {
         <div className="text-xs font-semibold uppercase tracking-wide text-brand-dark">
           Meet your Trash Scout
         </div>
-        <div className="mt-1 text-lg font-semibold">{porter.name}</div>
+        <div className="mt-1 text-lg font-semibold capitalize">{porter.name}</div>
         {porter.title && (
-          <p className="mt-1 text-sm text-zinc-500">{porter.title}</p>
+          <p className="mt-1 text-sm capitalize text-zinc-500">{porter.title}</p>
         )}
         <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-2.5 py-1 text-xs text-brand-dark">
           <span>✓</span> Authorized {BRAND_NAME} staff

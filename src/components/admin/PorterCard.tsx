@@ -124,9 +124,9 @@ export function PorterCard({ porter }: { porter: Porter }) {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-medium">{porter.name}</div>
+          <div className="font-medium capitalize">{porter.name}</div>
           {porter.title && (
-            <div className="truncate text-sm text-zinc-500">{porter.title}</div>
+            <div className="truncate text-sm capitalize text-zinc-500">{porter.title}</div>
           )}
           <div className="text-xs text-zinc-400">
             {porter.propertyCount} propert

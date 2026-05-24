@@ -52,7 +52,7 @@ export function IssueRow({
           <div className="mt-0.5 font-semibold">
             {issueCategoryLabel(issue.category)}
           </div>
-          <div className="text-sm text-zinc-500">
+          <div className="text-sm capitalize text-zinc-500">
             {issue.property.name} — {issue.property.address}
           </div>
         </div>
@@ -91,7 +91,7 @@ export function IssueRow({
       {(issue.reporterName || issue.reporterContact) && (
         <div className="mt-3 text-sm text-zinc-600">
           Reported by{" "}
-          <span className="font-medium">{issue.reporterName ?? "—"}</span>
+          <span className="font-medium capitalize">{issue.reporterName ?? "—"}</span>
           {issue.reporterContact && ` · ${issue.reporterContact}`}
         </div>
       )}

@@ -195,11 +195,11 @@ async function GroupedReports({ where }: { where: Prisma.IssueWhereInput }) {
               <div className="min-w-0">
                 <Link
                   href={`/admin/properties/${g.propertyId}`}
-                  className="font-semibold tracking-tight hover:underline"
+                  className="font-semibold capitalize tracking-tight hover:underline"
                 >
                   {g.name}
                 </Link>
-                <span className="ml-2 text-sm text-zinc-500">{g.address}</span>
+                <span className="ml-2 text-sm capitalize text-zinc-500">{g.address}</span>
               </div>
               <span className="shrink-0 text-xs font-medium text-zinc-500">
                 {open > 0 && (

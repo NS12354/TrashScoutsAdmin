@@ -122,8 +122,8 @@ export default async function AdminHome({
             className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white p-4 hover:shadow-sm"
           >
             <Link href={`/admin/properties/${p.id}`} className="min-w-0 flex-1">
-              <div className="font-medium">{p.name}</div>
-              <div className="text-sm text-zinc-500">{p.address}</div>
+              <div className="font-medium capitalize">{p.name}</div>
+              <div className="text-sm capitalize text-zinc-500">{p.address}</div>
               <div className="mt-1 text-xs text-zinc-400">
                 {p.porter?.name ?? "No porter"} · {p._count.schedule} schedule
                 row{p._count.schedule === 1 ? "" : "s"} · {p._count.setupPhotos}{" "}
