@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   // Throttle silently — still return the generic message so the limiter
   // can't be used to probe anything either.
-  if (!rateLimit(`forgot:${getClientIp(req)}`, FORGOT_LIMIT).ok) {
+  if (!(await rateLimit(`forgot:${getClientIp(req)}`, FORGOT_LIMIT)).ok) {
     return GENERIC;
   }
 

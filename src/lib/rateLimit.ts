@@ -1,10 +1,13 @@
-// Simple per-identifier rate limiter held in memory. On Vercel that means
-// per-function-instance — fine for a small resident app, since the only
-// realistic abuse is one bored person spamming the form. If usage grows
-// or you start seeing real abuse, swap this for Upstash Redis.
+// Rate limiter with two backends, chosen at runtime:
+//   • Upstash Redis (shared across every serverless instance) when
+//     UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN are set. This is the
+//     production path — limits hold across instances and survive cold starts,
+//     so login brute-force and the public report form are actually throttled.
+//   • In-memory fallback (per-instance) when Upstash isn't configured, so
+//     local dev and preview deploys keep working without external services.
 
-type WindowState = { count: number; resetAt: number };
-const buckets = new Map<string, WindowState>();
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
 export type RateLimitConfig = {
   limit: number;
@@ -17,7 +20,38 @@ export type RateLimitResult = {
   resetIn: number; // seconds until the window resets
 };
 
-export function rateLimit(
+// ── Upstash (shared) backend ─────────────────────────────────────────────
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
+
+// One Ratelimit instance per distinct config, cached so connections/headers
+// are reused across requests.
+const limiters = new Map<string, Ratelimit>();
+function upstashLimiter(config: RateLimitConfig): Ratelimit {
+  const key = `${config.limit}:${config.windowMs}`;
+  let limiter = limiters.get(key);
+  if (!limiter) {
+    limiter = new Ratelimit({
+      redis: redis!,
+      limiter: Ratelimit.slidingWindow(config.limit, `${config.windowMs} ms`),
+      prefix: "ts_rl",
+      analytics: false,
+    });
+    limiters.set(key, limiter);
+  }
+  return limiter;
+}
+
+// ── In-memory (per-instance) fallback ────────────────────────────────────
+type WindowState = { count: number; resetAt: number };
+const buckets = new Map<string, WindowState>();
+
+function memoryRateLimit(
   identifier: string,
   config: RateLimitConfig,
 ): RateLimitResult {
@@ -47,13 +81,36 @@ export function rateLimit(
   };
 }
 
-// GC expired buckets so the Map doesn't grow forever.
+// GC expired buckets so the Map doesn't grow forever (memory backend only).
 setInterval(() => {
   const now = Date.now();
   for (const [key, bucket] of buckets) {
     if (bucket.resetAt <= now) buckets.delete(key);
   }
 }, 60_000).unref?.();
+
+// ── Public API ───────────────────────────────────────────────────────────
+export async function rateLimit(
+  identifier: string,
+  config: RateLimitConfig,
+): Promise<RateLimitResult> {
+  if (redis) {
+    try {
+      const res = await upstashLimiter(config).limit(identifier);
+      const resetIn = Math.max(0, Math.ceil((res.reset - Date.now()) / 1000));
+      return { ok: res.success, remaining: res.remaining, resetIn };
+    } catch (err) {
+      // A Redis hiccup must never take down a request path — fall back to the
+      // in-memory limiter for this call rather than throwing.
+      console.error(
+        "[rateLimit] Upstash error; using in-memory fallback:",
+        err,
+      );
+      return memoryRateLimit(identifier, config);
+    }
+  }
+  return memoryRateLimit(identifier, config);
+}
 
 // Best-effort client IP. Vercel sets x-vercel-forwarded-for (untamperable by
 // the client); fall back to standard proxy headers in dev / other hosts.

@@ -26,7 +26,7 @@ type SignupBody = {
 // signed in via the standard session cookie — same end state as the old
 // invite + set-password flow.
 export async function POST(req: NextRequest) {
-  const limit = rateLimit(`signup:${getClientIp(req)}`, SIGNUP_LIMIT);
+  const limit = await rateLimit(`signup:${getClientIp(req)}`, SIGNUP_LIMIT);
   if (!limit.ok) {
     return NextResponse.json(
       { error: `Too many attempts — try again in ${limit.resetIn} seconds.` },

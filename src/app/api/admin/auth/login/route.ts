@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 const LOGIN_LIMIT = { limit: 10, windowMs: 10 * 60 * 1000 };
 
 export async function POST(req: NextRequest) {
-  const limit = rateLimit(`login:${getClientIp(req)}`, LOGIN_LIMIT);
+  const limit = await rateLimit(`login:${getClientIp(req)}`, LOGIN_LIMIT);
   if (!limit.ok) {
     return NextResponse.json(
       { error: `Too many attempts — try again in ${limit.resetIn} seconds.` },

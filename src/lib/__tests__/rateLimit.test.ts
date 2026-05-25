@@ -1,43 +1,44 @@
 import { describe, expect, it } from "vitest";
 import { rateLimit } from "../rateLimit";
 
+// No Upstash env in tests, so rateLimit() uses the in-memory backend.
 describe("rateLimit", () => {
-  it("allows requests up to the limit", () => {
+  it("allows requests up to the limit", async () => {
     const id = `test-${Date.now()}-${Math.random()}`;
     const config = { limit: 3, windowMs: 60_000 };
-    expect(rateLimit(id, config).ok).toBe(true);
-    expect(rateLimit(id, config).ok).toBe(true);
-    expect(rateLimit(id, config).ok).toBe(true);
-    expect(rateLimit(id, config).ok).toBe(false);
+    expect((await rateLimit(id, config)).ok).toBe(true);
+    expect((await rateLimit(id, config)).ok).toBe(true);
+    expect((await rateLimit(id, config)).ok).toBe(true);
+    expect((await rateLimit(id, config)).ok).toBe(false);
   });
 
-  it("isolates different identifiers", () => {
+  it("isolates different identifiers", async () => {
     const a = `a-${Date.now()}-${Math.random()}`;
     const b = `b-${Date.now()}-${Math.random()}`;
     const config = { limit: 1, windowMs: 60_000 };
-    expect(rateLimit(a, config).ok).toBe(true);
-    expect(rateLimit(b, config).ok).toBe(true);
-    expect(rateLimit(a, config).ok).toBe(false);
-    expect(rateLimit(b, config).ok).toBe(false);
+    expect((await rateLimit(a, config)).ok).toBe(true);
+    expect((await rateLimit(b, config)).ok).toBe(true);
+    expect((await rateLimit(a, config)).ok).toBe(false);
+    expect((await rateLimit(b, config)).ok).toBe(false);
   });
 
-  it("returns the correct remaining + resetIn", () => {
+  it("returns the correct remaining + resetIn", async () => {
     const id = `remaining-${Date.now()}-${Math.random()}`;
     const config = { limit: 5, windowMs: 60_000 };
-    const r1 = rateLimit(id, config);
+    const r1 = await rateLimit(id, config);
     expect(r1.ok).toBe(true);
     expect(r1.remaining).toBe(4);
     expect(r1.resetIn).toBeGreaterThan(0);
-    const r2 = rateLimit(id, config);
+    const r2 = await rateLimit(id, config);
     expect(r2.remaining).toBe(3);
   });
 
   it("rolls over after the window expires", async () => {
     const id = `rollover-${Date.now()}-${Math.random()}`;
     const config = { limit: 1, windowMs: 50 };
-    expect(rateLimit(id, config).ok).toBe(true);
-    expect(rateLimit(id, config).ok).toBe(false);
+    expect((await rateLimit(id, config)).ok).toBe(true);
+    expect((await rateLimit(id, config)).ok).toBe(false);
     await new Promise((r) => setTimeout(r, 80));
-    expect(rateLimit(id, config).ok).toBe(true);
+    expect((await rateLimit(id, config)).ok).toBe(true);
   });
 });

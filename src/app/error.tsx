@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 
 // Top-level error boundary. Captures any runtime error in a route segment
 // and shows a friendly recovery UI rather than a blank screen.
@@ -13,8 +14,9 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Surface to console in dev. In production Sentry's instrumentation
-    // hook captures unhandled errors automatically.
+    // Report React render errors caught by this boundary to Sentry (no-op
+    // until a DSN is configured), and surface to the console in dev.
+    Sentry.captureException(error);
     console.error(error);
   }, [error]);
 
