@@ -7,14 +7,26 @@ import {
   invalidateActiveTokens,
 } from "@/lib/passwordTokens";
 import { createSession } from "@/lib/auth";
+import { getClientIp, rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
 const MIN_PASSWORD_LEN = 8;
+// Throttle this public endpoint (defense-in-depth — tokens are already
+// unguessable + single-use): 10 attempts per IP per 15 minutes.
+const SETPW_LIMIT = { limit: 10, windowMs: 15 * 60 * 1000 };
 
 // Public endpoint. Consumes a single-use token from /admin/set-password and
 // sets the user's password, then signs them in.
 export async function POST(req: NextRequest) {
+  const limit = await rateLimit(`setpw:${getClientIp(req)}`, SETPW_LIMIT);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: `Too many attempts — try again in ${limit.resetIn} seconds.` },
+      { status: 429, headers: { "Retry-After": String(limit.resetIn) } },
+    );
+  }
+
   const { token, password } = await req.json().catch(() => ({}));
   const raw = String(token ?? "");
   const pw = String(password ?? "");

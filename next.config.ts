@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 
+// 'unsafe-eval' is only needed by the dev server (HMR) — never ship it to prod.
+const isDev = process.env.NODE_ENV !== "production";
+
 // Defense-in-depth security headers applied to every response.
 const SECURITY_HEADERS = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -29,12 +32,12 @@ const SECURITY_HEADERS = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' data: https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://*.supabase.co",
       "media-src 'self' blob:",
-      "connect-src 'self' https://nominatim.openstreetmap.org",
+      "connect-src 'self' https://nominatim.openstreetmap.org https://*.sentry.io",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
