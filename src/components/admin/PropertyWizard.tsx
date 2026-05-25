@@ -462,6 +462,11 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
 
       {/* 4. Schedule */}
       <Section number={4} title="Push / pull schedule">
+        <p className="mb-3 text-sm text-zinc-500">
+          Add a row for when each bin goes <strong>out</strong> and when it
+          comes <strong>back in</strong>, and set the time for each so
+          residents know exactly when.
+        </p>
         {schedule.length === 0 ? (
           <p className="text-sm text-zinc-500">
             No rows yet. Add one for each day a bin goes out or comes in.

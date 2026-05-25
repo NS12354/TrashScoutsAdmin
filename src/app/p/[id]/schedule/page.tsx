@@ -66,7 +66,7 @@ export default async function SchedulePage({
       <BrandHeader backHref={`/p/${id}`} />
       <div className="mb-4">
         <h1 className="text-xl font-semibold tracking-tight">
-          Service schedule
+          Service Schedule
         </h1>
         <p className="mt-1 text-sm capitalize text-zinc-500">{property.name}</p>
       </div>
@@ -119,12 +119,13 @@ export default async function SchedulePage({
                           </svg>
                         </span>
                         <div className="min-w-0 flex-1">
-                          <div className="text-[15px] font-semibold text-zinc-900">
-                            {isOut ? "Put bins out" : "Bring bins in"}
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="text-[15px] font-semibold text-zinc-900">
+                              {isOut ? "Put bins out" : "Bring bins in"}
+                            </span>
                             {g.timeWindow && (
-                              <span className="font-normal text-zinc-500">
-                                {" · by "}
-                                {g.timeWindow}
+                              <span className="shrink-0 text-sm font-semibold text-zinc-900">
+                                by {g.timeWindow}
                               </span>
                             )}
                           </div>
