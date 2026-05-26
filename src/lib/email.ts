@@ -1,10 +1,10 @@
-import { Resend } from "resend";
+import sgMail from "@sendgrid/mail";
 import { BRAND_NAME } from "./brand";
 
-const apiKey = process.env.RESEND_API_KEY;
-const FROM = process.env.EMAIL_FROM || `${BRAND_NAME} <onboarding@resend.dev>`;
+const apiKey = process.env.SENDGRID_API_KEY;
+const FROM = process.env.EMAIL_FROM || `${BRAND_NAME} <noreply@trashscouts.com>`;
 
-const client = apiKey ? new Resend(apiKey) : null;
+if (apiKey) sgMail.setApiKey(apiKey);
 
 export type EmailAttachment = {
   filename: string;
@@ -20,7 +20,35 @@ export type SendEmailInput = {
   attachments?: EmailAttachment[];
 };
 
-// Sends an email via Resend. With no RESEND_API_KEY, logs the message and
+// Parse an RFC5322 "Name <email>" (or bare email) into SendGrid's shape.
+function parseAddress(value: string): { email: string; name?: string } {
+  const m = value.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  const email = m?.[2]?.trim();
+  if (email) {
+    const name = m?.[1]?.trim();
+    return name ? { email, name } : { email };
+  }
+  return { email: value.trim() };
+}
+
+function mimeFromName(name: string): string {
+  const ext = name.split(".").pop()?.toLowerCase();
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  if (ext === "png") return "image/png";
+  if (ext === "webp") return "image/webp";
+  if (ext === "pdf") return "application/pdf";
+  return "application/octet-stream";
+}
+
+function sendgridError(err: unknown): string {
+  if (err && typeof err === "object" && "response" in err) {
+    const body = (err.response as { body?: unknown } | undefined)?.body;
+    if (body) return typeof body === "string" ? body : JSON.stringify(body);
+  }
+  return err instanceof Error ? err.message : "send failed";
+}
+
+// Sends an email via SendGrid. With no SENDGRID_API_KEY, logs the message and
 // returns a successful no-op so dev doesn't break and a missing secret in
 // prod doesn't crash a request path.
 export async function sendEmail(input: SendEmailInput): Promise<{
@@ -29,10 +57,10 @@ export async function sendEmail(input: SendEmailInput): Promise<{
   skipped?: boolean;
   error?: string;
 }> {
-  if (!client) {
+  if (!apiKey) {
     if (process.env.NODE_ENV !== "production") {
       console.warn(
-        "[email] RESEND_API_KEY not set — skipping send.",
+        "[email] SENDGRID_API_KEY not set — skipping send.",
         JSON.stringify({ to: input.to, subject: input.subject }),
       );
     }
@@ -40,29 +68,30 @@ export async function sendEmail(input: SendEmailInput): Promise<{
   }
 
   try {
-    const result = await client.emails.send({
-      from: FROM,
+    const [res] = await sgMail.send({
       to: input.to,
+      from: parseAddress(FROM),
       subject: input.subject,
       html: input.html,
-      text: input.text,
-      replyTo: input.replyTo,
-      attachments: input.attachments?.map((a) => ({
-        filename: a.filename,
-        content: a.content,
-      })),
+      // SendGrid wants a text part too; derive a plain fallback if absent.
+      text: input.text ?? input.html.replace(/<[^>]+>/g, " "),
+      ...(input.replyTo ? { replyTo: input.replyTo } : {}),
+      ...(input.attachments?.length
+        ? {
+            attachments: input.attachments.map((a) => ({
+              filename: a.filename,
+              content: a.content.toString("base64"),
+              type: mimeFromName(a.filename),
+              disposition: "attachment",
+            })),
+          }
+        : {}),
     });
-    if (result.error) {
-      console.error("[email] Resend rejected send:", result.error.message, {
-        to: input.to,
-        subject: input.subject,
-      });
-      return { ok: false, error: result.error.message };
-    }
-    return { ok: true, id: result.data?.id };
+    const id = res?.headers?.["x-message-id"] as string | undefined;
+    return { ok: true, id };
   } catch (err) {
-    const message = err instanceof Error ? err.message : "send failed";
-    console.error("[email] Send threw:", message, { to: input.to });
+    const message = sendgridError(err);
+    console.error("[email] SendGrid send failed:", message, { to: input.to });
     return { ok: false, error: message };
   }
 }
