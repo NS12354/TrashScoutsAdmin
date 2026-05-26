@@ -9,6 +9,7 @@ type Porter = {
   name: string;
   title: string | null;
   photoUrl: string | null;
+  email: string | null;
   propertyCount: number;
 };
 
@@ -20,6 +21,7 @@ export function PorterCard({ porter }: { porter: Porter }) {
 
   const [name, setName] = useState(porter.name);
   const [title, setTitle] = useState(porter.title ?? "");
+  const [email, setEmail] = useState(porter.email ?? "");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [removePhoto, setRemovePhoto] = useState(false);
 
@@ -28,6 +30,7 @@ export function PorterCard({ porter }: { porter: Porter }) {
     setError(null);
     setName(porter.name);
     setTitle(porter.title ?? "");
+    setEmail(porter.email ?? "");
     setPhotoFile(null);
     setRemovePhoto(false);
   }
@@ -53,6 +56,7 @@ export function PorterCard({ porter }: { porter: Porter }) {
       const body: Record<string, unknown> = {
         name: name.trim(),
         title: title.trim(),
+        email: email.trim(),
       };
       if (photoFile) {
         const url = await uploadPhoto(photoFile);
@@ -128,6 +132,9 @@ export function PorterCard({ porter }: { porter: Porter }) {
           {porter.title && (
             <div className="truncate text-sm capitalize text-zinc-500">{porter.title}</div>
           )}
+          {porter.email && (
+            <div className="truncate text-xs text-zinc-500">{porter.email}</div>
+          )}
           <div className="text-xs text-zinc-400">
             {porter.propertyCount} propert
             {porter.propertyCount === 1 ? "y" : "ies"}
@@ -183,6 +190,13 @@ export function PorterCard({ porter }: { porter: Porter }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Title (e.g. Field Supervisor)"
+            className="w-full input"
+          />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email (for issue notifications)"
             className="w-full input"
           />
           <input

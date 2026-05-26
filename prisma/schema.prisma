@@ -51,6 +51,10 @@ model Porter {
   name      String
   title     String? // e.g. "Field Supervisor since 2020"
   photoUrl  String?
+  // Optional contact email. When set, any issue reported at a property
+  // this porter is assigned to is forwarded to this address (in addition
+  // to the NOTIFICATION_EMAIL ops inbox).
+  email     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

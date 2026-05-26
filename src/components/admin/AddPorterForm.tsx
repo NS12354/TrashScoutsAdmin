@@ -7,6 +7,7 @@ export function AddPorterForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
+  const [email, setEmail] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +37,7 @@ export function AddPorterForm() {
       const r2 = await fetch("/api/admin/porters", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, title, photoUrl }),
+        body: JSON.stringify({ name, title, photoUrl, email }),
       });
       if (!r2.ok) {
         const j = await r2.json().catch(() => ({}));
@@ -44,6 +45,7 @@ export function AddPorterForm() {
       }
       setName("");
       setTitle("");
+      setEmail("");
       setPhoto(null);
       router.refresh();
     } catch (err) {
@@ -69,6 +71,13 @@ export function AddPorterForm() {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Title (e.g. Field Supervisor)"
+        className="w-full input"
+      />
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email (gets issue reports for their properties)"
         className="w-full input"
       />
       <input

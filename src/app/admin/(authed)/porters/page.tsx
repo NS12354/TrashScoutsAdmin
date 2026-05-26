@@ -33,6 +33,7 @@ export default async function PortersPage() {
                     name: p.name,
                     title: p.title,
                     photoUrl: p.photoUrl,
+                    email: p.email,
                     propertyCount: p.properties.length,
                   }}
                 />

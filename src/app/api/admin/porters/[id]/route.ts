@@ -4,10 +4,13 @@ import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 type UpdateBody = {
   name?: string;
   title?: string | null;
   photoUrl?: string | null;
+  email?: string | null;
 };
 
 export async function PATCH(
@@ -30,6 +33,13 @@ export async function PATCH(
   }
   if ("title" in body) data.title = body.title?.trim() || null;
   if ("photoUrl" in body) data.photoUrl = body.photoUrl || null;
+  if ("email" in body) {
+    const e = body.email?.trim().toLowerCase() || null;
+    if (e && !EMAIL_RE.test(e)) {
+      return NextResponse.json({ error: "Email isn't valid" }, { status: 400 });
+    }
+    data.email = e;
+  }
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ ok: true });
@@ -38,7 +48,13 @@ export async function PATCH(
   const porter = await prisma.porter.update({
     where: { id },
     data,
-    select: { id: true, name: true, title: true, photoUrl: true },
+    select: {
+      id: true,
+      name: true,
+      title: true,
+      photoUrl: true,
+      email: true,
+    },
   });
   return NextResponse.json({ porter });
 }

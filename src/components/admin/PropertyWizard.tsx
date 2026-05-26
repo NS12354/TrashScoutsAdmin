@@ -26,6 +26,7 @@ type Porter = {
   name: string;
   title: string | null;
   photoUrl: string | null;
+  email: string | null;
 };
 
 type ScheduleRow = {
@@ -76,6 +77,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
   const [addingPorter, setAddingPorter] = useState(false);
   const [newPorterName, setNewPorterName] = useState("");
   const [newPorterTitle, setNewPorterTitle] = useState("");
+  const [newPorterEmail, setNewPorterEmail] = useState("");
   const [newPorterPhoto, setNewPorterPhoto] = useState<File | null>(null);
 
   const [schedule, setSchedule] = useState<ScheduleRow[]>(
@@ -218,11 +220,13 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       body: JSON.stringify({
         name: newPorterName,
         title: newPorterTitle,
+        email: newPorterEmail,
         photoUrl,
       }),
     });
     if (!res.ok) {
-      setError("Couldn't add porter");
+      const j = await res.json().catch(() => ({}));
+      setError(j.error || "Couldn't add porter");
       return;
     }
     const { porter } = await res.json();
@@ -231,6 +235,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
     setAddingPorter(false);
     setNewPorterName("");
     setNewPorterTitle("");
+    setNewPorterEmail("");
     setNewPorterPhoto(null);
   }
 
@@ -375,6 +380,13 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
               value={newPorterTitle}
               onChange={(e) => setNewPorterTitle(e.target.value)}
               placeholder="Title (e.g. Field Supervisor)"
+              className="w-full input"
+            />
+            <input
+              type="email"
+              value={newPorterEmail}
+              onChange={(e) => setNewPorterEmail(e.target.value)}
+              placeholder="Email (for issue notifications)"
               className="w-full input"
             />
             <input
