@@ -19,6 +19,10 @@ export function AddPorterForm() {
       setError("Name is required");
       return;
     }
+    if (!email.trim()) {
+      setError("Email is required");
+      return;
+    }
     setBusy(true);
     try {
       let photoUrl: string | null = null;
@@ -75,6 +79,7 @@ export function AddPorterForm() {
       />
       <input
         type="email"
+        required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Email (gets issue reports for their properties)"

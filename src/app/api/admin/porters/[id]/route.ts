@@ -34,8 +34,11 @@ export async function PATCH(
   if ("title" in body) data.title = body.title?.trim() || null;
   if ("photoUrl" in body) data.photoUrl = body.photoUrl || null;
   if ("email" in body) {
-    const e = body.email?.trim().toLowerCase() || null;
-    if (e && !EMAIL_RE.test(e)) {
+    const e = body.email?.trim().toLowerCase() || "";
+    if (!e) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+    if (!EMAIL_RE.test(e)) {
       return NextResponse.json({ error: "Email isn't valid" }, { status: 400 });
     }
     data.email = e;

@@ -210,6 +210,10 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
 
   async function savePorter() {
     if (!newPorterName.trim()) return;
+    if (!newPorterEmail.trim()) {
+      setError("Porter email is required");
+      return;
+    }
     let photoUrl: string | null = null;
     if (newPorterPhoto) {
       photoUrl = await uploadFile(newPorterPhoto, "porters");
@@ -384,6 +388,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
             />
             <input
               type="email"
+              required
               value={newPorterEmail}
               onChange={(e) => setNewPorterEmail(e.target.value)}
               placeholder="Email (for issue notifications)"
@@ -399,7 +404,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
               <button
                 type="button"
                 onClick={savePorter}
-                disabled={!newPorterName.trim()}
+                disabled={!newPorterName.trim() || !newPorterEmail.trim()}
                 className="btn-primary"
               >
                 Save porter

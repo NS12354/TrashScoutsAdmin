@@ -51,6 +51,10 @@ export function PorterCard({ porter }: { porter: Porter }) {
       setError("Name is required");
       return;
     }
+    if (!email.trim()) {
+      setError("Email is required");
+      return;
+    }
     setBusy(true);
     try {
       const body: Record<string, unknown> = {
@@ -194,6 +198,7 @@ export function PorterCard({ porter }: { porter: Porter }) {
           />
           <input
             type="email"
+            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email (for issue notifications)"

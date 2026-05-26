@@ -31,8 +31,11 @@ export async function POST(req: NextRequest) {
   if (!name?.trim()) {
     return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
-  const trimmedEmail = email?.trim().toLowerCase() || null;
-  if (trimmedEmail && !EMAIL_RE.test(trimmedEmail)) {
+  const trimmedEmail = email?.trim().toLowerCase() || "";
+  if (!trimmedEmail) {
+    return NextResponse.json({ error: "Email is required" }, { status: 400 });
+  }
+  if (!EMAIL_RE.test(trimmedEmail)) {
     return NextResponse.json({ error: "Email isn't valid" }, { status: 400 });
   }
   const porter = await prisma.porter.create({
