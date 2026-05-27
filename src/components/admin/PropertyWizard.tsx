@@ -298,7 +298,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
   return (
     <div className="space-y-6">
       {/* 1. Name + Address */}
-      <Section number={1} title="Building name + address">
+      <Section number={1} title="Building Name + Address">
         <Field label="Name (shown to residents)">
           <input
             value={name}
@@ -347,7 +347,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       </Section>
 
       {/* 2. Trash Scout */}
-      <Section number={2} title="Trash Scout assigned">
+      <Section number={2} title="Trash Scout Assigned">
         {!addingPorter ? (
           <div className="flex flex-wrap items-center gap-2">
             <select
@@ -355,7 +355,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
               onChange={(e) => setPorterId(e.target.value)}
               className="flex-1 input"
             >
-              <option value="">— No porter assigned —</option>
+              <option value="">— No Porter Assigned —</option>
               {porters.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -368,7 +368,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
               onClick={() => setAddingPorter(true)}
               className="btn-secondary"
             >
-              + Add new porter
+              + Add New Porter
             </button>
           </div>
         ) : (
@@ -422,7 +422,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       </Section>
 
       {/* 3. Setup photos */}
-      <Section number={3} title="Setup photos">
+      <Section number={3} title="Setup Photos">
         <input
           type="file"
           accept="image/*"
@@ -478,7 +478,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       </Section>
 
       {/* 4. Schedule */}
-      <Section number={4} title="Push / pull schedule">
+      <Section number={4} title="Push / Pull Schedule">
         <p className="mb-3 text-sm text-zinc-500">
           Add a row for when each bin goes <strong>out</strong> and when it
           comes <strong>back in</strong>, and set the time for each so
@@ -549,8 +549,8 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
                         }
                         className="rounded-md border border-zinc-300 bg-white px-2 py-1"
                       >
-                        <option value="PULL_OUT">Pull out</option>
-                        <option value="RETURN">Return</option>
+                        <option value="PULL_OUT">Pull Out</option>
+                        <option value="RETURN">Pull In</option>
                       </select>
                     </td>
                     <td className="px-2 py-1">
@@ -561,7 +561,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
                         }
                         className="w-28 rounded-md border border-zinc-300 bg-white px-2 py-1"
                       >
-                        <option value="">— time —</option>
+                        <option value="">— Time —</option>
                         {TIME_OPTIONS.map((t) => (
                           <option key={t} value={t}>
                             {t}
@@ -596,7 +596,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       {/* 5. HHW instructions */}
       <Section
         number={5}
-        title="Property-specific Household Hazardous Waste instructions (optional)"
+        title="Property-Specific Household Hazardous Waste Instructions (Optional)"
       >
         <textarea
           rows={4}

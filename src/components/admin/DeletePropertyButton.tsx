@@ -39,7 +39,7 @@ export function DeletePropertyButton({
 
   return (
     <div className="mt-8 rounded-2xl border border-red-200 bg-red-50/40 p-5">
-      <h2 className="text-sm font-semibold text-red-800">Danger zone</h2>
+      <h2 className="text-sm font-semibold text-red-800">Danger Zone</h2>
       <p className="mt-1 text-sm text-red-700">
         Removing a property is permanent. Any QR code already printed will lead
         to a “not found” page.
