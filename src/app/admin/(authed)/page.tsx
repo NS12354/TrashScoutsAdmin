@@ -66,7 +66,7 @@ export default async function AdminHome({
         <Stat label="Properties" value={totalProperties} href="/admin" />
         <Stat label="Porters" value={porterCount} href="/admin/porters" />
         <Stat
-          label="Open issues"
+          label="Open Issues"
           value={openIssues}
           href="/admin/issues?status=OPEN"
         />
