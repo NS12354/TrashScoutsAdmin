@@ -56,10 +56,10 @@ export function ReportsFilters({
         label="Status"
         value={current.status}
         onChange={(v) => setParam("status", v)}
-        allLabel="Any status"
+        allLabel="Any Status"
         options={[
           { value: "OPEN", label: "Open" },
-          { value: "IN_PROGRESS", label: "In progress" },
+          { value: "IN_PROGRESS", label: "In Progress" },
           { value: "RESOLVED", label: "Resolved" },
         ]}
       />
@@ -67,21 +67,21 @@ export function ReportsFilters({
         label="Property"
         value={current.property}
         onChange={(v) => setParam("property", v)}
-        allLabel="All properties"
+        allLabel="All Properties"
         options={properties}
       />
       <FilterSelect
         label="Porter"
         value={current.porter}
         onChange={(v) => setParam("porter", v)}
-        allLabel="All porters"
+        allLabel="All Porters"
         options={porters}
       />
       <FilterSelect
-        label="Type of issue"
+        label="Type of Issue"
         value={current.category}
         onChange={(v) => setParam("category", v)}
-        allLabel="All types"
+        allLabel="All Types"
         options={categories}
       />
     </aside>

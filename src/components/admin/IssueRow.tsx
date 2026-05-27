@@ -63,7 +63,7 @@ export function IssueRow({
           className={`rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm ${pending ? "opacity-60" : ""}`}
         >
           <option value="OPEN">Open</option>
-          <option value="IN_PROGRESS">In progress</option>
+          <option value="IN_PROGRESS">In Progress</option>
           <option value="RESOLVED">Resolved</option>
         </select>
       </div>
