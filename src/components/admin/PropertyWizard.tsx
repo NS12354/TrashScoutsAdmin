@@ -631,7 +631,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
             ? "Saving…"
             : mode === "new"
               ? "✓ Generate QR Code"
-              : "✓ Save & view QR"}
+              : "✓ Save & View QR"}
         </button>
       </div>
     </div>
