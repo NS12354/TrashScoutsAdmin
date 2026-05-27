@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { escapeHtml, sendEmail } from "@/lib/email";
 import { issueCategoryLabel } from "@/lib/format";
-import { BRAND_NAME, SITE_URL } from "@/lib/brand";
+import { BRAND_NAME } from "@/lib/brand";
 
 export const runtime = "nodejs";
 
@@ -99,9 +99,6 @@ function renderResidentResolved(args: {
         If the problem isn't fully fixed, just scan the QR code in your trash
         room and submit a new report.
       </p>
-    </td></tr>
-    <tr><td style="padding:14px 24px;border-top:1px solid #f1f1f0;font-size:12px;color:#71717a">
-      Sent by ${escapeHtml(BRAND_NAME)} · ${escapeHtml(SITE_URL)}
     </td></tr>
   </table>
 </body></html>`;
