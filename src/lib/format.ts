@@ -28,11 +28,11 @@ export const ACTION_LABEL: Record<string, string> = {
 };
 
 export const ISSUE_CATEGORIES: Array<{ value: string; label: string }> = [
-  { value: "BROKEN_BIN", label: "Broken bin" },
-  { value: "BULKY_ITEM", label: "Bulky item" },
+  { value: "BROKEN_BIN", label: "Broken Bin" },
+  { value: "BULKY_ITEM", label: "Bulky Item" },
   { value: "ODOR", label: "Odor" },
-  { value: "OVERFLOW", label: "Overflow / overflowing bins" },
-  { value: "CHUTE_CLOG", label: "Chute clogged" },
+  { value: "OVERFLOW", label: "Overflow / Overflowing Bins" },
+  { value: "CHUTE_CLOG", label: "Chute Clogged" },
   { value: "OTHER", label: "Other" },
 ];
 

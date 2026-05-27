@@ -140,8 +140,8 @@ export default async function AdminHome({
                 }`}
               >
                 {p._count.issues > 0
-                  ? `View ${p._count.issues} open report${p._count.issues === 1 ? "" : "s"}`
-                  : "View reports"}
+                  ? `View ${p._count.issues} Open Report${p._count.issues === 1 ? "" : "s"}`
+                  : "View Reports"}
               </Link>
               <Link
                 href={`/admin/properties/${p.id}/qr`}

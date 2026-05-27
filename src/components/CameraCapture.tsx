@@ -175,7 +175,7 @@ export function CameraCapture({
               type="button"
               onClick={capture}
               disabled={!ready}
-              aria-label="Take photo"
+              aria-label="Take Photo"
               className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-lg ring-4 ring-white/30 transition active:scale-95 disabled:cursor-wait disabled:opacity-50"
             >
               <span className="block h-12 w-12 rounded-full bg-white ring-2 ring-zinc-300" />

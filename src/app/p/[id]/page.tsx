@@ -58,7 +58,7 @@ export default async function PropertyHome({
       <h1 className="mt-2 text-2xl font-semibold tracking-tight">
         Welcome,{" "}
         <span className="capitalize text-brand-dark">{property.name}</span>{" "}
-        resident
+        Resident
       </h1>
       <p className="mt-1 text-sm capitalize text-zinc-500">{property.address}</p>
 

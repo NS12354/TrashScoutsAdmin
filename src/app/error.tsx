@@ -61,7 +61,7 @@ export default function GlobalError({
           href="/"
           className="rounded-xl bg-white px-4 py-3 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
         >
-          Back to home
+          Back to Home
         </Link>
       </div>
     </main>

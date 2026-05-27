@@ -19,7 +19,7 @@ export default async function ReportPage({
       <BrandHeader backHref={`/p/${id}`} />
       <div className="mb-4">
         <h1 className="text-xl font-semibold tracking-tight">
-          Report an issue
+          Report an Issue
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
           {property.name} — no account needed.

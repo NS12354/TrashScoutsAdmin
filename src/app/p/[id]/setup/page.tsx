@@ -24,7 +24,7 @@ export default async function SetupPhotosPage({
     <>
       <BrandHeader backHref={`/p/${id}`} />
       <div className="mb-4">
-        <h1 className="text-xl font-semibold tracking-tight">Setup photos</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Setup Photos</h1>
         <p className="mt-1 text-sm text-zinc-500">
           {property.name} — how the trash room should look.
         </p>

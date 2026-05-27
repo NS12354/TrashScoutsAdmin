@@ -46,13 +46,13 @@ export default async function SuccessPage({
           href={`/p/${id}`}
           className="rounded-xl bg-brand px-4 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-brand-dark"
         >
-          Back to home
+          Back to Home
         </Link>
         <Link
           href={`/p/${id}/hhw`}
           className="rounded-xl bg-white px-4 py-3 text-center text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
         >
-          Read the Household Hazardous Waste guide
+          Read the Household Hazardous Waste Guide
         </Link>
       </div>
     </>

@@ -29,7 +29,7 @@ export default function NotFound() {
         href="/"
         className="mt-6 rounded-xl bg-brand px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-brand-dark"
       >
-        Back to home
+        Back to Home
       </Link>
     </main>
   );

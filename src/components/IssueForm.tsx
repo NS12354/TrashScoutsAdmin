@@ -116,7 +116,7 @@ export function IssueForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <Field label="Issue category">
+      <Field label="Issue Category">
         <select
           required
           name="category"
@@ -134,7 +134,7 @@ export function IssueForm({
         </select>
       </Field>
 
-      <Field label="Issue description" optional>
+      <Field label="Issue Description" optional>
         <textarea
           name="description"
           rows={4}
@@ -146,7 +146,7 @@ export function IssueForm({
       <div>
         <div className="mb-1 flex items-baseline justify-between">
           <span className="text-sm font-medium text-zinc-700">
-            Attach photos <span className="text-zinc-500">(up to 3)</span>
+            Attach Photos <span className="text-zinc-500">(up to 3)</span>
           </span>
           <span
             className={`text-xs font-semibold tabular-nums ${
@@ -192,7 +192,7 @@ export function IssueForm({
             className="flex items-center justify-center gap-2 rounded-lg bg-white px-3 py-3 text-sm font-medium text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50 active:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <CameraIcon />
-            <span>Take photo</span>
+            <span>Take Photo</span>
           </button>
 
           {/* Upload uses a directly-visible native input — most reliable
@@ -213,7 +213,7 @@ export function IssueForm({
         </div>
       </div>
 
-      <Field label="Your name">
+      <Field label="Your Name">
         <input
           type="text"
           name="reporterName"
