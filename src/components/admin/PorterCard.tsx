@@ -187,7 +187,7 @@ export function PorterCard({ porter }: { porter: Porter }) {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Full name"
+            placeholder="Full Name"
             className="w-full input"
           />
           <input

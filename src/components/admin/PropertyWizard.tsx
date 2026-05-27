@@ -377,7 +377,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
             <input
               value={newPorterName}
               onChange={(e) => setNewPorterName(e.target.value)}
-              placeholder="Full name"
+              placeholder="Full Name"
               className="w-full input"
             />
             <input

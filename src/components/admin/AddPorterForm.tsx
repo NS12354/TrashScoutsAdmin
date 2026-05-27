@@ -64,11 +64,11 @@ export function AddPorterForm() {
       onSubmit={submit}
       className="space-y-3 rounded-2xl border border-zinc-200 bg-white p-5"
     >
-      <div className="font-medium">Add a porter</div>
+      <div className="font-medium">Add a Porter</div>
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="Full name"
+        placeholder="Full Name"
         className="w-full input"
       />
       <input
@@ -101,7 +101,7 @@ export function AddPorterForm() {
         disabled={busy}
         className="w-full btn-primary"
       >
-        {busy ? "Saving…" : "Add porter"}
+        {busy ? "Saving…" : "Add Porter"}
       </button>
     </form>
   );
