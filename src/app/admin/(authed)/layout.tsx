@@ -28,6 +28,7 @@ export default async function AdminLayout({
             <NavLink href="/admin">Overview</NavLink>
             <NavLink href="/admin/porters">Porters</NavLink>
             <NavLink href="/admin/issues">Reports</NavLink>
+            <NavLink href="/admin/diversion">Diversion</NavLink>
             {canManageAdmins && <NavLink href="/admin/admins">Admins</NavLink>}
           </nav>
           <div className="flex items-center gap-2">
@@ -46,6 +47,7 @@ export default async function AdminLayout({
           <NavLink href="/admin">Overview</NavLink>
           <NavLink href="/admin/porters">Porters</NavLink>
           <NavLink href="/admin/issues">Reports</NavLink>
+          <NavLink href="/admin/diversion">Diversion</NavLink>
           {canManageAdmins && <NavLink href="/admin/admins">Admins</NavLink>}
         </nav>
       </header>
