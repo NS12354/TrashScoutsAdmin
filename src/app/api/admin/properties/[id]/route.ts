@@ -9,6 +9,7 @@ type ScheduleRowIn = {
   binType: string;
   action: string;
   binCount?: number | null;
+  binSize?: number | null;
   timeWindow?: string | null;
 };
 type PhotoIn = {
@@ -69,6 +70,10 @@ export async function PATCH(
           binCount:
             typeof s.binCount === "number" && Number.isFinite(s.binCount)
               ? s.binCount
+              : null,
+          binSize:
+            typeof s.binSize === "number" && Number.isFinite(s.binSize)
+              ? s.binSize
               : null,
           timeWindow: s.timeWindow || null,
         })),

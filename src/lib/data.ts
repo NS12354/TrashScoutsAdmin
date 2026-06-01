@@ -28,6 +28,7 @@ type PrismaProperty = {
     binType: string;
     action: string;
     binCount: number | null;
+    binSize: number | null;
     timeWindow: string | null;
   }>;
   setupPhotos: Array<{
@@ -59,6 +60,7 @@ function toProperty(p: PrismaProperty): Property {
         binType: s.binType as ScheduleItem["binType"],
         action: s.action as ScheduleItem["action"],
         binCount: s.binCount ?? undefined,
+        binSize: s.binSize ?? undefined,
         timeWindow: s.timeWindow ?? undefined,
       }),
     ),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArcElement,
   BarElement,
@@ -14,7 +15,10 @@ import {
 } from "chart.js";
 import { Bar, Doughnut } from "react-chartjs-2";
 import { BRAND_LOGO, BRAND_NAME } from "@/lib/brand";
+import { autofillFromSchedule } from "@/lib/diversion";
 import styles from "./DiversionReportBuilder.module.css";
+
+const MODE_PREF_PREFIX = "ts.diversion.mode.";
 
 ChartJS.register(
   ArcElement,
@@ -86,10 +90,31 @@ export type PropertyOption = {
   id: string;
   name: string;
   address: string;
+  schedule: Array<{
+    binType: string;
+    action: string;
+    binCount: number | null;
+    binSize: number | null;
+  }>;
+};
+
+export type SavedReport = {
+  id: string;
+  propertyId: string;
+  propertyName: string;
+  clientName: string;
+  period: string;
+  propType: string;
+  mode: string;
+  divRate: number;
+  totalWeekly: number;
+  createdByName: string | null;
+  createdAt: string;
 };
 
 type Props = {
   properties: PropertyOption[];
+  savedReports: SavedReport[];
 };
 
 let nextRowId = 0;
@@ -117,18 +142,23 @@ function rowWeeklyTons(r: Row): number | null {
   return null;
 }
 
-export function DiversionReportBuilder({ properties }: Props) {
+function defaultRows(): Row[] {
+  return [
+    newRow("Landfill"),
+    newRow("Mixed Recycling"),
+    newRow("Organics"),
+  ];
+}
+
+export function DiversionReportBuilder({ properties, savedReports }: Props) {
+  const router = useRouter();
   const [clientName, setClientName] = useState("");
   const [address, setAddress] = useState("");
   const [period, setPeriod] = useState("");
   const [propType, setPropType] = useState(PROPERTY_TYPES[0]!);
   const [propertyId, setPropertyId] = useState("");
   const [mode, setMode] = useState<Mode>("volume");
-  const [rows, setRows] = useState<Row[]>(() => [
-    newRow("Landfill"),
-    newRow("Mixed Recycling"),
-    newRow("Organics"),
-  ]);
+  const [rows, setRows] = useState<Row[]>(defaultRows);
   const [generated, setGenerated] = useState<{
     clientName: string;
     address: string;
@@ -137,7 +167,38 @@ export function DiversionReportBuilder({ properties }: Props) {
     mode: Mode;
     rows: Row[];
   } | null>(null);
+  const [reportSavedId, setReportSavedId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
+
+  // Persist last-used mode per property so admins don't have to flip the
+  // toggle every visit. Keyed by property; clearing the property uses
+  // "default".
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const key = MODE_PREF_PREFIX + (propertyId || "default");
+    try {
+      const stored = window.localStorage.getItem(key);
+      if (stored === "volume" || stored === "weight") setMode(stored);
+    } catch {
+      /* ignore */
+    }
+  }, [propertyId]);
+
+  function onModeChange(next: Mode) {
+    setMode(next);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(
+          MODE_PREF_PREFIX + (propertyId || "default"),
+          next,
+        );
+      } catch {
+        /* ignore */
+      }
+    }
+  }
 
   function onPropertyChange(id: string) {
     // Switching properties (or back to "None") is treated as starting a
@@ -146,15 +207,29 @@ export function DiversionReportBuilder({ properties }: Props) {
     // property into the new one.
     setPropertyId(id);
     setPeriod("");
-    setRows([
-      newRow("Landfill"),
-      newRow("Mixed Recycling"),
-      newRow("Organics"),
-    ]);
     setGenerated(null);
+    setReportSavedId(null);
+    setSaveError(null);
     const p = id ? properties.find((x) => x.id === id) : null;
     setClientName(p?.name ?? "");
     setAddress(p?.address ?? "");
+    // Prefill rows from the property's Service Schedule if it has bin
+    // sizes set. Otherwise fall back to the 3 starter rows so the table
+    // is never empty.
+    if (p) {
+      const autofilled = autofillFromSchedule(p.schedule).map((a) => ({
+        id: nextRowId++,
+        stream: a.stream,
+        bins: a.bins,
+        sizeVal: a.sizeVal,
+        pickups: a.pickups,
+        tons: "",
+        lbs: "",
+      }));
+      setRows(autofilled.length > 0 ? autofilled : defaultRows());
+    } else {
+      setRows(defaultRows());
+    }
   }
 
   function addRow() {
@@ -196,9 +271,127 @@ export function DiversionReportBuilder({ properties }: Props) {
       mode,
       rows: rows.map((r) => ({ ...r })),
     });
+    setReportSavedId(null);
+    setSaveError(null);
     setTimeout(() => {
       resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
+  }
+
+  async function saveReport() {
+    if (!generated) return;
+    if (!propertyId) {
+      setSaveError(
+        "Pick a property from the dropdown before saving — saved reports are tied to a property.",
+      );
+      return;
+    }
+    setSaving(true);
+    setSaveError(null);
+    // Recompute totals from the generated snapshot so the saved row's
+    // divRate matches exactly what the admin printed.
+    const isWt = generated.mode === "weight";
+    let total = 0;
+    let diverted = 0;
+    for (const r of generated.rows) {
+      const val = isWt ? rowWeeklyTons(r) ?? 0 : rowWeeklyVolume(r);
+      total += val;
+      if (DIVERTED.has(r.stream)) diverted += val;
+    }
+    const divRate = total > 0 ? (diverted / total) * 100 : 0;
+
+    try {
+      const res = await fetch("/api/admin/diversion-reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          propertyId,
+          clientName: generated.clientName,
+          address: generated.address,
+          period: generated.period,
+          propType: generated.propType,
+          mode: generated.mode,
+          rows: generated.rows,
+          totalWeekly: total,
+          divertedWeekly: diverted,
+          divRate,
+        }),
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(j.error || `Save failed (${res.status})`);
+      }
+      const data = (await res.json()) as { id: string };
+      setReportSavedId(data.id);
+      router.refresh();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function reopen(reportId: string) {
+    try {
+      const res = await fetch(`/api/admin/diversion-reports/${reportId}`);
+      if (!res.ok) throw new Error(`Couldn't load report (${res.status})`);
+      const r = (await res.json()) as {
+        id: string;
+        propertyId: string;
+        clientName: string;
+        address: string;
+        period: string;
+        propType: string;
+        mode: string;
+        rows: Row[];
+      };
+      setPropertyId(r.propertyId);
+      setClientName(r.clientName);
+      setAddress(r.address);
+      setPeriod(r.period);
+      setPropType(r.propType);
+      const reopenedMode: Mode = r.mode === "weight" ? "weight" : "volume";
+      setMode(reopenedMode);
+      // Reassign row ids so React keys stay stable + don't collide
+      // with anything currently in the form.
+      const reopenedRows: Row[] = r.rows.map((row) => ({
+        ...row,
+        id: nextRowId++,
+      }));
+      setRows(reopenedRows);
+      setGenerated({
+        clientName: r.clientName,
+        address: r.address,
+        period: r.period,
+        propType: r.propType,
+        mode: reopenedMode,
+        rows: reopenedRows,
+      });
+      setReportSavedId(r.id);
+      setSaveError(null);
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 50);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Couldn't reopen report");
+    }
+  }
+
+  async function deleteSaved(reportId: string) {
+    if (!confirm("Delete this saved report? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/admin/diversion-reports/${reportId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(`Delete failed (${res.status})`);
+      if (reportSavedId === reportId) setReportSavedId(null);
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Delete failed");
+    }
   }
 
   return (
@@ -210,6 +403,14 @@ export function DiversionReportBuilder({ properties }: Props) {
           <div className={styles.headerReportTitle}>Report Builder</div>
         </div>
       </div>
+
+      {savedReports.length > 0 && (
+        <SavedReportsList
+          reports={savedReports}
+          onReopen={reopen}
+          onDelete={deleteSaved}
+        />
+      )}
 
       {/* ─ Property info ─────────────────────────────────────────────── */}
       <div className={`${styles.card} ${styles.noPrint}`}>
@@ -285,14 +486,14 @@ export function DiversionReportBuilder({ properties }: Props) {
           <button
             type="button"
             className={`${styles.modeBtn} ${mode === "volume" ? styles.active : ""}`}
-            onClick={() => setMode("volume")}
+            onClick={() => onModeChange("volume")}
           >
             By volume (bin sizes &amp; pickups)
           </button>
           <button
             type="button"
             className={`${styles.modeBtn} ${mode === "weight" ? styles.active : ""}`}
-            onClick={() => setMode("weight")}
+            onClick={() => onModeChange("weight")}
           >
             By weight (actual scale weights)
           </button>
@@ -493,9 +694,110 @@ export function DiversionReportBuilder({ properties }: Props) {
       {generated && (
         <div ref={resultsRef} style={{ marginTop: "1rem" }}>
           <hr className={`${styles.divider} ${styles.noPrint}`} />
+          <div className={`${styles.card} ${styles.noPrint}`}>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                type="button"
+                className={styles.generateBtn}
+                style={{ width: "auto", padding: "10px 18px" }}
+                onClick={saveReport}
+                disabled={saving || !!reportSavedId}
+              >
+                {reportSavedId
+                  ? "✓ Saved"
+                  : saving
+                    ? "Saving…"
+                    : "Save report"}
+              </button>
+              {!propertyId && (
+                <span style={{ fontSize: 12, color: "var(--text-2)" }}>
+                  Pick a property to enable save.
+                </span>
+              )}
+              {saveError && (
+                <span style={{ fontSize: 12, color: "#b91c1c" }}>
+                  {saveError}
+                </span>
+              )}
+            </div>
+          </div>
           <ReportOutput data={generated} />
         </div>
       )}
+    </div>
+  );
+}
+
+function SavedReportsList({
+  reports,
+  onReopen,
+  onDelete,
+}: {
+  reports: SavedReport[];
+  onReopen: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className={`${styles.card} ${styles.noPrint}`}>
+      <div className={styles.sectionTitle}>Saved reports</div>
+      <div className={styles.streamTableWrap}>
+        <table className={styles.streamTable}>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Period</th>
+              <th>Mode</th>
+              <th>Diversion</th>
+              <th>Saved</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {reports.map((r) => (
+              <tr key={r.id}>
+                <td>{r.propertyName}</td>
+                <td>{r.period}</td>
+                <td style={{ textTransform: "capitalize" }}>{r.mode}</td>
+                <td>{r.divRate.toFixed(1)}%</td>
+                <td>
+                  {new Date(r.createdAt).toLocaleDateString()}{" "}
+                  {r.createdByName && (
+                    <span style={{ color: "var(--text-3)" }}>
+                      · {r.createdByName}
+                    </span>
+                  )}
+                </td>
+                <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                  <button
+                    type="button"
+                    className={styles.printBtn}
+                    style={{ padding: "4px 12px", fontSize: 12 }}
+                    onClick={() => onReopen(r.id)}
+                  >
+                    Reopen
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.removeBtn}
+                    style={{ marginLeft: 4 }}
+                    onClick={() => onDelete(r.id)}
+                    aria-label="Delete report"
+                  >
+                    ×
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -597,8 +899,8 @@ function ReportOutput({
             {clientName} — Waste Diversion Report
           </div>
           <div className={styles.reportMeta}>
-            {address && <>📍 {address} &nbsp;·&nbsp; </>}📅 {period} &nbsp;·&nbsp;
-            🏢 {propType} &nbsp;·&nbsp; 📏 Measured by{" "}
+            {address && <>{address} &nbsp;·&nbsp; </>}
+            {period} &nbsp;·&nbsp; {propType} &nbsp;·&nbsp; Measured by{" "}
             {isWt ? "weight (actual scale data)" : "volume"}
           </div>
         </div>

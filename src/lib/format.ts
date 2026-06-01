@@ -32,6 +32,33 @@ export const ACTION_LABEL: Record<string, string> = {
   SERVICE_DAY: "Service day",
 };
 
+// Bin sizes (cubic yards per pickup) the admin can pick from when
+// building a property's Service Schedule. The cu yd value feeds the
+// Diversion Report's volume math. Cart sizes are converted from
+// gallons at the standard waste-industry rate of 202 gal/cu yd.
+export const BIN_SIZE_OPTIONS: Array<{ label: string; cuyd: number }> = [
+  { label: "20 Gallon Cart", cuyd: 20 / 202 },
+  { label: "32 Gallon Cart", cuyd: 32 / 202 },
+  { label: "35 Gallon Cart", cuyd: 35 / 202 },
+  { label: "64 Gallon Cart", cuyd: 64 / 202 },
+  { label: "96 Gallon Cart", cuyd: 96 / 202 },
+  { label: "1 Cubic Yard", cuyd: 1 },
+  { label: "1.5 Cubic Yard", cuyd: 1.5 },
+  { label: "2 Cubic Yard", cuyd: 2 },
+  { label: "3 Cubic Yard", cuyd: 3 },
+  { label: "4 Cubic Yard", cuyd: 4 },
+  { label: "6 Cubic Yard", cuyd: 6 },
+  { label: "7 Cubic Yard", cuyd: 7 },
+  { label: "8 Cubic Yard", cuyd: 8 },
+];
+
+export function binSizeLabel(cuyd: number | null | undefined) {
+  if (cuyd == null) return null;
+  return (
+    BIN_SIZE_OPTIONS.find((s) => Math.abs(s.cuyd - cuyd) < 0.0001)?.label ?? null
+  );
+}
+
 // Counties we have agency recycling info for. The value is what's stored
 // on Property.county; the label is shown in the admin dropdown. Adding a
 // new county is two lines here + one entry in COUNTY_AGENCY below.

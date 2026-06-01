@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import {
   ACTION_LABEL,
   BIN_LABEL,
+  BIN_SIZE_OPTIONS,
   COUNTY_OPTIONS,
   DAY_NAMES,
 } from "@/lib/format";
@@ -49,6 +50,7 @@ type ScheduleRow = {
   binType: (typeof BIN_TYPES)[number];
   action: (typeof ACTIONS)[number];
   binCount: number | null;
+  binSize: number | null;
   timeWindow: string;
 };
 
@@ -109,6 +111,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       binType: s.binType as (typeof BIN_TYPES)[number],
       action: s.action as (typeof ACTIONS)[number],
       binCount: s.binCount ?? null,
+      binSize: s.binSize ?? null,
       timeWindow: s.timeWindow ?? "",
     })),
   );
@@ -263,6 +266,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
         binType: "TRASH",
         action: "PULL_OUT",
         binCount: null,
+        binSize: null,
         timeWindow: "",
       },
     ]);
@@ -342,6 +346,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
           binType: s.binType,
           action: s.action,
           binCount: s.binCount,
+          binSize: s.binSize,
           timeWindow: s.timeWindow.trim() || null,
         })),
         setupPhotos: photos.map((p) => ({
@@ -639,6 +644,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
                   <th className="px-2 pb-2">Day</th>
                   <th className="px-2 pb-2">Bin</th>
                   <th className="px-2 pb-2"># Bins</th>
+                  <th className="px-2 pb-2">Bin Size</th>
                   <th className="px-2 pb-2">Action</th>
                   <th className="px-2 pb-2">Time</th>
                   <th className="px-2 pb-2"></th>
@@ -698,6 +704,26 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
                         {BIN_COUNT_OPTIONS.map((n) => (
                           <option key={n} value={n}>
                             {n}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-2 py-1">
+                      <select
+                        value={r.binSize ?? ""}
+                        onChange={(e) =>
+                          updateScheduleRow(r.key, {
+                            binSize: e.target.value
+                              ? Number(e.target.value)
+                              : null,
+                          })
+                        }
+                        className="w-36 rounded-md border border-zinc-300 bg-white px-2 py-1"
+                      >
+                        <option value="">— Size —</option>
+                        {BIN_SIZE_OPTIONS.map((s) => (
+                          <option key={s.label} value={s.cuyd}>
+                            {s.label}
                           </option>
                         ))}
                       </select>

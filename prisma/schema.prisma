@@ -93,6 +93,7 @@ model Property {
   setupPhotos  SetupPhoto[]
   schedule     ScheduleItem[]
   issues       Issue[]
+  diversionReports DiversionReport[]
 }
 
 // ─── Setup photos (per property) ────────────────────────────────────
@@ -121,6 +122,10 @@ model ScheduleItem {
   binType    String // "TRASH" | "RECYCLING" | "ORGANICS" | "FIBER" | "BOTTLES_CANS" | "OTHER"
   action     String // "PULL_OUT" | "RETURN" | "SERVICE_DAY"
   binCount   Int?
+  // Bin size in cubic yards (e.g. 0.158 for a 32-gallon cart, 2 for a 2 cu
+  // yd dumpster). Drives the Diversion Report's automatic volume math —
+  // without it, that property's report falls back to manual entry.
+  binSize    Float?
   timeWindow String?
   notes      String?
   createdAt  DateTime @default(now())
@@ -147,6 +152,35 @@ model IssuePhoto {
   issueId String
   issue   Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
   url     String
+}
+
+// ─── Diversion reports (saved waste-diversion summaries) ────────────
+// Each row is one generated report. Admins build a report in the
+// /admin/diversion tool, save it, and can reopen it later. The waste-
+// stream `rows` array is opaque to the DB (Json) — its shape lives in
+// the builder component; storing it as JSON keeps the model flexible
+// while we iterate.
+model DiversionReport {
+  id             String   @id @default(cuid())
+  propertyId     String
+  property       Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  // Display name of the admin who saved it. Stored as a string rather
+  // than a User FK because we want it to survive admins being removed
+  // and because it's display-only — no relational queries depend on it.
+  createdByName  String?
+  clientName     String
+  address        String
+  period         String
+  propType       String
+  mode           String // "volume" | "weight"
+  rows           Json
+  totalWeekly    Float
+  divertedWeekly Float
+  divRate        Float
+  createdAt      DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([createdAt])
 }
 
 // ─── Shared guides (waste + HHW) ────────────────────────────────────

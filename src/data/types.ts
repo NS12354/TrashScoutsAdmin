@@ -20,6 +20,7 @@ export type ScheduleItem = {
     | "OTHER";
   action: "PULL_OUT" | "RETURN" | "SERVICE_DAY";
   binCount?: number;
+  binSize?: number; // cu yd per pickup; see BIN_SIZE_OPTIONS in lib/format.ts
   timeWindow?: string; // e.g. "6pm - 9pm"
   notes?: string;
 };

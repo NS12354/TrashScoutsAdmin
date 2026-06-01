@@ -66,6 +66,7 @@ export default async function EditPropertyPage({
                 | "OTHER",
               action: s.action as "PULL_OUT" | "RETURN" | "SERVICE_DAY",
               binCount: s.binCount,
+              binSize: s.binSize,
               timeWindow: s.timeWindow ?? "",
             })),
             setupPhotos: property.setupPhotos.map((p) => ({
