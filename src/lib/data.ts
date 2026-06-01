@@ -26,6 +26,7 @@ type PrismaProperty = {
     dayOfWeek: number;
     binType: string;
     action: string;
+    binCount: number | null;
     timeWindow: string | null;
   }>;
   setupPhotos: Array<{
@@ -53,6 +54,7 @@ function toProperty(p: PrismaProperty): Property {
         dayOfWeek: s.dayOfWeek,
         binType: s.binType as ScheduleItem["binType"],
         action: s.action as ScheduleItem["action"],
+        binCount: s.binCount ?? undefined,
         timeWindow: s.timeWindow ?? undefined,
       }),
     ),

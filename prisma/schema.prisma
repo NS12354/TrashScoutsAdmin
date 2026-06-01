@@ -107,8 +107,9 @@ model ScheduleItem {
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   dayOfWeek  Int // 0 = Sunday … 6 = Saturday
-  binType    String // "TRASH" | "RECYCLING" | "ORGANICS" | "OTHER"
-  action     String // "PULL_OUT" | "RETURN"
+  binType    String // "TRASH" | "RECYCLING" | "ORGANICS" | "FIBER" | "BOTTLES_CANS" | "OTHER"
+  action     String // "PULL_OUT" | "RETURN" | "SERVICE_DAY"
+  binCount   Int?
   timeWindow String?
   notes      String?
   createdAt  DateTime @default(now())

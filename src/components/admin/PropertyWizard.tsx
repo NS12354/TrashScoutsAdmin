@@ -3,10 +3,18 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DAY_NAMES } from "@/lib/format";
+import { ACTION_LABEL, BIN_LABEL, DAY_NAMES } from "@/lib/format";
 
-const BIN_TYPES = ["TRASH", "RECYCLING", "ORGANICS", "OTHER"] as const;
-const ACTIONS = ["PULL_OUT", "RETURN"] as const;
+const BIN_TYPES = [
+  "TRASH",
+  "RECYCLING",
+  "ORGANICS",
+  "FIBER",
+  "BOTTLES_CANS",
+  "OTHER",
+] as const;
+const ACTIONS = ["PULL_OUT", "RETURN", "SERVICE_DAY"] as const;
+const BIN_COUNT_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 
 // Time-of-day options in 30-minute increments (12-hour labels).
 const TIME_OPTIONS: string[] = (() => {
@@ -34,6 +42,7 @@ type ScheduleRow = {
   dayOfWeek: number;
   binType: (typeof BIN_TYPES)[number];
   action: (typeof ACTIONS)[number];
+  binCount: number | null;
   timeWindow: string;
 };
 
@@ -90,6 +99,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       dayOfWeek: s.dayOfWeek,
       binType: s.binType as (typeof BIN_TYPES)[number],
       action: s.action as (typeof ACTIONS)[number],
+      binCount: s.binCount ?? null,
       timeWindow: s.timeWindow ?? "",
     })),
   );
@@ -197,6 +207,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
         dayOfWeek: 2,
         binType: "TRASH",
         action: "PULL_OUT",
+        binCount: null,
         timeWindow: "",
       },
     ]);
@@ -269,6 +280,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
           dayOfWeek: s.dayOfWeek,
           binType: s.binType,
           action: s.action,
+          binCount: s.binCount,
           timeWindow: s.timeWindow.trim() || null,
         })),
         setupPhotos: photos.map((p) => ({
@@ -506,15 +518,16 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       </Section>
 
       {/* 4. Schedule */}
-      <Section number={4} title="Push / Pull Schedule">
+      <Section number={4} title="Service Schedule">
         <p className="mb-3 text-sm text-zinc-500">
-          Add a row for when each bin goes <strong>out</strong> and when it
-          comes <strong>back in</strong>, and set the time for each so
-          residents know exactly when.
+          Add a row for each <strong>pull out</strong>, <strong>pull in</strong>, or{" "}
+          <strong>service day</strong>. Set the bin type, number of bins, and
+          time so residents know exactly what to expect.
         </p>
         {schedule.length === 0 ? (
           <p className="text-sm text-zinc-500">
-            No rows yet. Add one for each day a bin goes out or comes in.
+            No rows yet. Add one for each day a bin goes out, comes in, or
+            gets serviced.
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -523,6 +536,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
                 <tr className="text-left text-xs uppercase tracking-wide text-zinc-500">
                   <th className="px-2 pb-2">Day</th>
                   <th className="px-2 pb-2">Bin</th>
+                  <th className="px-2 pb-2"># Bins</th>
                   <th className="px-2 pb-2">Action</th>
                   <th className="px-2 pb-2">Time</th>
                   <th className="px-2 pb-2"></th>
@@ -561,7 +575,27 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
                       >
                         {BIN_TYPES.map((b) => (
                           <option key={b} value={b}>
-                            {b}
+                            {BIN_LABEL[b] ?? b}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-2 py-1">
+                      <select
+                        value={r.binCount ?? ""}
+                        onChange={(e) =>
+                          updateScheduleRow(r.key, {
+                            binCount: e.target.value
+                              ? Number(e.target.value)
+                              : null,
+                          })
+                        }
+                        className="w-20 rounded-md border border-zinc-300 bg-white px-2 py-1"
+                      >
+                        <option value="">—</option>
+                        {BIN_COUNT_OPTIONS.map((n) => (
+                          <option key={n} value={n}>
+                            {n}
                           </option>
                         ))}
                       </select>
@@ -579,6 +613,9 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
                       >
                         <option value="PULL_OUT">Pull Out</option>
                         <option value="RETURN">Pull In</option>
+                        <option value="SERVICE_DAY">
+                          {ACTION_LABEL.SERVICE_DAY}
+                        </option>
                       </select>
                     </td>
                     <td className="px-2 py-1">

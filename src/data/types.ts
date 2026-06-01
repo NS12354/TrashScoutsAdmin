@@ -11,8 +11,15 @@ export type Porter = {
 
 export type ScheduleItem = {
   dayOfWeek: number; // 0 Sun … 6 Sat
-  binType: "TRASH" | "RECYCLING" | "ORGANICS" | "OTHER";
-  action: "PULL_OUT" | "RETURN";
+  binType:
+    | "TRASH"
+    | "RECYCLING"
+    | "ORGANICS"
+    | "FIBER"
+    | "BOTTLES_CANS"
+    | "OTHER";
+  action: "PULL_OUT" | "RETURN" | "SERVICE_DAY";
+  binCount?: number;
   timeWindow?: string; // e.g. "6pm - 9pm"
   notes?: string;
 };

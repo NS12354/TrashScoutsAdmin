@@ -9,6 +9,7 @@ type ScheduleRowIn = {
   dayOfWeek: number;
   binType: string;
   action: string;
+  binCount?: number | null;
   timeWindow?: string | null;
 };
 type PhotoIn = { url: string; caption?: string | null };
@@ -66,6 +67,10 @@ export async function POST(req: NextRequest) {
               dayOfWeek: s.dayOfWeek,
               binType: s.binType,
               action: s.action,
+              binCount:
+                typeof s.binCount === "number" && Number.isFinite(s.binCount)
+                  ? s.binCount
+                  : null,
               timeWindow: s.timeWindow || null,
             })),
           }

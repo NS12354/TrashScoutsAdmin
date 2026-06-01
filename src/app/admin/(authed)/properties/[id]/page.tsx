@@ -56,8 +56,15 @@ export default async function EditPropertyPage({
             nightPorterId: property.nightPorterId,
             schedule: property.schedule.map((s) => ({
               dayOfWeek: s.dayOfWeek,
-              binType: s.binType as "TRASH" | "RECYCLING" | "ORGANICS" | "OTHER",
-              action: s.action as "PULL_OUT" | "RETURN",
+              binType: s.binType as
+                | "TRASH"
+                | "RECYCLING"
+                | "ORGANICS"
+                | "FIBER"
+                | "BOTTLES_CANS"
+                | "OTHER",
+              action: s.action as "PULL_OUT" | "RETURN" | "SERVICE_DAY",
+              binCount: s.binCount,
               timeWindow: s.timeWindow ?? "",
             })),
             setupPhotos: property.setupPhotos.map((p) => ({

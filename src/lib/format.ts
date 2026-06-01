@@ -12,6 +12,8 @@ export const BIN_LABEL: Record<string, string> = {
   TRASH: "Trash",
   RECYCLING: "Recycling",
   ORGANICS: "Organics",
+  FIBER: "Fiber / Cardboard",
+  BOTTLES_CANS: "Bottles and Cans",
   OTHER: "Other",
 };
 
@@ -19,12 +21,15 @@ export const BIN_COLOR: Record<string, string> = {
   TRASH: "bg-zinc-800 text-white",
   RECYCLING: "bg-blue-600 text-white",
   ORGANICS: "bg-green-700 text-white",
+  FIBER: "bg-amber-800 text-white",
+  BOTTLES_CANS: "bg-sky-600 text-white",
   OTHER: "bg-amber-600 text-white",
 };
 
 export const ACTION_LABEL: Record<string, string> = {
   PULL_OUT: "Put out",
   RETURN: "Bring in",
+  SERVICE_DAY: "Service day",
 };
 
 export const ISSUE_CATEGORIES: Array<{ value: string; label: string }> = [
