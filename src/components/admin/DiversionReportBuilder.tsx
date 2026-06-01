@@ -140,13 +140,21 @@ export function DiversionReportBuilder({ properties }: Props) {
   const resultsRef = useRef<HTMLDivElement | null>(null);
 
   function onPropertyChange(id: string) {
+    // Switching properties (or back to "None") is treated as starting a
+    // fresh report — clear the previously entered period, waste-stream
+    // rows, and any generated output so nothing leaks from the prior
+    // property into the new one.
     setPropertyId(id);
-    if (!id) return;
-    const p = properties.find((x) => x.id === id);
-    if (p) {
-      setClientName(p.name);
-      setAddress(p.address);
-    }
+    setPeriod("");
+    setRows([
+      newRow("Landfill"),
+      newRow("Mixed Recycling"),
+      newRow("Organics"),
+    ]);
+    setGenerated(null);
+    const p = id ? properties.find((x) => x.id === id) : null;
+    setClientName(p?.name ?? "");
+    setAddress(p?.address ?? "");
   }
 
   function addRow() {
