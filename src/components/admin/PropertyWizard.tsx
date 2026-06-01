@@ -3,7 +3,12 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ACTION_LABEL, BIN_LABEL, DAY_NAMES } from "@/lib/format";
+import {
+  ACTION_LABEL,
+  BIN_LABEL,
+  COUNTY_OPTIONS,
+  DAY_NAMES,
+} from "@/lib/format";
 
 const BIN_TYPES = [
   "TRASH",
@@ -60,6 +65,7 @@ type Props = {
     address: string;
     latitude: number | null;
     longitude: number | null;
+    county: string | null;
     hhwInstructions: string | null;
     porterId: string | null;
     nightPorterId: string | null;
@@ -78,6 +84,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
   const [longitude, setLongitude] = useState<string>(
     initial?.longitude?.toString() ?? "",
   );
+  const [county, setCounty] = useState<string>(initial?.county ?? "");
   const [hhwInstructions, setHhwInstructions] = useState(
     initial?.hhwInstructions ?? "",
   );
@@ -273,6 +280,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
         address: address.trim(),
         latitude: Number.isFinite(lat) ? lat : null,
         longitude: Number.isFinite(lng) ? lng : null,
+        county: county || null,
         hhwInstructions: hhwInstructions.trim() || null,
         porterId: porterId || null,
         nightPorterId: nightPorterId || null,
@@ -360,6 +368,24 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
               and ZIP — you can still save, but the location won&apos;t be set.
             </div>
           )}
+        </Field>
+        <Field label="County">
+          <select
+            value={county}
+            onChange={(e) => setCounty(e.target.value)}
+            className="w-full input"
+          >
+            <option value="">— Select County —</option>
+            {COUNTY_OPTIONS.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs text-zinc-500">
+            Drives the official recycling-agency link shown on the
+            resident Recycling Guide.
+          </span>
         </Field>
       </Section>
 

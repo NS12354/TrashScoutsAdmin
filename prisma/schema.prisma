@@ -72,6 +72,11 @@ model Property {
   address         String
   latitude        Float?
   longitude       Float?
+  // Which county the property is in — drives the county-specific recycling
+  // agency link shown on the resident Recycling Guide. Values from
+  // COUNTY_OPTIONS in lib/format.ts (e.g. "ALAMEDA"). Nullable: legacy
+  // properties without a county still see the generic guide.
+  county          String?
   hhwInstructions String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

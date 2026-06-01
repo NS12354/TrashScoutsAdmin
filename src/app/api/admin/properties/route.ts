@@ -19,6 +19,7 @@ type CreateBody = {
   address: string;
   latitude?: number | null;
   longitude?: number | null;
+  county?: string | null;
   hhwInstructions?: string | null;
   porterId?: string | null;
   nightPorterId?: string | null;
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
       address: body.address.trim(),
       latitude: body.latitude ?? null,
       longitude: body.longitude ?? null,
+      county: body.county || null,
       hhwInstructions: body.hhwInstructions?.trim() || null,
       porterId: body.porterId || null,
       nightPorterId: body.nightPorterId || null,

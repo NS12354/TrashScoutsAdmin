@@ -32,6 +32,46 @@ export const ACTION_LABEL: Record<string, string> = {
   SERVICE_DAY: "Service day",
 };
 
+// Counties we have agency recycling info for. The value is what's stored
+// on Property.county; the label is shown in the admin dropdown. Adding a
+// new county is two lines here + one entry in COUNTY_AGENCY below.
+export const COUNTY_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "ALAMEDA", label: "Alameda County" },
+  { value: "CONTRA_COSTA", label: "Contra Costa County" },
+  { value: "SAN_FRANCISCO", label: "San Francisco County" },
+  { value: "SAN_MATEO", label: "San Mateo County" },
+];
+
+// Authoritative local recycling/sorting info, published by the public
+// agency for each county. Shown as a link card on /p/[id]/guide so
+// residents always have the official source for their address.
+export const COUNTY_AGENCY: Record<
+  string,
+  { name: string; url: string }
+> = {
+  ALAMEDA: {
+    name: "StopWaste (Alameda County)",
+    url: "https://resource.stopwaste.org/curbside",
+  },
+  CONTRA_COSTA: {
+    name: "StopWaste (Contra Costa County)",
+    url: "https://resource.stopwaste.org/curbside",
+  },
+  SAN_FRANCISCO: {
+    name: "SF Environment",
+    url: "https://www.sfenvironment.org/sfrecycles",
+  },
+  SAN_MATEO: {
+    name: "RecycleStuff (San Mateo County)",
+    url: "https://recyclestuff.org/",
+  },
+};
+
+export function countyLabel(value: string | null | undefined) {
+  if (!value) return null;
+  return COUNTY_OPTIONS.find((c) => c.value === value)?.label ?? value;
+}
+
 export const ISSUE_CATEGORIES: Array<{ value: string; label: string }> = [
   { value: "BROKEN_BIN", label: "Broken Bin" },
   { value: "BULKY_ITEM", label: "Bulky Item" },

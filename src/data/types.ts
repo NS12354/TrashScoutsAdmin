@@ -37,6 +37,7 @@ export type Property = {
   longitude: number;
   porterId?: string; // day-shift porter (legacy field)
   nightPorterId?: string;
+  county?: string; // value from COUNTY_OPTIONS in lib/format.ts
   hhwInstructions?: string;
   setupPhotos?: SetupPhoto[];
   schedule?: ScheduleItem[];
