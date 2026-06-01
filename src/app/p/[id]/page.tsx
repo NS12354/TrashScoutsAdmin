@@ -24,13 +24,33 @@ export default async function PropertyHome({
     getPorter(property.porterId),
     getPorter(property.nightPorterId),
   ]);
+
+  // Decide which shift is "active" right now in the property's local time
+  // so the active porter shows first in the swipe stack. Properties are all
+  // in California today, so we hardcode the LA timezone — if you ever take
+  // this to other regions, store a tz field on Property and read it here.
+  // Window: 4pm–4am = night, 4am–4pm = day.
+  const hourPT = Number(
+    new Date().toLocaleString("en-US", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: "America/Los_Angeles",
+    }),
+  );
+  const isNightShift = hourPT >= 16 || hourPT < 4;
+
   const porterCards: { porter: Porter; shift: string }[] =
     dayPorter && nightPorter && dayPorter.id === nightPorter.id
       ? [{ porter: dayPorter, shift: "Day & Night Shift" }]
-      : [
-          dayPorter && { porter: dayPorter, shift: "Day Shift" },
-          nightPorter && { porter: nightPorter, shift: "Night Shift" },
-        ].filter((c): c is { porter: Porter; shift: string } => Boolean(c));
+      : (() => {
+          const day = dayPorter && { porter: dayPorter, shift: "Day Shift" };
+          const night =
+            nightPorter && { porter: nightPorter, shift: "Night Shift" };
+          const ordered = isNightShift ? [night, day] : [day, night];
+          return ordered.filter(
+            (c): c is { porter: Porter; shift: string } => Boolean(c),
+          );
+        })();
 
   const tiles = [
     {
