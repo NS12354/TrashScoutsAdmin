@@ -16,7 +16,21 @@ export default async function PropertyHome({
   const { id } = await params;
   const property = await getProperty(id);
   if (!property) return notFound();
-  const porter = await getPorter(property.porterId);
+
+  // Two shifts: most properties have a morning + evening porter. Fetch both
+  // (either slot can be empty), and if the same person covers both shifts
+  // collapse to a single card with a combined label.
+  const [dayPorter, nightPorter] = await Promise.all([
+    getPorter(property.porterId),
+    getPorter(property.nightPorterId),
+  ]);
+  const porterCards: { porter: Porter; shift: string }[] =
+    dayPorter && nightPorter && dayPorter.id === nightPorter.id
+      ? [{ porter: dayPorter, shift: "Day & Night Shift" }]
+      : [
+          dayPorter && { porter: dayPorter, shift: "Day Shift" },
+          nightPorter && { porter: nightPorter, shift: "Night Shift" },
+        ].filter((c): c is { porter: Porter; shift: string } => Boolean(c));
 
   const tiles = [
     {
@@ -62,7 +76,17 @@ export default async function PropertyHome({
       </h1>
       <p className="mt-1 text-sm capitalize text-zinc-500">{property.address}</p>
 
-      <PorterCard porter={porter} />
+      {porterCards.length === 0 ? (
+        <div className="mt-4 rounded-2xl bg-white p-4 text-sm text-zinc-500 ring-1 ring-zinc-200">
+          No Trash Scouts assigned yet.
+        </div>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {porterCards.map(({ porter, shift }) => (
+            <PorterCard key={porter.id + shift} porter={porter} shift={shift} />
+          ))}
+        </div>
+      )}
 
       <div className="mt-5">
         <TileNav tiles={tiles} />
@@ -71,16 +95,9 @@ export default async function PropertyHome({
   );
 }
 
-function PorterCard({ porter }: { porter: Porter | null }) {
-  if (!porter) {
-    return (
-      <div className="mt-4 rounded-2xl bg-white p-4 text-sm text-zinc-500 ring-1 ring-zinc-200">
-        No Trash Scout assigned yet.
-      </div>
-    );
-  }
+function PorterCard({ porter, shift }: { porter: Porter; shift: string }) {
   return (
-    <article className="mt-4 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200">
+    <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200">
       <div className="relative aspect-[4/3] w-full bg-zinc-100">
         {porter.photoUrl ? (
           <Image
@@ -99,7 +116,7 @@ function PorterCard({ porter }: { porter: Porter | null }) {
       </div>
       <div className="p-4">
         <div className="text-xs font-semibold uppercase tracking-wide text-brand-dark">
-          Meet your Trash Scout
+          {shift}
         </div>
         <div className="mt-1 text-lg font-semibold capitalize">{porter.name}</div>
         {porter.title && (

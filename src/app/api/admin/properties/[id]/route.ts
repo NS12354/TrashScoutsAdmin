@@ -18,6 +18,7 @@ type UpdateBody = {
   longitude?: number | null;
   hhwInstructions?: string | null;
   porterId?: string | null;
+  nightPorterId?: string | null;
   schedule?: ScheduleRowIn[];
   setupPhotos?: PhotoIn[];
 };
@@ -42,6 +43,8 @@ export async function PATCH(
   if ("hhwInstructions" in body)
     data.hhwInstructions = body.hhwInstructions?.trim() || null;
   if ("porterId" in body) data.porterId = body.porterId || null;
+  if ("nightPorterId" in body)
+    data.nightPorterId = body.nightPorterId || null;
   if (Object.keys(data).length > 0) {
     await prisma.property.update({ where: { id }, data });
   }

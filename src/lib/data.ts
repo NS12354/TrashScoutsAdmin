@@ -21,6 +21,7 @@ type PrismaProperty = {
   longitude: number | null;
   hhwInstructions: string | null;
   porterId: string | null;
+  nightPorterId: string | null;
   schedule: Array<{
     dayOfWeek: number;
     binType: string;
@@ -41,6 +42,7 @@ function toProperty(p: PrismaProperty): Property {
     latitude: p.latitude ?? 0,
     longitude: p.longitude ?? 0,
     porterId: p.porterId ?? undefined,
+    nightPorterId: p.nightPorterId ?? undefined,
     hhwInstructions: p.hhwInstructions ?? undefined,
     setupPhotos: p.setupPhotos.map((sp) => ({
       url: sp.url,

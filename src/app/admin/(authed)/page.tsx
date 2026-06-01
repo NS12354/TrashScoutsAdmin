@@ -29,6 +29,7 @@ export default async function AdminHome({
         where,
         include: {
           porter: true,
+          nightPorter: true,
           _count: {
             select: {
               schedule: true,
@@ -125,7 +126,10 @@ export default async function AdminHome({
               <div className="font-medium capitalize">{p.name}</div>
               <div className="text-sm capitalize text-zinc-500">{p.address}</div>
               <div className="mt-1 text-xs text-zinc-400">
-                {p.porter?.name ?? "No porter"} · {p._count.schedule} schedule
+                {[p.porter?.name, p.nightPorter?.name]
+                  .filter(Boolean)
+                  .join(" / ") || "No porter"}{" "}
+                · {p._count.schedule} schedule
                 row{p._count.schedule === 1 ? "" : "s"} · {p._count.setupPhotos}{" "}
                 photo{p._count.setupPhotos === 1 ? "" : "s"}
               </div>

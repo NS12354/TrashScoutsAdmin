@@ -20,6 +20,7 @@ type CreateBody = {
   longitude?: number | null;
   hhwInstructions?: string | null;
   porterId?: string | null;
+  nightPorterId?: string | null;
   schedule?: ScheduleRowIn[];
   setupPhotos?: PhotoIn[];
 };
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
       longitude: body.longitude ?? null,
       hhwInstructions: body.hhwInstructions?.trim() || null,
       porterId: body.porterId || null,
+      nightPorterId: body.nightPorterId || null,
       schedule: body.schedule
         ? {
             create: body.schedule.map((s) => ({

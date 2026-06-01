@@ -3,8 +3,8 @@ import { issueCategoryLabel, renderGuide } from "../format";
 
 describe("issueCategoryLabel", () => {
   it("returns the friendly label for known categories", () => {
-    expect(issueCategoryLabel("BROKEN_BIN")).toBe("Broken bin");
-    expect(issueCategoryLabel("CHUTE_CLOG")).toBe("Chute clogged");
+    expect(issueCategoryLabel("BROKEN_BIN")).toBe("Broken Bin");
+    expect(issueCategoryLabel("CHUTE_CLOG")).toBe("Chute Clogged");
     expect(issueCategoryLabel("OTHER")).toBe("Other");
   });
 

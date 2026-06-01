@@ -28,7 +28,8 @@ export type Property = {
   address: string;
   latitude: number;
   longitude: number;
-  porterId?: string;
+  porterId?: string; // day-shift porter (legacy field)
+  nightPorterId?: string;
   hhwInstructions?: string;
   setupPhotos?: SetupPhoto[];
   schedule?: ScheduleItem[];

@@ -74,10 +74,17 @@ export async function DELETE(
   // Property.porter has no onDelete cascade in the schema, so deleting a
   // porter that's still assigned to properties would fail on the FK. Null
   // out the assignment first in a single transaction.
+  // A porter may be the day OR night assignment (or both) on any number of
+  // properties. Null out every reference to them across both slots before
+  // deleting so the FK constraints don't fail.
   await prisma.$transaction([
     prisma.property.updateMany({
       where: { porterId: id },
       data: { porterId: null },
+    }),
+    prisma.property.updateMany({
+      where: { nightPorterId: id },
+      data: { nightPorterId: null },
     }),
     prisma.porter.delete({ where: { id } }),
   ]);

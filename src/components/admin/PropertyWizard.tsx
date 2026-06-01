@@ -53,6 +53,7 @@ type Props = {
     longitude: number | null;
     hhwInstructions: string | null;
     porterId: string | null;
+    nightPorterId: string | null;
     schedule: Array<Omit<ScheduleRow, "key">>;
     setupPhotos: Array<Omit<Photo, "key">>;
   };
@@ -74,6 +75,9 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
 
   const [porters, setPorters] = useState<Porter[]>([]);
   const [porterId, setPorterId] = useState<string>(initial?.porterId ?? "");
+  const [nightPorterId, setNightPorterId] = useState<string>(
+    initial?.nightPorterId ?? "",
+  );
   const [addingPorter, setAddingPorter] = useState(false);
   const [newPorterName, setNewPorterName] = useState("");
   const [newPorterTitle, setNewPorterTitle] = useState("");
@@ -260,6 +264,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
         longitude: Number.isFinite(lng) ? lng : null,
         hhwInstructions: hhwInstructions.trim() || null,
         porterId: porterId || null,
+        nightPorterId: nightPorterId || null,
         schedule: schedule.map((s) => ({
           dayOfWeek: s.dayOfWeek,
           binType: s.binType,
@@ -346,23 +351,46 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
         </Field>
       </Section>
 
-      {/* 2. Trash Scout */}
-      <Section number={2} title="Trash Scout Assigned">
+      {/* 2. Trash Scouts (day + night shifts) */}
+      <Section number={2} title="Trash Scouts Assigned">
         {!addingPorter ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={porterId}
-              onChange={(e) => setPorterId(e.target.value)}
-              className="flex-1 input"
-            >
-              <option value="">— No Porter Assigned —</option>
-              {porters.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                  {p.title ? ` (${p.title})` : ""}
-                </option>
-              ))}
-            </select>
+          <div className="space-y-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-zinc-600">
+                Day shift (morning)
+              </label>
+              <select
+                value={porterId}
+                onChange={(e) => setPorterId(e.target.value)}
+                className="w-full input"
+              >
+                <option value="">— No Porter Assigned —</option>
+                {porters.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                    {p.title ? ` (${p.title})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-zinc-600">
+                Night shift (evening)
+              </label>
+              <select
+                value={nightPorterId}
+                onChange={(e) => setNightPorterId(e.target.value)}
+                className="w-full input"
+              >
+                <option value="">— No Porter Assigned —</option>
+                {porters.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                    {p.title ? ` (${p.title})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               type="button"
               onClick={() => setAddingPorter(true)}

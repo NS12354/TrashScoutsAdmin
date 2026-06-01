@@ -58,7 +58,10 @@ model Porter {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  properties Property[]
+  // A porter can be assigned to many properties as the day-shift or
+  // night-shift contact (or both for the same property).
+  dayProperties   Property[] @relation("DayPorter")
+  nightProperties Property[] @relation("NightPorter")
 }
 
 // ─── Properties (buildings) ─────────────────────────────────────────
@@ -73,8 +76,14 @@ model Property {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  porterId String?
-  porter   Porter? @relation(fields: [porterId], references: [id])
+  // Two named porter slots — most properties have a morning person and an
+  // evening person, so the resident "Meet your Trash Scouts" panel can show
+  // both. Either slot is optional; the day slot is the legacy `porterId`
+  // column so existing assignments don't break.
+  porterId      String?
+  porter        Porter? @relation("DayPorter", fields: [porterId], references: [id])
+  nightPorterId String?
+  nightPorter   Porter? @relation("NightPorter", fields: [nightPorterId], references: [id])
 
   setupPhotos  SetupPhoto[]
   schedule     ScheduleItem[]

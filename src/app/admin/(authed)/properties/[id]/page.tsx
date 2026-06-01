@@ -53,6 +53,7 @@ export default async function EditPropertyPage({
             longitude: property.longitude,
             hhwInstructions: property.hhwInstructions,
             porterId: property.porterId,
+            nightPorterId: property.nightPorterId,
             schedule: property.schedule.map((s) => ({
               dayOfWeek: s.dayOfWeek,
               binType: s.binType as "TRASH" | "RECYCLING" | "ORGANICS" | "OTHER",

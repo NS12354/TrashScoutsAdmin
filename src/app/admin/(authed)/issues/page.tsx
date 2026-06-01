@@ -43,7 +43,13 @@ export default async function AdminIssuesPage({
     ...(status ? { status } : {}),
     ...(category ? { category } : {}),
     ...(property ? { propertyId: property } : {}),
-    ...(porter ? { property: { porterId: porter } } : {}),
+    ...(porter
+      ? {
+          property: {
+            OR: [{ porterId: porter }, { nightPorterId: porter }],
+          },
+        }
+      : {}),
   };
 
   const [propertyRows, porterRows] = await Promise.all([

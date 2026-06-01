@@ -7,7 +7,10 @@ export const dynamic = "force-dynamic";
 export default async function PortersPage() {
   const porters = await prisma.porter.findMany({
     orderBy: { name: "asc" },
-    include: { properties: { select: { id: true } } },
+    include: {
+      dayProperties: { select: { id: true } },
+      nightProperties: { select: { id: true } },
+    },
   });
 
   return (
@@ -25,19 +28,27 @@ export default async function PortersPage() {
             </div>
           ) : (
             <ul className="divide-y divide-zinc-100">
-              {porters.map((p) => (
-                <PorterCard
-                  key={p.id}
-                  porter={{
-                    id: p.id,
-                    name: p.name,
-                    title: p.title,
-                    photoUrl: p.photoUrl,
-                    email: p.email,
-                    propertyCount: p.properties.length,
-                  }}
-                />
-              ))}
+              {porters.map((p) => {
+                // Dedupe across day/night so a porter doing both shifts at
+                // the same property doesn't get counted twice.
+                const assigned = new Set([
+                  ...p.dayProperties.map((x) => x.id),
+                  ...p.nightProperties.map((x) => x.id),
+                ]);
+                return (
+                  <PorterCard
+                    key={p.id}
+                    porter={{
+                      id: p.id,
+                      name: p.name,
+                      title: p.title,
+                      photoUrl: p.photoUrl,
+                      email: p.email,
+                      propertyCount: assigned.size,
+                    }}
+                  />
+                );
+              })}
             </ul>
           )}
         </div>
