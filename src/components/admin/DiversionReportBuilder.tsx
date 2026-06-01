@@ -414,12 +414,10 @@ export function DiversionReportBuilder({ properties, savedReports }: Props) {
 
       {/* ─ Property info ─────────────────────────────────────────────── */}
       <div className={`${styles.card} ${styles.noPrint}`}>
-        <div className={styles.sectionTitle}>Property information</div>
+        <div className={styles.sectionTitle}>Property Information</div>
         {properties.length > 0 && (
           <div style={{ marginBottom: 14 }}>
-            <label className={styles.fieldLabel}>
-              Prefill from saved property (optional)
-            </label>
+            <label className={styles.fieldLabel}>Property</label>
             <select
               className={styles.select}
               value={propertyId}
@@ -436,7 +434,7 @@ export function DiversionReportBuilder({ properties, savedReports }: Props) {
         )}
         <div className={styles.metaGrid}>
           <div>
-            <label className={styles.fieldLabel}>Client / property name</label>
+            <label className={styles.fieldLabel}>Client / Property Name</label>
             <input
               className={styles.input}
               value={clientName}
@@ -454,7 +452,7 @@ export function DiversionReportBuilder({ properties, savedReports }: Props) {
             />
           </div>
           <div>
-            <label className={styles.fieldLabel}>Report period</label>
+            <label className={styles.fieldLabel}>Report Period</label>
             <input
               className={styles.input}
               value={period}
@@ -463,7 +461,7 @@ export function DiversionReportBuilder({ properties, savedReports }: Props) {
             />
           </div>
           <div>
-            <label className={styles.fieldLabel}>Property type</label>
+            <label className={styles.fieldLabel}>Property Type</label>
             <select
               className={styles.select}
               value={propType}
@@ -481,21 +479,21 @@ export function DiversionReportBuilder({ properties, savedReports }: Props) {
 
       {/* ─ Measurement method ────────────────────────────────────────── */}
       <div className={`${styles.card} ${styles.noPrint}`}>
-        <div className={styles.sectionTitle}>Measurement method</div>
+        <div className={styles.sectionTitle}>Measurement Method</div>
         <div className={styles.modeToggle} role="group">
           <button
             type="button"
             className={`${styles.modeBtn} ${mode === "volume" ? styles.active : ""}`}
             onClick={() => onModeChange("volume")}
           >
-            By volume (bin sizes &amp; pickups)
+            By Volume
           </button>
           <button
             type="button"
             className={`${styles.modeBtn} ${mode === "weight" ? styles.active : ""}`}
             onClick={() => onModeChange("weight")}
           >
-            By weight (actual scale weights)
+            By Weight
           </button>
         </div>
 
@@ -542,22 +540,22 @@ export function DiversionReportBuilder({ properties, savedReports }: Props) {
 
       {/* ─ Waste streams ─────────────────────────────────────────────── */}
       <div className={`${styles.card} ${styles.noPrint}`}>
-        <div className={styles.sectionTitle}>Waste streams &amp; data entry</div>
+        <div className={styles.sectionTitle}>Waste Streams &amp; Data Entry</div>
         <div className={styles.streamTableWrap}>
           <table className={styles.streamTable}>
             <thead>
               <tr>
-                <th style={{ minWidth: 160 }}>Waste stream</th>
+                <th style={{ minWidth: 160 }}>Waste Stream</th>
                 {mode === "volume" ? (
                   <>
-                    <th style={{ minWidth: 70 }}># bins</th>
-                    <th style={{ minWidth: 160 }}>Bin size</th>
-                    <th style={{ minWidth: 110 }}>Pickups / week</th>
+                    <th style={{ minWidth: 70 }}># of Bins</th>
+                    <th style={{ minWidth: 160 }}>Bin Size</th>
+                    <th style={{ minWidth: 110 }}>Pickups/Week</th>
                   </>
                 ) : (
                   <>
-                    <th style={{ minWidth: 130 }}>Tons / week</th>
-                    <th style={{ minWidth: 150 }}>— or — lbs / week</th>
+                    <th style={{ minWidth: 130 }}>Tons/Week</th>
+                    <th style={{ minWidth: 150 }}>— or — Lbs/Week</th>
                   </>
                 )}
                 <th style={{ width: 36 }}></th>
@@ -688,7 +686,7 @@ export function DiversionReportBuilder({ properties, savedReports }: Props) {
         className={`${styles.generateBtn} ${styles.noPrint}`}
         onClick={generate}
       >
-        Generate diversion report
+        Generate Report
       </button>
 
       {generated && (
