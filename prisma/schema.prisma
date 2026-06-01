@@ -101,7 +101,13 @@ model SetupPhoto {
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   url        String
+  // Two-line caption shown on the resident Setup Photos page. `caption`
+  // is the heading (e.g. "Trash Room 1"); `subcaption` is the detail
+  // line (e.g. "3 trash · 2 recycling · 1 organics"). Either may be
+  // empty — legacy photos that used a single caption keep it in
+  // `caption` and leave `subcaption` null.
   caption    String?
+  subcaption String?
   sortOrder  Int      @default(0)
   createdAt  DateTime @default(now())
 }

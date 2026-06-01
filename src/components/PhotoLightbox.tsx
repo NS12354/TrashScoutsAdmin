@@ -6,10 +6,12 @@ import { useFocusTrap } from "@/lib/useFocusTrap";
 export function PhotoLightbox({
   src,
   caption,
+  subcaption,
   onClose,
 }: {
   src: string;
   caption?: string | null;
+  subcaption?: string | null;
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -51,9 +53,17 @@ export function PhotoLightbox({
         onClick={(e) => e.stopPropagation()}
         className="max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl"
       />
-      {caption && (
-        <div className="mt-3 max-w-md text-center text-sm text-white/85">
-          {caption}
+      {(caption || subcaption) && (
+        <div
+          className="mt-3 max-w-md text-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {caption && (
+            <div className="text-sm font-semibold text-white">{caption}</div>
+          )}
+          {subcaption && (
+            <div className="mt-0.5 text-sm text-white/85">{subcaption}</div>
+          )}
         </div>
       )}
     </div>

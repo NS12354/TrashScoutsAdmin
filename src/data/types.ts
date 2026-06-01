@@ -26,7 +26,8 @@ export type ScheduleItem = {
 
 export type SetupPhoto = {
   url: string; // path under /public or external URL
-  caption?: string;
+  caption?: string; // heading (e.g. "Trash Room 1")
+  subcaption?: string; // details (e.g. "3 trash · 2 recycling")
 };
 
 export type Property = {

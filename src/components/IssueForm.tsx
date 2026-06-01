@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ISSUE_CATEGORIES } from "@/lib/format";
+import { resizeImageFile } from "@/lib/imageResize";
 import { PhotoLightbox } from "./PhotoLightbox";
 import { CameraCapture } from "./CameraCapture";
 
@@ -70,12 +71,19 @@ export function IssueForm({
     };
   }, []);
 
-  function addFiles(incoming: File[]) {
+  async function addFiles(incoming: File[]) {
     if (!incoming || incoming.length === 0) return;
+    const slots = MAX_PHOTOS - previews.length;
+    if (slots <= 0) return;
+    // Resize on the client BEFORE accepting the file — a 10 MB iPhone photo
+    // would blow Vercel's 4.5 MB request body limit otherwise.
+    const resized = await Promise.all(
+      incoming.slice(0, slots).map((f) => resizeImageFile(f)),
+    );
     setPreviews((prev) => {
-      const slots = MAX_PHOTOS - prev.length;
-      if (slots <= 0) return prev;
-      const next: Preview[] = incoming.slice(0, slots).map((f) => ({
+      const remaining = MAX_PHOTOS - prev.length;
+      if (remaining <= 0) return prev;
+      const next: Preview[] = resized.slice(0, remaining).map((f) => ({
         file: f,
         url: URL.createObjectURL(f),
       }));

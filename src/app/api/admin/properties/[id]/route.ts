@@ -11,7 +11,11 @@ type ScheduleRowIn = {
   binCount?: number | null;
   timeWindow?: string | null;
 };
-type PhotoIn = { url: string; caption?: string | null };
+type PhotoIn = {
+  url: string;
+  caption?: string | null;
+  subcaption?: string | null;
+};
 type UpdateBody = {
   name?: string;
   address?: string;
@@ -79,6 +83,7 @@ export async function PATCH(
           propertyId: id,
           url: p.url,
           caption: p.caption || null,
+          subcaption: p.subcaption || null,
           sortOrder: i,
         })),
       });

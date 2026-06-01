@@ -9,6 +9,7 @@ import {
   COUNTY_OPTIONS,
   DAY_NAMES,
 } from "@/lib/format";
+import { resizeImageFile } from "@/lib/imageResize";
 
 const BIN_TYPES = [
   "TRASH",
@@ -55,6 +56,7 @@ type Photo = {
   key: string;
   url: string;
   caption: string;
+  subcaption: string;
 };
 
 type Props = {
@@ -116,6 +118,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
       key: `p${i}`,
       url: p.url,
       caption: p.caption ?? "",
+      subcaption: p.subcaption ?? "",
     })),
   );
 
@@ -172,14 +175,21 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
     }
   }
 
-  async function uploadFile(file: File, subdir: string): Promise<string | null> {
+  async function uploadFile(file: File, subdir: string): Promise<string> {
+    // Downscale large phone photos client-side first — Vercel's serverless
+    // body limit is 4.5 MB so a raw 8 MB iPhone JPEG would 413 every time.
+    const prepared = await resizeImageFile(file);
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", prepared);
     fd.append("subdir", subdir);
     const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const j = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(j.error || `Upload failed (${res.status})`);
+    }
     const data = (await res.json()) as { url?: string };
-    return data.url ?? null;
+    if (!data.url) throw new Error("Upload failed: no URL returned");
+    return data.url;
   }
 
   async function onPhotosChosen(e: React.ChangeEvent<HTMLInputElement>) {
@@ -187,18 +197,32 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
     e.target.value = "";
     if (files.length === 0) return;
     setUploading(true);
+    setError(null);
+    const failures: string[] = [];
     try {
       for (const f of files) {
-        const url = await uploadFile(f, "setup");
-        if (url) {
+        try {
+          const url = await uploadFile(f, "setup");
           setPhotos((prev) => [
             ...prev,
-            { key: `${Date.now()}-${Math.random()}`, url, caption: "" },
+            {
+              key: `${Date.now()}-${Math.random()}`,
+              url,
+              caption: "",
+              subcaption: "",
+            },
           ]);
+        } catch (err) {
+          failures.push(
+            `${f.name}: ${err instanceof Error ? err.message : "upload failed"}`,
+          );
         }
       }
     } finally {
       setUploading(false);
+      if (failures.length > 0) {
+        setError(`Couldn't upload ${failures.length} photo(s):\n${failures.join("\n")}`);
+      }
     }
   }
 
@@ -238,7 +262,12 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
     }
     let photoUrl: string | null = null;
     if (newPorterPhoto) {
-      photoUrl = await uploadFile(newPorterPhoto, "porters");
+      try {
+        photoUrl = await uploadFile(newPorterPhoto, "porters");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Photo upload failed");
+        return;
+      }
     }
     const res = await fetch("/api/admin/porters", {
       method: "POST",
@@ -294,6 +323,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
         setupPhotos: photos.map((p) => ({
           url: p.url,
           caption: p.caption.trim() || null,
+          subcaption: p.subcaption.trim() || null,
         })),
       };
 
@@ -526,7 +556,21 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
                         ),
                       )
                     }
-                    placeholder="Caption (optional)"
+                    placeholder="Label (e.g. Trash Room 1)"
+                    className="w-full rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs"
+                  />
+                  <input
+                    value={p.subcaption}
+                    onChange={(e) =>
+                      setPhotos((prev) =>
+                        prev.map((x) =>
+                          x.key === p.key
+                            ? { ...x, subcaption: e.target.value }
+                            : x,
+                        ),
+                      )
+                    }
+                    placeholder="Details (e.g. 3 trash · 2 recycling)"
                     className="w-full rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs"
                   />
                   <button

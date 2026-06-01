@@ -33,6 +33,7 @@ type PrismaProperty = {
   setupPhotos: Array<{
     url: string;
     caption: string | null;
+    subcaption: string | null;
   }>;
 };
 
@@ -50,6 +51,7 @@ function toProperty(p: PrismaProperty): Property {
     setupPhotos: p.setupPhotos.map((sp) => ({
       url: sp.url,
       caption: sp.caption ?? undefined,
+      subcaption: sp.subcaption ?? undefined,
     })),
     schedule: p.schedule.map(
       (s): ScheduleItem => ({

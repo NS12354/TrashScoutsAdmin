@@ -12,7 +12,11 @@ type ScheduleRowIn = {
   binCount?: number | null;
   timeWindow?: string | null;
 };
-type PhotoIn = { url: string; caption?: string | null };
+type PhotoIn = {
+  url: string;
+  caption?: string | null;
+  subcaption?: string | null;
+};
 
 type CreateBody = {
   name: string;
@@ -82,6 +86,7 @@ export async function POST(req: NextRequest) {
             create: body.setupPhotos.map((p, i) => ({
               url: p.url,
               caption: p.caption || null,
+              subcaption: p.subcaption || null,
               sortOrder: i,
             })),
           }

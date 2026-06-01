@@ -18,6 +18,7 @@ export default async function SetupPhotosPage({
     id: `${id}-${i}`,
     url: p.url,
     caption: p.caption ?? null,
+    subcaption: p.subcaption ?? null,
   }));
 
   return (

@@ -71,6 +71,7 @@ export default async function EditPropertyPage({
             setupPhotos: property.setupPhotos.map((p) => ({
               url: p.url,
               caption: p.caption ?? "",
+              subcaption: p.subcaption ?? "",
             })),
           }}
         />
