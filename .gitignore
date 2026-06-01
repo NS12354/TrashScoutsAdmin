@@ -44,3 +44,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# Favicon source files — iCloud sync keeps restoring deleted icons, ignore.
+src/app/icon.png
+src/app/apple-icon.png
