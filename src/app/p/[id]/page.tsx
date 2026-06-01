@@ -29,7 +29,7 @@ export default async function PropertyHome({
   // so the active porter shows first in the swipe stack. Properties are all
   // in California today, so we hardcode the LA timezone — if you ever take
   // this to other regions, store a tz field on Property and read it here.
-  // Window: 4pm–4am = night, 4am–4pm = day.
+  // Window: 4pm–midnight = night, midnight–4pm = day.
   const hourPT = Number(
     new Date().toLocaleString("en-US", {
       hour: "numeric",
@@ -37,7 +37,7 @@ export default async function PropertyHome({
       timeZone: "America/Los_Angeles",
     }),
   );
-  const isNightShift = hourPT >= 16 || hourPT < 4;
+  const isNightShift = hourPT >= 16;
 
   const porterCards: { porter: Porter; shift: string }[] =
     dayPorter && nightPorter && dayPorter.id === nightPorter.id
