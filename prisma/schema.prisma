@@ -119,10 +119,11 @@ model Issue {
   id              String   @id @default(cuid())
   propertyId      String
   property        Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  category        String // BROKEN_BIN | BULKY_ITEM | ODOR | OVERFLOW | CHUTE_CLOG | OTHER
+  category        String // see ISSUE_CATEGORIES in lib/format.ts
   description     String?
   reporterName    String?
-  reporterContact String?
+  reporterContact String? // email
+  reporterPhone   String? // optional phone number
   status          String   @default("OPEN") // OPEN | IN_PROGRESS | RESOLVED
   photos          IssuePhoto[]
   createdAt       DateTime @default(now())

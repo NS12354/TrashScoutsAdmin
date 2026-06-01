@@ -9,7 +9,7 @@ import { CameraCapture } from "./CameraCapture";
 const STORAGE_KEY = "ts.reporter";
 const MAX_PHOTOS = 3;
 
-type Reporter = { name: string; contact: string };
+type Reporter = { name: string; contact: string; phone: string };
 type Preview = { file: File; url: string };
 
 export function IssueForm({
@@ -23,7 +23,11 @@ export function IssueForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [reporter, setReporter] = useState<Reporter>({ name: "", contact: "" });
+  const [reporter, setReporter] = useState<Reporter>({
+    name: "",
+    contact: "",
+    phone: "",
+  });
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [zoom, setZoom] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -42,10 +46,14 @@ export function IssueForm({
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as Reporter;
+        const parsed = JSON.parse(raw) as Partial<Reporter>;
         if (parsed && typeof parsed === "object") {
           // eslint-disable-next-line react-hooks/set-state-in-effect
-          setReporter(parsed);
+          setReporter({
+            name: parsed.name ?? "",
+            contact: parsed.contact ?? "",
+            phone: parsed.phone ?? "",
+          });
         }
       }
     } catch {
@@ -243,6 +251,21 @@ export function IssueForm({
         <span className="mt-1 block text-xs text-zinc-500">
           We&apos;ll use this to follow up with you if needed.
         </span>
+      </Field>
+
+      <Field label="Phone" optional>
+        <input
+          type="tel"
+          name="reporterPhone"
+          autoComplete="tel"
+          inputMode="tel"
+          placeholder="(555) 123-4567"
+          value={reporter.phone}
+          onChange={(e) =>
+            setReporter((r) => ({ ...r, phone: e.target.value }))
+          }
+          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-[15px] text-zinc-900 placeholder:text-zinc-400"
+        />
       </Field>
 
       {error && (

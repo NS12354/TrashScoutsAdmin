@@ -30,9 +30,10 @@ export const ACTION_LABEL: Record<string, string> = {
 export const ISSUE_CATEGORIES: Array<{ value: string; label: string }> = [
   { value: "BROKEN_BIN", label: "Broken Bin" },
   { value: "BULKY_ITEM", label: "Bulky Item" },
-  { value: "ODOR", label: "Odor" },
   { value: "OVERFLOW", label: "Overflow / Overflowing Bins" },
-  { value: "CHUTE_CLOG", label: "Chute Clogged" },
+  { value: "MISSING_BINS", label: "Missing Bins" },
+  { value: "CONTAMINATION", label: "Contamination" },
+  { value: "HAZARDOUS_WASTE_IN_BINS", label: "Hazardous Waste inside bins" },
   { value: "OTHER", label: "Other" },
 ];
 

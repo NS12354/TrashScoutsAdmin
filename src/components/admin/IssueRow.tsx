@@ -16,6 +16,7 @@ export function IssueRow({
     description: string | null;
     reporterName: string | null;
     reporterContact: string | null;
+    reporterPhone: string | null;
     status: string;
     createdAt: Date | string;
     property: { name: string; address: string };
@@ -88,11 +89,12 @@ export function IssueRow({
         </div>
       )}
 
-      {(issue.reporterName || issue.reporterContact) && (
+      {(issue.reporterName || issue.reporterContact || issue.reporterPhone) && (
         <div className="mt-3 text-sm text-zinc-600">
           Reported by{" "}
           <span className="font-medium capitalize">{issue.reporterName ?? "—"}</span>
           {issue.reporterContact && ` · ${issue.reporterContact}`}
+          {issue.reporterPhone && ` · ${issue.reporterPhone}`}
         </div>
       )}
     </article>
