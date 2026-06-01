@@ -81,10 +81,8 @@ export default async function PropertyHome({
           No Trash Scouts assigned yet.
         </div>
       ) : (
-        <div className="mt-4 space-y-3">
-          {porterCards.map(({ porter, shift }) => (
-            <PorterCard key={porter.id + shift} porter={porter} shift={shift} />
-          ))}
+        <div className="mt-4">
+          <PorterCard entries={porterCards} />
         </div>
       )}
 
@@ -95,34 +93,97 @@ export default async function PropertyHome({
   );
 }
 
-function PorterCard({ porter, shift }: { porter: Porter; shift: string }) {
+type PorterEntry = { porter: Porter; shift: string };
+
+function PorterCard({ entries }: { entries: PorterEntry[] }) {
+  // Single porter (only-day, only-night, or same person on both shifts):
+  // render the classic full-width card unchanged.
+  if (entries.length === 1) {
+    const { porter, shift } = entries[0]!;
+    return (
+      <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200">
+        <div className="relative aspect-[4/3] w-full bg-zinc-100">
+          {porter.photoUrl ? (
+            <Image
+              src={porter.photoUrl}
+              alt={porter.name}
+              fill
+              className="object-cover object-center"
+              sizes="448px"
+              priority
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-5xl font-bold text-zinc-400">
+              {porter.name.charAt(0)}
+            </div>
+          )}
+        </div>
+        <div className="p-4">
+          <div className="text-xs font-semibold uppercase tracking-wide text-brand-dark">
+            {shift}
+          </div>
+          <div className="mt-1 text-lg font-semibold capitalize">
+            {porter.name}
+          </div>
+          {porter.title && (
+            <p className="mt-1 text-sm capitalize text-zinc-500">
+              {porter.title}
+            </p>
+          )}
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-2.5 py-1 text-xs text-brand-dark">
+            <span>✓</span> Authorized {BRAND_NAME} staff
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  // Dual porters on one card: photos side-by-side at the top, name + title
+  // in matching columns below, one shared "authorized staff" badge.
   return (
     <article className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200">
-      <div className="relative aspect-[4/3] w-full bg-zinc-100">
-        {porter.photoUrl ? (
-          <Image
-            src={porter.photoUrl}
-            alt={porter.name}
-            fill
-            className="object-cover object-center"
-            sizes="448px"
-            priority
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-5xl font-bold text-zinc-400">
-            {porter.name.charAt(0)}
+      <div className="grid grid-cols-2 gap-px bg-zinc-200">
+        {entries.map(({ porter }) => (
+          <div
+            key={porter.id}
+            className="relative aspect-[4/3] bg-zinc-100"
+          >
+            {porter.photoUrl ? (
+              <Image
+                src={porter.photoUrl}
+                alt={porter.name}
+                fill
+                className="object-cover object-center"
+                sizes="224px"
+                priority
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-zinc-400">
+                {porter.name.charAt(0)}
+              </div>
+            )}
           </div>
-        )}
+        ))}
       </div>
-      <div className="p-4">
-        <div className="text-xs font-semibold uppercase tracking-wide text-brand-dark">
-          {shift}
-        </div>
-        <div className="mt-1 text-lg font-semibold capitalize">{porter.name}</div>
-        {porter.title && (
-          <p className="mt-1 text-sm capitalize text-zinc-500">{porter.title}</p>
-        )}
-        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-2.5 py-1 text-xs text-brand-dark">
+      <div className="grid grid-cols-2 gap-3 px-4 pt-4">
+        {entries.map(({ porter, shift }) => (
+          <div key={porter.id + shift} className="min-w-0">
+            <div className="truncate text-xs font-semibold uppercase tracking-wide text-brand-dark">
+              {shift}
+            </div>
+            <div className="mt-1 truncate text-base font-semibold capitalize">
+              {porter.name}
+            </div>
+            {porter.title && (
+              <p className="mt-1 truncate text-sm capitalize text-zinc-500">
+                {porter.title}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="px-4 pb-4 pt-3">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-2.5 py-1 text-xs text-brand-dark">
           <span>✓</span> Authorized {BRAND_NAME} staff
         </div>
       </div>
