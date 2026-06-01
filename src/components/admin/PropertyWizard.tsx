@@ -125,6 +125,10 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
 
   // Address confirmation: geocode the typed address and show the matched
   // place back to the admin so they can confirm it's correct. lat/lng are
@@ -198,9 +202,20 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
     if (files.length === 0) return;
     setUploading(true);
     setError(null);
+    setUploadProgress({ done: 0, total: files.length });
     const failures: string[] = [];
-    try {
-      for (const f of files) {
+
+    // Upload N at a time so 50 photos doesn't take 50× one-file latency,
+    // but we don't fan out unbounded and overload the Supabase pooler.
+    const CONCURRENCY = 4;
+    let cursor = 0;
+    let completed = 0;
+
+    async function worker() {
+      while (true) {
+        const i = cursor++;
+        if (i >= files.length) return;
+        const f = files[i]!;
         try {
           const url = await uploadFile(f, "setup");
           setPhotos((prev) => [
@@ -217,9 +232,18 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
             `${f.name}: ${err instanceof Error ? err.message : "upload failed"}`,
           );
         }
+        completed += 1;
+        setUploadProgress({ done: completed, total: files.length });
       }
+    }
+
+    try {
+      await Promise.all(
+        Array.from({ length: Math.min(CONCURRENCY, files.length) }, worker),
+      );
     } finally {
       setUploading(false);
+      setUploadProgress(null);
       if (failures.length > 0) {
         setError(`Couldn't upload ${failures.length} photo(s):\n${failures.join("\n")}`);
       }
@@ -519,6 +543,12 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
 
       {/* 3. Setup photos */}
       <Section number={3} title="Setup Photos">
+        <p className="mb-2 text-sm text-zinc-500">
+          Upload as many as you need — one per trash room or enclosure.
+          Use the <strong>Label</strong> field on each photo for the
+          room name and <strong>Details</strong> for the bin count and
+          types inside.
+        </p>
         <input
           type="file"
           accept="image/*"
@@ -527,8 +557,10 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
           onChange={onPhotosChosen}
           className="block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-zinc-200 disabled:opacity-50"
         />
-        {uploading && (
-          <p className="text-xs text-zinc-500">Uploading…</p>
+        {uploading && uploadProgress && (
+          <p className="text-xs font-medium text-zinc-600">
+            Uploading {uploadProgress.done} of {uploadProgress.total}…
+          </p>
         )}
         {photos.length > 0 && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
