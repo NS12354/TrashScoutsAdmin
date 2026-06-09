@@ -20,6 +20,7 @@ type PrismaProperty = {
   latitude: number | null;
   longitude: number | null;
   county: string | null;
+  guideUrl: string | null;
   hhwInstructions: string | null;
   porterId: string | null;
   nightPorterId: string | null;
@@ -48,6 +49,7 @@ function toProperty(p: PrismaProperty): Property {
     porterId: p.porterId ?? undefined,
     nightPorterId: p.nightPorterId ?? undefined,
     county: p.county ?? undefined,
+    guideUrl: p.guideUrl ?? undefined,
     hhwInstructions: p.hhwInstructions ?? undefined,
     setupPhotos: p.setupPhotos.map((sp) => ({
       url: sp.url,

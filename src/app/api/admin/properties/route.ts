@@ -25,6 +25,7 @@ type CreateBody = {
   latitude?: number | null;
   longitude?: number | null;
   county?: string | null;
+  guideUrl?: string | null;
   hhwInstructions?: string | null;
   porterId?: string | null;
   nightPorterId?: string | null;
@@ -65,6 +66,7 @@ export async function POST(req: NextRequest) {
       latitude: body.latitude ?? null,
       longitude: body.longitude ?? null,
       county: body.county || null,
+      guideUrl: body.guideUrl?.trim() || null,
       hhwInstructions: body.hhwInstructions?.trim() || null,
       porterId: body.porterId || null,
       nightPorterId: body.nightPorterId || null,

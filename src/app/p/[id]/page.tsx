@@ -52,6 +52,9 @@ export default async function PropertyHome({
           );
         })();
 
+  // Four tiles, not five — consolidating HHW into the "What Goes Where"
+  // guide page (which deep-links back into the HHW page) keeps the home
+  // screen scrollable in one glance on most phones.
   const tiles = [
     {
       href: `/p/${id}/setup`,
@@ -72,15 +75,9 @@ export default async function PropertyHome({
       icon: TileIcons.Megaphone,
     },
     {
-      href: `/p/${id}/hhw`,
-      number: 4,
-      label: "Household Hazardous Waste",
-      icon: TileIcons.Warning,
-    },
-    {
       href: `/p/${id}/guide`,
-      number: 5,
-      label: "Recycling Guide",
+      number: 4,
+      label: "What Goes Where",
       icon: TileIcons.Recycle,
     },
   ];
@@ -139,6 +136,36 @@ export default async function PropertyHome({
       <div className="mt-5">
         <TileNav tiles={tiles} />
       </div>
+
+      <a
+        href={`/p/${id}/wall-sign`}
+        className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-zinc-200 transition hover:bg-zinc-50"
+      >
+        <div className="min-w-0">
+          <div className="text-[15px] font-semibold text-zinc-900">
+            Request a Trash Scouts Wall Sign
+          </div>
+          <div className="mt-0.5 text-xs text-zinc-500">
+            For your trash enclosure — we&apos;ll follow up with details.
+          </div>
+        </div>
+        <span
+          aria-hidden
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand/10 text-brand-dark"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+          >
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </span>
+      </a>
     </>
   );
 }

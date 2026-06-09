@@ -40,6 +40,7 @@ export type Property = {
   porterId?: string; // day-shift porter (legacy field)
   nightPorterId?: string;
   county?: string; // value from COUNTY_OPTIONS in lib/format.ts
+  guideUrl?: string; // city/hauler official sorting guide URL
   hhwInstructions?: string;
   setupPhotos?: SetupPhoto[];
   schedule?: ScheduleItem[];

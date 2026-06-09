@@ -52,6 +52,7 @@ export default async function EditPropertyPage({
             latitude: property.latitude,
             longitude: property.longitude,
             county: property.county,
+            guideUrl: property.guideUrl,
             hhwInstructions: property.hhwInstructions,
             porterId: property.porterId,
             nightPorterId: property.nightPorterId,

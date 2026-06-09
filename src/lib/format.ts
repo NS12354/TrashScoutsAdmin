@@ -9,7 +9,7 @@ export const DAY_NAMES = [
 ];
 
 export const BIN_LABEL: Record<string, string> = {
-  TRASH: "Trash",
+  TRASH: "Landfill",
   RECYCLING: "Recycling",
   ORGANICS: "Organics",
   FIBER: "Fiber / Cardboard",
@@ -57,6 +57,38 @@ export function binSizeLabel(cuyd: number | null | undefined) {
   return (
     BIN_SIZE_OPTIONS.find((s) => Math.abs(s.cuyd - cuyd) < 0.0001)?.label ?? null
   );
+}
+
+// Short size string for use inside a bin badge — "2 Yard" or "96 Gal".
+// Falls back to a generic "X cu yd" if we don't recognize the size as a
+// standard cart or dumpster.
+function shortBinSize(cuyd: number): { sizeText: string; suffix: string } {
+  if (cuyd >= 1) {
+    const num = cuyd % 1 === 0 ? String(cuyd) : cuyd.toFixed(1);
+    return { sizeText: `${num} Yard`, suffix: "Dumpster" };
+  }
+  return { sizeText: `${Math.round(cuyd * 202)} Gal`, suffix: "Cart" };
+}
+
+// Format a service-schedule bin badge for the resident page.
+//   "(2) 2 Yard Recycling Dumpster"
+//   "1 Yard Landfill Dumpster" (count omitted when 1)
+//   "96 Gal Organics Cart"
+// Falls back to "Recycling × 2" when size isn't set so we don't lie
+// about contracted bin specs we don't have on file.
+export function formatBinBadge(
+  binType: string,
+  binCount: number | null | undefined,
+  binSize: number | null | undefined,
+): string {
+  const label = BIN_LABEL[binType] ?? binType;
+  if (binSize == null) {
+    if (binCount && binCount > 1) return `${label} × ${binCount}`;
+    return label;
+  }
+  const { sizeText, suffix } = shortBinSize(binSize);
+  const countPrefix = binCount && binCount > 1 ? `(${binCount}) ` : "";
+  return `${countPrefix}${sizeText} ${label} ${suffix}`;
 }
 
 // Counties we have agency recycling info for. The value is what's stored

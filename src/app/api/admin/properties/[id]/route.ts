@@ -23,6 +23,7 @@ type UpdateBody = {
   latitude?: number | null;
   longitude?: number | null;
   county?: string | null;
+  guideUrl?: string | null;
   hhwInstructions?: string | null;
   porterId?: string | null;
   nightPorterId?: string | null;
@@ -48,6 +49,7 @@ export async function PATCH(
   if ("latitude" in body) data.latitude = body.latitude ?? null;
   if ("longitude" in body) data.longitude = body.longitude ?? null;
   if ("county" in body) data.county = body.county || null;
+  if ("guideUrl" in body) data.guideUrl = body.guideUrl?.trim() || null;
   if ("hhwInstructions" in body)
     data.hhwInstructions = body.hhwInstructions?.trim() || null;
   if ("porterId" in body) data.porterId = body.porterId || null;

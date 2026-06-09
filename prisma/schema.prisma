@@ -77,6 +77,12 @@ model Property {
   // COUNTY_OPTIONS in lib/format.ts (e.g. "ALAMEDA"). Nullable: legacy
   // properties without a county still see the generic guide.
   county          String?
+  // Direct link to the city/hauler's official sorting guide (PDF or web
+  // page). Shown on the resident "What Goes Where" page so residents
+  // get authoritative graphics from the agency rather than the generic
+  // in-app text. Nullable: properties without a URL fall back to the
+  // generic guide.
+  guideUrl        String?
   hhwInstructions String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

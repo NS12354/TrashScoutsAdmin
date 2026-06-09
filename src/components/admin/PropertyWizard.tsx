@@ -70,6 +70,7 @@ type Props = {
     latitude: number | null;
     longitude: number | null;
     county: string | null;
+    guideUrl: string | null;
     hhwInstructions: string | null;
     porterId: string | null;
     nightPorterId: string | null;
@@ -89,6 +90,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
     initial?.longitude?.toString() ?? "",
   );
   const [county, setCounty] = useState<string>(initial?.county ?? "");
+  const [guideUrl, setGuideUrl] = useState<string>(initial?.guideUrl ?? "");
   const [hhwInstructions, setHhwInstructions] = useState(
     initial?.hhwInstructions ?? "",
   );
@@ -338,6 +340,7 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
         latitude: Number.isFinite(lat) ? lat : null,
         longitude: Number.isFinite(lng) ? lng : null,
         county: county || null,
+        guideUrl: guideUrl.trim() || null,
         hhwInstructions: hhwInstructions.trim() || null,
         porterId: porterId || null,
         nightPorterId: nightPorterId || null,
@@ -444,6 +447,20 @@ export function PropertyWizard({ mode, propertyId, initial }: Props) {
           <span className="mt-1 block text-xs text-zinc-500">
             Drives the official recycling-agency link shown on the
             resident Recycling Guide.
+          </span>
+        </Field>
+        <Field label="What Goes Where Guide URL (optional)">
+          <input
+            type="url"
+            value={guideUrl}
+            onChange={(e) => setGuideUrl(e.target.value)}
+            placeholder="https://alamedacountyindustries.com/.../service-guide.pdf"
+            className="w-full input"
+          />
+          <span className="mt-1 block text-xs text-zinc-500">
+            Direct link to the city or hauler&apos;s official sorting guide
+            (PDF or web page). Shown as the primary CTA on the resident
+            What Goes Where page. Overrides the county agency link.
           </span>
         </Field>
       </Section>
