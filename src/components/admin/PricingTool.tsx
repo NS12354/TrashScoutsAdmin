@@ -3,12 +3,20 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BRAND_LOGO, BRAND_NAME } from "@/lib/brand";
+import { autofillStreamsFromSchedule } from "@/lib/pricing";
 import styles from "./PricingTool.module.css";
 
 export type PricingPropertyOption = {
   id: string;
   name: string;
   address: string;
+  schedule: Array<{
+    binType: string;
+    action: string;
+    binCount: number | null;
+    binSize: number | null;
+    dayOfWeek: number;
+  }>;
 };
 
 export type SavedPricingQuote = {
@@ -375,6 +383,7 @@ export function PricingTool({
   const [streams, setStreams] = useState<Stream[]>(() => [newStream()]);
   const [propertyId, setPropertyId] = useState<string>("");
   const [propName, setPropName] = useState("");
+  const [propAddress, setPropAddress] = useState("");
   const [propBy, setPropBy] = useState("");
   const [drive, setDrive] = useState(5);
   const [cleanup, setCleanup] = useState(5);
@@ -545,6 +554,7 @@ export function PricingTool({
     setMargin(50);
     setPropertyId("");
     setPropName("");
+    setPropAddress("");
     setPropBy("");
     setShowProposal(false);
     setSavedQuoteId(null);
@@ -552,16 +562,40 @@ export function PricingTool({
   }
 
   function onPropertyChange(id: string) {
-    // Switching properties clears any in-flight save state and the
-    // streams/calculator so a new quote isn't half-built against the
-    // wrong property. The "Prepared by" stays — it's usually the
-    // same admin.
+    // Switching properties clears any in-flight save state and
+    // repopulates the calculator from the property's Service
+    // Schedule when bin sizes are set. The "Prepared by" stays —
+    // it's usually the same admin.
     setPropertyId(id);
     setSavedQuoteId(null);
     setSaveError(null);
     const p = id ? properties.find((x) => x.id === id) : null;
     setPropName(p?.name ?? "");
+    setPropAddress(p?.address ?? "");
     nextStreamId = 0;
+
+    if (p && p.schedule.length > 0) {
+      const autofilled = autofillStreamsFromSchedule(p.schedule);
+      if (autofilled.length > 0) {
+        // Map each autofilled group onto a full Stream by starting
+        // from newStream()'s defaults and overlaying the schedule-
+        // derived fields. Everything stays editable — admin can tap
+        // any field to override.
+        setStreams(
+          autofilled.map((a) => {
+            const base = newStream();
+            base.stream = a.stream as Stream["stream"];
+            base.customName = a.customName;
+            base.carts = a.carts;
+            base.dumpsters = a.dumpsters;
+            base.days = new Set(a.days);
+            base.mode = a.mode;
+            return base;
+          }),
+        );
+        return;
+      }
+    }
     setStreams([newStream()]);
   }
 
@@ -667,6 +701,7 @@ export function PricingTool({
     return (
       <ProposalOutput
         propName={propName}
+        propAddress={propAddress}
         propBy={propBy}
         streams={calc.active}
         monthlyPrice={calc.price}
@@ -725,6 +760,12 @@ export function PricingTool({
                 value={propName}
                 onChange={(e) => setPropName(e.target.value)}
                 placeholder="Property / client name"
+              />
+              <input
+                className={styles.propfield}
+                value={propAddress}
+                onChange={(e) => setPropAddress(e.target.value)}
+                placeholder="Property address (optional)"
               />
               <input
                 className={styles.propfield}
@@ -1404,18 +1445,21 @@ function BdRow({
 
 function ProposalOutput({
   propName,
+  propAddress,
   propBy,
   streams,
   monthlyPrice,
   onBack,
 }: {
   propName: string;
+  propAddress: string;
   propBy: string;
   streams: Stream[];
   monthlyPrice: number;
   onBack: () => void;
 }) {
   const name = propName.trim() || "Prospective Client";
+  const address = propAddress.trim();
   const today = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -1477,6 +1521,18 @@ function ProposalOutput({
           <div>
             <span className={styles.plabel}>Prepared for</span>
             {name}
+            {address && (
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "#777",
+                  marginTop: 2,
+                  fontWeight: 400,
+                }}
+              >
+                {address}
+              </div>
+            )}
           </div>
           {propBy && (
             <div>

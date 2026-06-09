@@ -13,7 +13,20 @@ export default async function PricingPage() {
   const [properties, quotes] = await Promise.all([
     prisma.property.findMany({
       orderBy: { name: "asc" },
-      select: { id: true, name: true, address: true },
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        schedule: {
+          select: {
+            binType: true,
+            action: true,
+            binCount: true,
+            binSize: true,
+            dayOfWeek: true,
+          },
+        },
+      },
     }),
     prisma.pricingQuote.findMany({
       orderBy: { createdAt: "desc" },
@@ -36,6 +49,13 @@ export default async function PricingPage() {
     id: p.id,
     name: p.name,
     address: p.address,
+    schedule: p.schedule.map((s) => ({
+      binType: s.binType,
+      action: s.action,
+      binCount: s.binCount,
+      binSize: s.binSize,
+      dayOfWeek: s.dayOfWeek,
+    })),
   }));
 
   const savedQuotes: SavedPricingQuote[] = quotes.map((q) => ({
