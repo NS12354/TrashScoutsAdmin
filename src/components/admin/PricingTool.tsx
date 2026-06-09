@@ -1,8 +1,27 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { BRAND_LOGO, BRAND_NAME } from "@/lib/brand";
 import styles from "./PricingTool.module.css";
+
+export type PricingPropertyOption = {
+  id: string;
+  name: string;
+  address: string;
+};
+
+export type SavedPricingQuote = {
+  id: string;
+  propertyId: string;
+  propertyName: string;
+  clientName: string;
+  preparedBy: string | null;
+  monthlyPrice: number;
+  weeklyPrice: number;
+  createdByName: string | null;
+  createdAt: string;
+};
 
 /* ─── Constants ported from the standalone HTML ─────────────────── */
 
@@ -300,10 +319,61 @@ function extrasLabel(s: Stream): string {
   return ex.length ? ex.join(" · ") : "none";
 }
 
+/* ─── Save / load serialization ──────────────────────────────────
+ * Streams hold Sets which JSON can't carry verbatim, so we convert
+ * them to arrays on save and back to Sets on load. The wrapping
+ * envelope also captures global settings so a reopened quote
+ * restores the exact calculator state.
+ */
+
+type SerializedStream = Omit<Stream, "days" | "cartDays" | "dumpDays"> & {
+  days: number[];
+  cartDays: number[];
+  dumpDays: number[];
+};
+
+type SerializedTool = {
+  v: 1;
+  streams: SerializedStream[];
+  drive: number;
+  cleanup: number;
+  wage: number;
+  overhead: number;
+  minPrice: number;
+  margin: number;
+};
+
+function serializeStream(s: Stream): SerializedStream {
+  return {
+    ...s,
+    days: [...s.days],
+    cartDays: [...s.cartDays],
+    dumpDays: [...s.dumpDays],
+  };
+}
+
+function deserializeStream(s: SerializedStream): Stream {
+  return {
+    ...s,
+    id: ++nextStreamId,
+    days: new Set(s.days ?? []),
+    cartDays: new Set(s.cartDays ?? []),
+    dumpDays: new Set(s.dumpDays ?? []),
+  };
+}
+
 /* ─── Top-level component ───────────────────────────────────────── */
 
-export function PricingTool() {
+export function PricingTool({
+  properties,
+  savedQuotes,
+}: {
+  properties: PricingPropertyOption[];
+  savedQuotes: SavedPricingQuote[];
+}) {
+  const router = useRouter();
   const [streams, setStreams] = useState<Stream[]>(() => [newStream()]);
+  const [propertyId, setPropertyId] = useState<string>("");
   const [propName, setPropName] = useState("");
   const [propBy, setPropBy] = useState("");
   const [drive, setDrive] = useState(5);
@@ -313,6 +383,9 @@ export function PricingTool() {
   const [minPrice, setMinPrice] = useState(0);
   const [margin, setMargin] = useState(50);
   const [showProposal, setShowProposal] = useState(false);
+  const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const calc = useMemo(() => {
     const active = streams.filter(scheduled);
@@ -470,9 +543,124 @@ export function PricingTool() {
     setOverhead(25);
     setMinPrice(0);
     setMargin(50);
+    setPropertyId("");
     setPropName("");
     setPropBy("");
     setShowProposal(false);
+    setSavedQuoteId(null);
+    setSaveError(null);
+  }
+
+  function onPropertyChange(id: string) {
+    // Switching properties clears any in-flight save state and the
+    // streams/calculator so a new quote isn't half-built against the
+    // wrong property. The "Prepared by" stays — it's usually the
+    // same admin.
+    setPropertyId(id);
+    setSavedQuoteId(null);
+    setSaveError(null);
+    const p = id ? properties.find((x) => x.id === id) : null;
+    setPropName(p?.name ?? "");
+    nextStreamId = 0;
+    setStreams([newStream()]);
+  }
+
+  async function saveQuote() {
+    if (!calc.has) return;
+    if (!propertyId) {
+      setSaveError(
+        "Pick a property from the dropdown before saving — saved quotes are tied to a property.",
+      );
+      return;
+    }
+    setSaving(true);
+    setSaveError(null);
+    const data: SerializedTool = {
+      v: 1,
+      streams: streams.map(serializeStream),
+      drive,
+      cleanup,
+      wage,
+      overhead,
+      minPrice,
+      margin,
+    };
+    const weeklyPrice = Math.round(calc.price / WEEKS);
+    try {
+      const res = await fetch("/api/admin/pricing-quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          propertyId,
+          clientName: propName.trim() || "Client",
+          preparedBy: propBy.trim() || null,
+          data,
+          monthlyPrice: calc.price,
+          weeklyPrice,
+          breakEvenCost: calc.cost,
+        }),
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(j.error || `Save failed (${res.status})`);
+      }
+      const j = (await res.json()) as { id: string };
+      setSavedQuoteId(j.id);
+      router.refresh();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function reopen(quoteId: string) {
+    try {
+      const res = await fetch(`/api/admin/pricing-quotes/${quoteId}`);
+      if (!res.ok) throw new Error(`Couldn't load quote (${res.status})`);
+      const q = (await res.json()) as {
+        id: string;
+        propertyId: string;
+        clientName: string;
+        preparedBy: string | null;
+        data: SerializedTool;
+      };
+      nextStreamId = 0;
+      setPropertyId(q.propertyId);
+      setPropName(q.clientName);
+      setPropBy(q.preparedBy ?? "");
+      setStreams(q.data.streams.map(deserializeStream));
+      setDrive(q.data.drive);
+      setCleanup(q.data.cleanup);
+      setWage(q.data.wage);
+      setOverhead(q.data.overhead);
+      setMinPrice(q.data.minPrice);
+      setMargin(q.data.margin);
+      setSavedQuoteId(q.id);
+      setSaveError(null);
+      setShowProposal(false);
+      try {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } catch {
+        /* ignore */
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Couldn't reopen quote");
+    }
+  }
+
+  async function deleteSaved(quoteId: string) {
+    if (!confirm("Delete this saved quote? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/admin/pricing-quotes/${quoteId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(`Delete failed (${res.status})`);
+      if (savedQuoteId === quoteId) setSavedQuoteId(null);
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Delete failed");
+    }
   }
 
   if (showProposal && calc.has) {
@@ -503,12 +691,35 @@ export function PricingTool() {
           </p>
         </header>
 
+        {savedQuotes.length > 0 && (
+          <SavedQuotesList
+            quotes={savedQuotes}
+            onReopen={reopen}
+            onDelete={deleteSaved}
+          />
+        )}
+
         <div className={styles.layout}>
           <div>
             <div className={styles.card}>
               <div className={styles.sectLabel} style={{ marginBottom: 10 }}>
                 Property
               </div>
+              {properties.length > 0 && (
+                <select
+                  className={styles.propfield}
+                  value={propertyId}
+                  onChange={(e) => onPropertyChange(e.target.value)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <option value="">— Pick a saved property to save against —</option>
+                  {properties.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              )}
               <input
                 className={styles.propfield}
                 value={propName}
@@ -632,6 +843,11 @@ export function PricingTool() {
             sowVisits={calc.sowVisits}
             onGenerate={() => setShowProposal(true)}
             onReset={reset}
+            onSave={saveQuote}
+            saving={saving}
+            saved={!!savedQuoteId}
+            saveError={saveError}
+            propertyPicked={!!propertyId}
           />
         </div>
 
@@ -961,6 +1177,11 @@ function ResultPanel({
   sowVisits,
   onGenerate,
   onReset,
+  onSave,
+  saving,
+  saved,
+  saveError,
+  propertyPicked,
 }: {
   has: boolean;
   price: number;
@@ -977,6 +1198,11 @@ function ResultPanel({
   sowVisits: number;
   onGenerate: () => void;
   onReset: () => void;
+  onSave: () => void;
+  saving: boolean;
+  saved: boolean;
+  saveError: string | null;
+  propertyPicked: boolean;
 }) {
   return (
     <div className={styles.resultWrap}>
@@ -1100,6 +1326,51 @@ function ResultPanel({
         >
           Generate client proposal
         </button>
+        <button
+          type="button"
+          className={styles.gen}
+          style={{
+            background: "transparent",
+            border: "1px solid rgba(255,255,255,0.25)",
+            color: "#cfe3d5",
+            marginTop: 8,
+          }}
+          onClick={onSave}
+          disabled={!has || saving || saved}
+        >
+          {saved
+            ? "✓ Saved to property"
+            : saving
+              ? "Saving…"
+              : "Save quote to property"}
+        </button>
+        {!propertyPicked && has && (
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 12,
+              color: "#9dc4ac",
+              textAlign: "center",
+            }}
+          >
+            Pick a property at the top to enable saving.
+          </div>
+        )}
+        {saveError && (
+          <div
+            style={{
+              marginTop: 8,
+              fontSize: 12.5,
+              color: "#ffd79a",
+              padding: "8px 11px",
+              background: "rgba(255,200,120,0.14)",
+              border: "1px solid rgba(255,200,120,0.35)",
+              borderRadius: 9,
+            }}
+          >
+            {saveError}
+          </div>
+        )}
         <button
           type="button"
           className={styles.reset}
@@ -1473,6 +1744,106 @@ function NumberField({
           onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
         />
         {suffix && <span className={styles.unit}>{suffix}</span>}
+      </div>
+    </div>
+  );
+}
+
+function SavedQuotesList({
+  quotes,
+  onReopen,
+  onDelete,
+}: {
+  quotes: SavedPricingQuote[];
+  onReopen: (id: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className={styles.card} style={{ marginBottom: 16 }}>
+      <div className={styles.sectLabel} style={{ marginBottom: 10 }}>
+        Saved quotes
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
+          <thead>
+            <tr style={{ textAlign: "left", color: "var(--faint)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <th style={{ padding: "6px 8px", borderBottom: "1px solid var(--line)" }}>Property</th>
+              <th style={{ padding: "6px 8px", borderBottom: "1px solid var(--line)" }}>Client</th>
+              <th style={{ padding: "6px 8px", borderBottom: "1px solid var(--line)" }}>Monthly</th>
+              <th style={{ padding: "6px 8px", borderBottom: "1px solid var(--line)" }}>Saved</th>
+              <th style={{ padding: "6px 8px", borderBottom: "1px solid var(--line)" }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            {quotes.map((q) => (
+              <tr key={q.id}>
+                <td style={{ padding: "8px", borderBottom: "1px solid var(--line)" }}>
+                  {q.propertyName}
+                </td>
+                <td style={{ padding: "8px", borderBottom: "1px solid var(--line)" }}>
+                  {q.clientName}
+                </td>
+                <td
+                  style={{
+                    padding: "8px",
+                    borderBottom: "1px solid var(--line)",
+                    fontFamily: "var(--display)",
+                    fontWeight: 700,
+                  }}
+                >
+                  {usd(q.monthlyPrice)}/mo
+                </td>
+                <td
+                  style={{
+                    padding: "8px",
+                    borderBottom: "1px solid var(--line)",
+                    color: "var(--muted)",
+                    fontSize: 12.5,
+                  }}
+                >
+                  {new Date(q.createdAt).toLocaleDateString()}
+                  {q.createdByName && (
+                    <span style={{ color: "var(--faint)" }}> · {q.createdByName}</span>
+                  )}
+                </td>
+                <td
+                  style={{
+                    padding: "8px",
+                    borderBottom: "1px solid var(--line)",
+                    textAlign: "right",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => onReopen(q.id)}
+                    style={{
+                      border: "1px solid var(--line-strong)",
+                      background: "var(--surface)",
+                      borderRadius: 8,
+                      padding: "4px 12px",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      color: "var(--ink)",
+                    }}
+                  >
+                    Reopen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(q.id)}
+                    className={styles.rm}
+                    style={{ marginLeft: 4 }}
+                    aria-label="Delete quote"
+                  >
+                    ×
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -100,6 +100,7 @@ model Property {
   schedule     ScheduleItem[]
   issues       Issue[]
   diversionReports DiversionReport[]
+  pricingQuotes    PricingQuote[]
 }
 
 // ─── Setup photos (per property) ────────────────────────────────────
@@ -184,6 +185,30 @@ model DiversionReport {
   divertedWeekly Float
   divRate        Float
   createdAt      DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([createdAt])
+}
+
+// ─── Saved pricing quotes (per-property) ────────────────────────────
+// Admins build a quote in the /admin/pricing tool, save it against
+// the property they're bidding on, and can reopen / regenerate the
+// proposal later. The full `data` payload (waste streams + global
+// settings) is stored as Json — its shape is defined by the
+// PricingTool component, kept opaque to the DB so we can iterate
+// the calculator without migrations.
+model PricingQuote {
+  id              String   @id @default(cuid())
+  propertyId      String
+  property        Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdByName   String?
+  clientName      String
+  preparedBy      String?
+  data            Json
+  monthlyPrice    Float
+  weeklyPrice     Float
+  breakEvenCost   Float
+  createdAt       DateTime @default(now())
 
   @@index([propertyId])
   @@index([createdAt])
