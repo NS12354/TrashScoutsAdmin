@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BrandHeader } from "@/components/BrandHeader";
-import { GuideRenderer } from "@/components/GuideRenderer";
-import { getProperty, getWasteGuide } from "@/lib/data";
+import { WhatGoesWhereCards } from "@/components/WhatGoesWhereCards";
+import { getProperty } from "@/lib/data";
 import { COUNTY_AGENCY, countyLabel } from "@/lib/format";
+import { guideForCounty } from "@/data/countyGuides";
 
 export const dynamic = "force-dynamic";
 
@@ -16,13 +17,12 @@ export default async function WhatGoesWherePage({
   const property = await getProperty(id);
   if (!property) return notFound();
 
-  const guide = await getWasteGuide();
+  const guide = guideForCounty(property.county);
   const agency = property.county ? COUNTY_AGENCY[property.county] : null;
   const officialUrl = property.guideUrl || agency?.url || null;
   const officialName =
-    (property.guideUrl && agency?.name) ||
-    agency?.name ||
-    (property.guideUrl ? "Official Guide" : null);
+    agency?.name ?? (property.guideUrl ? "Official Guide" : null);
+  const countyName = countyLabel(property.county);
 
   return (
     <>
@@ -31,20 +31,22 @@ export default async function WhatGoesWherePage({
         <h1 className="text-xl font-semibold tracking-tight">
           What Goes Where
         </h1>
-        <p className="mt-1 text-sm capitalize text-zinc-500">{property.name}</p>
+        <p className="mt-1 text-sm capitalize text-zinc-500">
+          {property.name}
+          {countyName ? ` · ${countyName}` : ""}
+        </p>
       </div>
 
-      {/* Big primary CTA — the city's authoritative sorting guide. Drives
-          residents to the source-of-truth content (with photos) rather
-          than leaning on our in-app text. Shown whenever we have a URL
-          (admin-pasted property.guideUrl wins, agency map is the
-          fallback). */}
+      {/* City/county-specific authoritative guide — shown whenever we
+          have a URL (admin-pasted property.guideUrl wins, agency map
+          is the fallback). This is the source of truth; the cards
+          below are the in-app quick-reference. */}
       {officialUrl && (
         <a
           href={officialUrl}
           target="_blank"
           rel="noreferrer"
-          className="mb-3 flex items-start gap-3 rounded-2xl bg-gradient-to-br from-brand to-brand-dark p-4 text-white shadow-sm transition hover:brightness-110"
+          className="mb-4 flex items-start gap-3 rounded-2xl bg-gradient-to-br from-brand to-brand-dark p-4 text-white shadow-sm transition hover:brightness-110"
         >
           <span
             aria-hidden
@@ -66,35 +68,29 @@ export default async function WhatGoesWherePage({
           </span>
           <div className="min-w-0 flex-1">
             <div className="text-xs font-semibold uppercase tracking-wide text-white/85">
-              {countyLabel(property.county) ?? "Local"} sorting guide
+              {countyName ?? "Local"} sorting guide
             </div>
             <div className="mt-0.5 text-[15px] font-semibold leading-tight">
               Open official guide{officialName ? `: ${officialName}` : ""}
             </div>
             <div className="mt-0.5 text-xs text-white/85">
-              Photos and up-to-date rules for your address
+              Searchable A–Z list with photos for your address
             </div>
           </div>
         </a>
       )}
 
-      {/* In-app quick reference. Useful when residents don't want to
-          leave the page or when the property has no city URL on file. */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200">
-        <div className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-          Quick reference
-        </div>
-        <div className="mt-2">
-          <GuideRenderer content={guide.content} variant="light" />
-        </div>
-      </div>
+      {/* Visual material cards — Yes / Keep out lists with emoji
+          item icons. Content is per-county so SF residents see SF's
+          stricter copy, etc. */}
+      <WhatGoesWhereCards guide={guide} />
 
       {/* Deep link into the Household Hazardous Waste page so we can
           drop the standalone HHW tile from the resident home screen
           without losing access to that content. */}
       <Link
         href={`/p/${id}/hhw`}
-        className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200 transition hover:bg-amber-100"
+        className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200 transition hover:bg-amber-100"
       >
         <div className="min-w-0">
           <div className="text-xs font-semibold uppercase tracking-wide text-amber-700">
