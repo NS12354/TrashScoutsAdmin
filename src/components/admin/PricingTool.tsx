@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { BRAND_LOGO, BRAND_NAME } from "@/lib/brand";
 import { autofillStreamsFromSchedule } from "@/lib/pricing";
 import styles from "./PricingTool.module.css";
@@ -380,6 +380,10 @@ export function PricingTool({
   savedQuotes: SavedPricingQuote[];
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Guard so the URL-param effect only auto-loads once per mount —
+  // otherwise switching properties manually would re-trigger it.
+  const handledDeepLink = useRef(false);
   const [streams, setStreams] = useState<Stream[]>(() => [newStream()]);
   const [propertyId, setPropertyId] = useState<string>("");
   const [propName, setPropName] = useState("");
@@ -696,6 +700,27 @@ export function PricingTool({
       alert(err instanceof Error ? err.message : "Delete failed");
     }
   }
+
+  // Deep-link support for /admin/properties/[id]/pricing → calculator.
+  // ?quote=<id> reopens a saved quote (fetches and loads everything);
+  // ?property=<id> just preselects the property + autofills from its
+  // schedule. Runs once per mount.
+  useEffect(() => {
+    if (handledDeepLink.current) return;
+    const quoteParam = searchParams.get("quote");
+    const propertyParam = searchParams.get("property");
+    if (!quoteParam && !propertyParam) return;
+    handledDeepLink.current = true;
+    if (quoteParam) {
+      void reopen(quoteParam);
+    } else if (propertyParam) {
+      onPropertyChange(propertyParam);
+    }
+    // We intentionally don't depend on the function refs — they're
+    // stable enough for a once-per-mount effect, and we don't want
+    // to re-fire when state changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   if (showProposal && calc.has) {
     return (

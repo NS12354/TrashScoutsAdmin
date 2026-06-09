@@ -34,12 +34,20 @@ export default async function EditPropertyPage({
           <h1 className="text-2xl font-semibold tracking-tight capitalize">{property.name}</h1>
           <p className="text-sm capitalize text-zinc-500">{property.address}</p>
         </div>
-        <Link
-          href={`/admin/properties/${property.id}/qr`}
-          className="btn-secondary"
-        >
-          View QR
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/admin/properties/${property.id}/pricing`}
+            className="btn-secondary"
+          >
+            Pricing
+          </Link>
+          <Link
+            href={`/admin/properties/${property.id}/qr`}
+            className="btn-secondary"
+          >
+            View QR
+          </Link>
+        </div>
       </div>
 
       <div className="mt-6">

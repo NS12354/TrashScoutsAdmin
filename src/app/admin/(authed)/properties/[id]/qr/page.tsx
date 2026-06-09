@@ -59,6 +59,12 @@ export default async function PropertyQRPage({
           Edit this property
         </Link>
         <Link
+          href={`/admin/properties/${property.id}/pricing`}
+          className="btn-secondary"
+        >
+          Pricing
+        </Link>
+        <Link
           href="/admin/properties/new"
           className="btn-primary"
         >
