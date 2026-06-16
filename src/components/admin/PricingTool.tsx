@@ -723,6 +723,16 @@ export function PricingTool({
   }, [searchParams]);
 
   if (showProposal && calc.has) {
+    const proposalData = {
+      v: 1 as const,
+      streams: calc.active.map(serializeStream),
+      drive,
+      cleanup,
+      wage,
+      overhead,
+      minPrice,
+      margin,
+    };
     return (
       <ProposalOutput
         propName={propName}
@@ -730,6 +740,11 @@ export function PricingTool({
         propBy={propBy}
         streams={calc.active}
         monthlyPrice={calc.price}
+        weeklyPrice={Math.round(calc.price / WEEKS)}
+        breakEvenCost={calc.cost}
+        proposalData={proposalData}
+        propertyId={propertyId}
+        savedQuoteId={savedQuoteId}
         onBack={() => setShowProposal(false)}
       />
     );
@@ -1474,6 +1489,11 @@ function ProposalOutput({
   propBy,
   streams,
   monthlyPrice,
+  weeklyPrice,
+  breakEvenCost,
+  proposalData,
+  propertyId,
+  savedQuoteId,
   onBack,
 }: {
   propName: string;
@@ -1481,6 +1501,11 @@ function ProposalOutput({
   propBy: string;
   streams: Stream[];
   monthlyPrice: number;
+  weeklyPrice: number;
+  breakEvenCost: number;
+  proposalData: SerializedTool;
+  propertyId: string;
+  savedQuoteId: string | null;
   onBack: () => void;
 }) {
   const name = propName.trim() || "Prospective Client";
@@ -1493,7 +1518,7 @@ function ProposalOutput({
   const order: Mode[] = ["both", "pull", "cycle", "sow"];
   const present = order.filter((m) => streams.some((s) => s.mode === m));
   const hauler = present.some((m) => m !== "sow");
-  const weekly = Math.round(monthlyPrice / WEEKS);
+  const weekly = weeklyPrice;
 
   const benefits: Array<{ title: string; body: string }> = [];
   if (hauler) {
@@ -1524,6 +1549,17 @@ function ProposalOutput({
           <button type="button" onClick={onBack}>
             ← Back to calculator
           </button>
+          <SendProposalButton
+            propertyId={propertyId}
+            savedQuoteId={savedQuoteId}
+            clientName={name}
+            clientAddress={address}
+            preparedBy={propBy.trim() || null}
+            monthlyPrice={monthlyPrice}
+            weeklyPrice={weeklyPrice}
+            breakEvenCost={breakEvenCost}
+            data={proposalData}
+          />
           <button
             type="button"
             className={styles.pprint}
@@ -1925,6 +1961,198 @@ function SavedQuotesList({
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+function SendProposalButton({
+  propertyId,
+  savedQuoteId,
+  clientName,
+  clientAddress,
+  preparedBy,
+  monthlyPrice,
+  weeklyPrice,
+  breakEvenCost,
+  data,
+}: {
+  propertyId: string;
+  savedQuoteId: string | null;
+  clientName: string;
+  clientAddress: string;
+  preparedBy: string | null;
+  monthlyPrice: number;
+  weeklyPrice: number;
+  breakEvenCost: number;
+  data: SerializedTool;
+}) {
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sentLink, setSentLink] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function send() {
+    if (!email.trim()) {
+      setErr("Enter the client's email.");
+      return;
+    }
+    setSending(true);
+    setErr(null);
+    try {
+      const res = await fetch("/api/admin/proposals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          propertyId: propertyId || null,
+          pricingQuoteId: savedQuoteId,
+          clientName,
+          clientAddress: clientAddress || null,
+          clientEmail: email.trim(),
+          preparedBy,
+          data,
+          monthlyPrice,
+          weeklyPrice,
+          breakEvenCost,
+          message: message.trim() || null,
+        }),
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(j.error || `Send failed (${res.status})`);
+      }
+      const j = (await res.json()) as { token: string; emailSkipped?: boolean };
+      setSentLink(`/proposals/${j.token}`);
+      if (j.emailSkipped) {
+        setErr(
+          "Saved, but email wasn't sent (SENDGRID_API_KEY not set). Copy the link below.",
+        );
+      }
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Send failed");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  if (sentLink) {
+    const fullLink = `${typeof window !== "undefined" ? window.location.origin : ""}${sentLink}`;
+    return (
+      <div
+        style={{
+          flex: "1 1 100%",
+          background: "#E7F1EA",
+          border: "1px solid #CFE3D6",
+          borderRadius: 9,
+          padding: "10px 14px",
+          fontSize: 13,
+          color: "#0E3F27",
+        }}
+      >
+        <b>✓ Proposal sent to {email}.</b> They&apos;ll receive a link to view
+        and accept it.
+        {err && (
+          <div style={{ color: "#7C4A00", marginTop: 6 }}>{err}</div>
+        )}
+        <div style={{ marginTop: 6, fontSize: 12 }}>
+          Link:{" "}
+          <a
+            href={sentLink}
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: "#0E3F27", textDecoration: "underline" }}
+          >
+            {fullLink}
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        style={{
+          background: "#1FA864",
+          borderColor: "#1FA864",
+          color: "#06281A",
+          fontWeight: 700,
+        }}
+        onClick={() => setOpen(true)}
+      >
+        Send to client →
+      </button>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        flex: "1 1 100%",
+        background: "#F7F6F1",
+        border: "1px solid #ECEAE2",
+        borderRadius: 9,
+        padding: 12,
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+      }}
+    >
+      <input
+        type="email"
+        placeholder="Client email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        style={{
+          padding: "9px 11px",
+          borderRadius: 8,
+          border: "1px solid #C7C5BB",
+          fontSize: 14,
+          fontFamily: "inherit",
+        }}
+      />
+      <textarea
+        placeholder="Optional note to include in the email…"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        rows={2}
+        style={{
+          padding: "9px 11px",
+          borderRadius: 8,
+          border: "1px solid #C7C5BB",
+          fontSize: 13.5,
+          fontFamily: "inherit",
+          resize: "vertical",
+          minHeight: 50,
+        }}
+      />
+      {err && (
+        <div style={{ color: "#C8442E", fontSize: 12 }}>{err}</div>
+      )}
+      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          disabled={sending}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          style={{
+          background: "#1FA864",
+          borderColor: "#1FA864",
+          color: "#06281A",
+          fontWeight: 700,
+        }}
+          onClick={send}
+          disabled={sending}
+        >
+          {sending ? "Sending…" : "Send proposal"}
+        </button>
       </div>
     </div>
   );

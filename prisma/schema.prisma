@@ -101,6 +101,7 @@ model Property {
   issues       Issue[]
   diversionReports DiversionReport[]
   pricingQuotes    PricingQuote[]
+  proposals        Proposal[]
 }
 
 // ─── Setup photos (per property) ────────────────────────────────────
@@ -212,6 +213,72 @@ model PricingQuote {
 
   @@index([propertyId])
   @@index([createdAt])
+}
+
+// ─── Sent proposals + signed agreements ─────────────────────────────
+// A Proposal is the snapshot an admin sends to a client. The token
+// becomes the public URL (/proposals/<token>) — unguessable, no auth.
+// All the data needed to render the proposal lives in `data` (the
+// same SerializedTool envelope PricingQuote uses), so price + scope
+// are preserved exactly as sent even if the underlying quote changes.
+//
+// SignedAgreement is the client's filled-and-signed copy. One proposal
+// can have multiple signed agreements in theory (client signs, then
+// resigns); the most recent one is the canonical record.
+model Proposal {
+  id             String   @id @default(cuid())
+  token          String   @unique
+
+  propertyId     String?
+  property       Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  pricingQuoteId String?
+
+  createdByName  String?
+  clientName     String
+  clientAddress  String?
+  clientEmail    String
+  preparedBy     String?
+
+  data           Json
+  monthlyPrice   Float
+  weeklyPrice    Float
+  breakEvenCost  Float
+  validUntil     DateTime
+
+  sentAt         DateTime?
+  viewedAt       DateTime?
+  acceptedAt     DateTime?
+
+  createdAt      DateTime @default(now())
+
+  agreements     SignedAgreement[]
+
+  @@index([propertyId])
+  @@index([createdAt])
+}
+
+model SignedAgreement {
+  id             String   @id @default(cuid())
+  proposalId     String
+  proposal       Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  // All the form fields the client filled in (property info, contacts,
+  // customer type, access notes). Opaque to the DB so the form shape
+  // can evolve without migrations.
+  formData       Json
+  signatureType  String   // 'drawn' | 'typed'
+  // Drawn: data URL of the canvas PNG. Typed: the text the client typed.
+  // We use @db.Text since drawn-signature PNGs run 30–100 KB.
+  signatureValue String   @db.Text
+  // Only set when signatureType === 'typed' — captures which cursive
+  // font the client picked so the signed copy renders identically.
+  signatureFont  String?
+  signerName     String
+  signerTitle    String?
+
+  signedAt       DateTime @default(now())
+
+  @@index([proposalId])
 }
 
 // ─── Shared guides (waste + HHW) ────────────────────────────────────
