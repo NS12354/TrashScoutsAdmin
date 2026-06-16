@@ -4,13 +4,15 @@ import {
   type PricingPropertyOption,
   type SavedPricingQuote,
 } from "@/components/admin/PricingTool";
+import { type SentProposalRow } from "@/components/admin/SentProposalsList";
 
 export const dynamic = "force-dynamic";
 
 const SAVED_QUOTE_LIMIT = 30;
+const PROPOSAL_LIMIT = 30;
 
 export default async function PricingPage() {
-  const [properties, quotes] = await Promise.all([
+  const [properties, quotes, proposals] = await Promise.all([
     prisma.property.findMany({
       orderBy: { name: "asc" },
       select: {
@@ -43,6 +45,29 @@ export default async function PricingPage() {
         property: { select: { name: true } },
       },
     }),
+    prisma.proposal.findMany({
+      orderBy: { createdAt: "desc" },
+      take: PROPOSAL_LIMIT,
+      select: {
+        id: true,
+        token: true,
+        clientName: true,
+        clientEmail: true,
+        monthlyPrice: true,
+        weeklyPrice: true,
+        sentAt: true,
+        viewedAt: true,
+        acceptedAt: true,
+        validUntil: true,
+        createdByName: true,
+        property: { select: { id: true, name: true } },
+        agreements: {
+          orderBy: { signedAt: "desc" },
+          take: 1,
+          select: { id: true, signerName: true, signedAt: true },
+        },
+      },
+    }),
   ]);
 
   const propertyOptions: PricingPropertyOption[] = properties.map((p) => ({
@@ -70,7 +95,33 @@ export default async function PricingPage() {
     createdAt: q.createdAt.toISOString(),
   }));
 
+  const proposalRows: SentProposalRow[] = proposals.map((p) => ({
+    id: p.id,
+    token: p.token,
+    clientName: p.clientName,
+    clientEmail: p.clientEmail,
+    monthlyPrice: p.monthlyPrice,
+    weeklyPrice: p.weeklyPrice,
+    sentAt: p.sentAt?.toISOString() ?? null,
+    viewedAt: p.viewedAt?.toISOString() ?? null,
+    acceptedAt: p.acceptedAt?.toISOString() ?? null,
+    validUntil: p.validUntil.toISOString(),
+    createdByName: p.createdByName,
+    property: p.property,
+    latestAgreement: p.agreements[0]
+      ? {
+          id: p.agreements[0].id,
+          signerName: p.agreements[0].signerName,
+          signedAt: p.agreements[0].signedAt.toISOString(),
+        }
+      : null,
+  }));
+
   return (
-    <PricingTool properties={propertyOptions} savedQuotes={savedQuotes} />
+    <PricingTool
+      properties={propertyOptions}
+      savedQuotes={savedQuotes}
+      sentProposals={proposalRows}
+    />
   );
 }

@@ -4,6 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BRAND_LOGO, BRAND_NAME } from "@/lib/brand";
 import { autofillStreamsFromSchedule } from "@/lib/pricing";
+import {
+  SentProposalsList,
+  type SentProposalRow,
+} from "@/components/admin/SentProposalsList";
 import styles from "./PricingTool.module.css";
 
 export type PricingPropertyOption = {
@@ -375,9 +379,11 @@ function deserializeStream(s: SerializedStream): Stream {
 export function PricingTool({
   properties,
   savedQuotes,
+  sentProposals = [],
 }: {
   properties: PricingPropertyOption[];
   savedQuotes: SavedPricingQuote[];
+  sentProposals?: SentProposalRow[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -765,6 +771,15 @@ export function PricingTool({
             however you enter it.
           </p>
         </header>
+
+        {sentProposals.length > 0 && (
+          <div className={styles.card} style={{ marginBottom: 16 }}>
+            <div className={styles.sectLabel} style={{ marginBottom: 10 }}>
+              Sent proposals &amp; signed agreements
+            </div>
+            <SentProposalsList proposals={sentProposals} showProperty />
+          </div>
+        )}
 
         {savedQuotes.length > 0 && (
           <SavedQuotesList

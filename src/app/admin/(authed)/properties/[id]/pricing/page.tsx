@@ -2,6 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { PropertyPricingDeleteButton } from "@/components/admin/PropertyPricingDeleteButton";
+import {
+  SentProposalsList,
+  type SentProposalRow,
+} from "@/components/admin/SentProposalsList";
 
 export const dynamic = "force-dynamic";
 
@@ -23,19 +27,66 @@ export default async function PropertyPricingPage({
   });
   if (!property) return notFound();
 
-  const quotes = await prisma.pricingQuote.findMany({
-    where: { propertyId: id },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      clientName: true,
-      preparedBy: true,
-      monthlyPrice: true,
-      weeklyPrice: true,
-      createdByName: true,
-      createdAt: true,
-    },
-  });
+  const [quotes, proposals] = await Promise.all([
+    prisma.pricingQuote.findMany({
+      where: { propertyId: id },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        clientName: true,
+        preparedBy: true,
+        monthlyPrice: true,
+        weeklyPrice: true,
+        createdByName: true,
+        createdAt: true,
+      },
+    }),
+    prisma.proposal.findMany({
+      where: { propertyId: id },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+      select: {
+        id: true,
+        token: true,
+        clientName: true,
+        clientEmail: true,
+        monthlyPrice: true,
+        weeklyPrice: true,
+        sentAt: true,
+        viewedAt: true,
+        acceptedAt: true,
+        validUntil: true,
+        createdByName: true,
+        agreements: {
+          orderBy: { signedAt: "desc" },
+          take: 1,
+          select: { id: true, signerName: true, signedAt: true },
+        },
+      },
+    }),
+  ]);
+
+  const proposalRows: SentProposalRow[] = proposals.map((p) => ({
+    id: p.id,
+    token: p.token,
+    clientName: p.clientName,
+    clientEmail: p.clientEmail,
+    monthlyPrice: p.monthlyPrice,
+    weeklyPrice: p.weeklyPrice,
+    sentAt: p.sentAt?.toISOString() ?? null,
+    viewedAt: p.viewedAt?.toISOString() ?? null,
+    acceptedAt: p.acceptedAt?.toISOString() ?? null,
+    validUntil: p.validUntil.toISOString(),
+    createdByName: p.createdByName,
+    property: null,
+    latestAgreement: p.agreements[0]
+      ? {
+          id: p.agreements[0].id,
+          signerName: p.agreements[0].signerName,
+          signedAt: p.agreements[0].signedAt.toISOString(),
+        }
+      : null,
+  }));
 
   return (
     <div>
@@ -74,6 +125,16 @@ export default async function PropertyPricingPage({
       </div>
 
       <h2 className="mt-6 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        Sent proposals &amp; signed agreements
+      </h2>
+      <div className="mt-3">
+        <SentProposalsList
+          proposals={proposalRows}
+          emptyMessage="No proposals sent to clients yet for this property."
+        />
+      </div>
+
+      <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-zinc-500">
         Saved pricing quotes
       </h2>
 
