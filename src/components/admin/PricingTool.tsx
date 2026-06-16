@@ -775,7 +775,7 @@ export function PricingTool({
         {sentProposals.length > 0 && (
           <div className={styles.card} style={{ marginBottom: 16 }}>
             <div className={styles.sectLabel} style={{ marginBottom: 10 }}>
-              Sent proposals &amp; signed agreements
+              Sent Proposals &amp; Signed Agreements
             </div>
             <SentProposalsList proposals={sentProposals} showProperty />
           </div>
@@ -849,7 +849,7 @@ export function PricingTool({
               className={styles.addBtn}
               onClick={addStream}
             >
-              + Add another service line
+              + Add Another Service Line
             </button>
 
             <details className={styles.card} style={{ padding: 0 }}>
@@ -865,7 +865,7 @@ export function PricingTool({
                   fontFamily: "var(--display)",
                 }}
               >
-                Advanced &amp; rates
+                Advanced &amp; Rates
                 <span
                   style={{
                     fontWeight: 400,
@@ -880,7 +880,7 @@ export function PricingTool({
               </summary>
               <div style={{ padding: "0 22px 20px" }}>
                 <NumberField
-                  label="Drive time per trip"
+                  label="Drive Time per Trip"
                   sub="Higher for out-of-area bids"
                   value={drive}
                   onChange={setDrive}
@@ -888,14 +888,14 @@ export function PricingTool({
                   min={0}
                 />
                 <NumberField
-                  label="Cleanup time per trip"
+                  label="Cleanup Time per Trip"
                   value={cleanup}
                   onChange={setCleanup}
                   suffix="min"
                   min={0}
                 />
                 <NumberField
-                  label="Loaded porter wage"
+                  label="Loaded Porter Wage"
                   value={wage}
                   onChange={setWage}
                   prefix="$"
@@ -911,7 +911,7 @@ export function PricingTool({
                   min={0}
                 />
                 <NumberField
-                  label="Minimum monthly price"
+                  label="Minimum Monthly Price"
                   sub="Quote never drops below this"
                   value={minPrice}
                   onChange={setMinPrice}
@@ -1020,7 +1020,7 @@ function StreamCard({
       )}
 
       <div className={styles.sect}>
-        <div className={styles.sectLabel}>How we service it</div>
+        <div className={styles.sectLabel}>How We Service It</div>
         <Seg
           options={MODE_OPT}
           value={s.mode}
@@ -1044,7 +1044,7 @@ function StreamCard({
         {s.mode !== "sow" && (
           <div className={styles.toggleLine}>
             <div className={styles.rowLabel}>
-              Carts &amp; dumpsters serviced on different days
+              Carts &amp; Dumpsters Serviced on Different Days
               <span className={styles.sub}>
                 e.g. dumpster Fridays, carts Tuesdays
               </span>
@@ -1058,13 +1058,13 @@ function StreamCard({
 
         {splitActive && (
           <div className={styles.reveal}>
-            <div className={styles.miniLabel}>Cart service days</div>
+            <div className={styles.miniLabel}>Cart Service Days</div>
             <Week
               value={s.cartDays}
               onToggle={(d) => onToggleDay("cartDays", d)}
             />
             <div className={styles.miniLabel} style={{ marginTop: 10 }}>
-              Dumpster service days
+              Dumpster Service Days
             </div>
             <Week
               value={s.dumpDays}
@@ -1076,7 +1076,7 @@ function StreamCard({
 
       {s.mode !== "sow" && (
         <div className={styles.sect}>
-          <div className={styles.sectLabel}>Bins on this line</div>
+          <div className={styles.sectLabel}>Bins on This Line</div>
           <Stepper
             label="Carts"
             sub="Handled in pairs"
@@ -1092,7 +1092,7 @@ function StreamCard({
           {(s.mode === "both" || s.mode === "pull") && (
             <div className={styles.toggleLine} style={{ paddingLeft: 2 }}>
               <div className={styles.rowLabel} style={{ fontWeight: 500, fontSize: 14 }}>
-                Compactor-style dumpster
+                Compactor-Style Dumpster
                 <span className={styles.sub}>
                   Adds a 5-min cycle per dumpster on the pull-out
                 </span>
@@ -1108,7 +1108,7 @@ function StreamCard({
 
       {s.mode !== "cycle" && s.mode !== "sow" && (
         <div className={styles.sect}>
-          <div className={styles.sectLabel}>Distance to curb</div>
+          <div className={styles.sectLabel}>Distance to Curb</div>
           <Seg
             options={DIST}
             value={s.dist}
@@ -1116,7 +1116,7 @@ function StreamCard({
           />
           <div className={styles.toggleLine}>
             <div className={styles.rowLabel}>
-              Bins are in different spots
+              Bins Are in Different Spots
               <span className={styles.sub}>
                 e.g. dumpster in the garage, carts at the curb
               </span>
@@ -1128,13 +1128,13 @@ function StreamCard({
           </div>
           {s.split && (
             <div className={styles.reveal}>
-              <div className={styles.miniLabel}>Carts distance</div>
+              <div className={styles.miniLabel}>Carts Distance</div>
               <Seg
                 options={DIST}
                 value={s.cartDist}
                 onChange={(v) => onPatch({ cartDist: v })}
               />
-              <div className={styles.miniLabel}>Dumpsters distance</div>
+              <div className={styles.miniLabel}>Dumpsters Distance</div>
               <Seg
                 options={DIST}
                 value={s.dumpDist}
@@ -1147,9 +1147,9 @@ function StreamCard({
 
       {s.mode === "sow" && (
         <div className={styles.sect}>
-          <div className={styles.sectLabel}>Time on site</div>
+          <div className={styles.sectLabel}>Time on Site</div>
           <Stepper
-            label="Minutes per visit"
+            label="Minutes per Visit"
             sub="15-minute increments · drive time included, no cleanup"
             value={s.sowMin}
             onStep={(d) => onStep("sowMin", d)}
@@ -1159,7 +1159,7 @@ function StreamCard({
               className={styles.rowLabel}
               style={{ fontWeight: 500, fontSize: 15, marginBottom: 6 }}
             >
-              Scope of work
+              Scope of Work
               <span className={styles.sub}>
                 Describe what the client requested — this appears on the
                 proposal
@@ -1181,10 +1181,10 @@ function StreamCard({
         <Stepper
           label={
             s.mode === "sow"
-              ? "Porters on site"
+              ? "Porters on Site"
               : s.mode === "cycle"
-                ? "Cycle / swap crew"
-                : "Night pull crew"
+                ? "Cycle / Swap Crew"
+                : "Night Pull Crew"
           }
           sub="Porters — bump for difficulty or truck"
           value={s.pull}
@@ -1192,7 +1192,7 @@ function StreamCard({
         />
         {s.mode === "both" && (
           <Stepper
-            label="Morning push crew"
+            label="Morning Push Crew"
             sub="Porters"
             value={s.push}
             onStep={(d) => onStep("push", d)}
@@ -1202,7 +1202,7 @@ function StreamCard({
 
       <details className={styles.acc}>
         <summary>
-          Access &amp; extras
+          Access &amp; Extras
           <span className={styles.sm}>{extrasLabel(s)}</span>
           <span className="chev">▼</span>
         </summary>
@@ -1216,7 +1216,7 @@ function StreamCard({
             onChange={(v) => onPatch({ stairs: v })}
           />
           <div className={styles.toggleLine}>
-            <div className={styles.rowLabel}>Elevator needed</div>
+            <div className={styles.rowLabel}>Elevator Needed</div>
             <Switch
               checked={s.elev}
               onChange={(v) => onPatch({ elev: v })}
@@ -1225,7 +1225,7 @@ function StreamCard({
           {s.elev && (
             <div className={styles.reveal}>
               <Stepper
-                label="Elevator trips per visit"
+                label="Elevator Trips per Visit"
                 value={s.elevTrips}
                 onStep={(d) => onStep("elevTrips", d)}
                 tight
@@ -1233,7 +1233,7 @@ function StreamCard({
             </div>
           )}
           <div className={styles.toggleLine}>
-            <div className={styles.rowLabel}>Scout truck needed</div>
+            <div className={styles.rowLabel}>Scout Truck Needed</div>
             <Switch
               checked={s.truck}
               onChange={(v) => onPatch({ truck: v })}
@@ -1242,7 +1242,7 @@ function StreamCard({
           {s.truck && (
             <div className={styles.reveal}>
               <Stepper
-                label="Bins strapped to truck"
+                label="Bins Strapped to Truck"
                 value={s.truckBins}
                 onStep={(d) => onStep("truckBins", d)}
                 tight
@@ -1303,7 +1303,7 @@ function ResultPanel({
   return (
     <div className={styles.resultWrap}>
       <div className={styles.result}>
-        <div className={styles.rEyebrow}>Monthly quote</div>
+        <div className={styles.rEyebrow}>Monthly Quote</div>
         <div className={styles.price}>
           {has ? usd(price) : "$0"}
           <span className={styles.per}> /mo</span>
@@ -1383,32 +1383,32 @@ function ResultPanel({
             })}
           {has && <div className={styles.bdDivider} />}
           {pullTrips > 0 && (
-            <BdRow label="Pull trips / week" value={pullTrips} />
+            <BdRow label="Pull Trips / Week" value={pullTrips} />
           )}
           {pushTrips > 0 && (
-            <BdRow label="Push trips / week" value={pushTrips} />
+            <BdRow label="Push Trips / Week" value={pushTrips} />
           )}
           {cycleVisits > 0 && (
-            <BdRow label="Cycle visits / week" value={cycleVisits} />
+            <BdRow label="Cycle Visits / Week" value={cycleVisits} />
           )}
           {sowVisits > 0 && (
-            <BdRow label="SOW visits / week" value={sowVisits} />
+            <BdRow label="SOW Visits / Week" value={sowVisits} />
           )}
           <BdRow
-            label="Total trips / week"
+            label="Total Trips / Week"
             value={has ? pullTrips + pushTrips + cycleVisits + sowVisits : "—"}
           />
           <BdRow
-            label="Labor hours / month"
+            label="Labor Hours / Month"
             value={has ? `${hours.toFixed(1)} hrs` : "—"}
           />
-          <BdRow label="Labor cost" value={has ? usd(labor, true) : "—"} />
+          <BdRow label="Labor Cost" value={has ? usd(labor, true) : "—"} />
           <BdRow
-            label="+ overhead"
+            label="+ Overhead"
             value={has ? usd(cost - labor, true) : "—"}
           />
           <BdRow
-            label="Your cost"
+            label="Your Cost"
             value={has ? usd(cost, true) : "—"}
             total
           />
@@ -1420,7 +1420,7 @@ function ResultPanel({
           onClick={onGenerate}
           disabled={!has}
         >
-          Generate client proposal
+          Generate Client Proposal
         </button>
         <button
           type="button"
@@ -1435,10 +1435,10 @@ function ResultPanel({
           disabled={!has || saving || saved}
         >
           {saved
-            ? "✓ Saved to property"
+            ? "✓ Saved to Property"
             : saving
               ? "Saving…"
-              : "Save quote to property"}
+              : "Save Quote to Property"}
         </button>
         {!propertyPicked && has && (
           <div
@@ -1472,7 +1472,7 @@ function ResultPanel({
           className={styles.reset}
           onClick={onReset}
         >
-          Reset for a new property
+          Reset for a New Property
         </button>
       </div>
     </div>
@@ -1562,7 +1562,7 @@ function ProposalOutput({
       <div className={styles.paper}>
         <div className={`${styles.proposalActions} ${styles.noPrint}`}>
           <button type="button" onClick={onBack}>
-            ← Back to calculator
+            ← Back to Calculator
           </button>
           <SendProposalButton
             propertyId={propertyId}
@@ -1893,7 +1893,7 @@ function SavedQuotesList({
   return (
     <div className={styles.card} style={{ marginBottom: 16 }}>
       <div className={styles.sectLabel} style={{ marginBottom: 10 }}>
-        Saved quotes
+        Saved Quotes
       </div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13.5 }}>
@@ -2098,7 +2098,7 @@ function SendProposalButton({
         }}
         onClick={() => setOpen(true)}
       >
-        Send to client →
+        Send to Client →
       </button>
     );
   }
@@ -2166,7 +2166,7 @@ function SendProposalButton({
           onClick={send}
           disabled={sending}
         >
-          {sending ? "Sending…" : "Send proposal"}
+          {sending ? "Sending…" : "Send Proposal"}
         </button>
       </div>
     </div>

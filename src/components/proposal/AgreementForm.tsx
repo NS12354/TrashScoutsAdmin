@@ -268,9 +268,9 @@ export function AgreementForm({
   return (
     <article className={styles.paper}>
       <div className={styles.actions}>
-        <a href={`/proposals/${token}`}>← Back to proposal</a>
+        <a href={`/proposals/${token}`}>← Back to Proposal</a>
         <span style={{ marginLeft: "auto" }} className={styles.agStep}>
-          Step 2 of 2 · Review &amp; sign
+          Step 2 of 2 · Review &amp; Sign
         </span>
       </div>
 
@@ -298,12 +298,13 @@ export function AgreementForm({
       {/* SECTION 1 — Property info */}
       <div className={styles.agSec}>
         <div className={styles.agSecH}>
-          <span className={styles.agSecHN}>1</span> Property information
+          <span className={styles.agSecHN}>1</span> Property Information
         </div>
         <div className={styles.agGrid}>
           <div className={`${styles.agF} ${styles["full"] ?? ""} full`}>
             <label>
-              Property name / account name <span className={styles.req}>*</span>
+              Property Name / Account Name{" "}
+              <span className={styles.req}>*</span>
             </label>
             <input
               className={isBad("pname") ? styles.bad : ""}
@@ -314,7 +315,7 @@ export function AgreementForm({
           </div>
           <div className={styles.agF}>
             <label>
-              Customer type <span className={styles.req}>*</span>
+              Customer Type <span className={styles.req}>*</span>
             </label>
             <select
               className={isBad("ctype") ? styles.bad : ""}
@@ -332,7 +333,7 @@ export function AgreementForm({
             </select>
           </div>
           <div className={styles.agF}>
-            <label>Requested start date</label>
+            <label>Requested Start Date</label>
             <input
               type="date"
               value={form.start}
@@ -357,7 +358,7 @@ export function AgreementForm({
           </div>
           <div className={`${styles.agF} full`}>
             <label>
-              Service address <span className={styles.req}>*</span>
+              Service Address <span className={styles.req}>*</span>
             </label>
             <input
               className={isBad("svcaddr") ? styles.bad : ""}
@@ -368,7 +369,7 @@ export function AgreementForm({
           </div>
         </div>
         <div className={`${styles.agF} full`} style={{ marginTop: 14 }}>
-          <label>Access notes &amp; entry instructions</label>
+          <label>Access Notes &amp; Entry Instructions</label>
           <textarea
             value={form.access}
             onChange={(e) => patch("access", e.target.value)}
@@ -380,7 +381,7 @@ export function AgreementForm({
       {/* SECTION 2 — Contacts */}
       <div className={styles.agSec}>
         <div className={styles.agSecH}>
-          <span className={styles.agSecHN}>2</span> Management &amp; contacts
+          <span className={styles.agSecHN}>2</span> Management &amp; Contacts
         </div>
         <label className={styles.agInlineCheck}>
           <input
@@ -393,7 +394,7 @@ export function AgreementForm({
         {form.managed && (
           <div className={`${styles.agF} full`} style={{ marginTop: 12 }}>
             <label>
-              Management / property ownership company{" "}
+              Management / Property Ownership Company{" "}
               <span className={styles.req}>*</span>
             </label>
             <input
@@ -408,7 +409,7 @@ export function AgreementForm({
           {/* Management contact */}
           <div className={styles.agContact}>
             <div className={styles.agContactH}>
-              <b>Management contact</b>
+              <b>Management Contact</b>
               <span>Account &amp; management communication</span>
             </div>
             <div className={styles.agF}>
@@ -435,7 +436,7 @@ export function AgreementForm({
               />
             </div>
             <div className={styles.agF}>
-              <label>Phone (optional)</label>
+              <label>Phone (Optional)</label>
               <input
                 type="tel"
                 value={form.mc_phone}
@@ -448,7 +449,7 @@ export function AgreementForm({
           {/* Billing contact */}
           <div className={styles.agContact}>
             <div className={styles.agContactH}>
-              <b>Billing contact</b>
+              <b>Billing Contact</b>
               <span>Invoices emailed here — electronic invoices only</span>
             </div>
             <label
@@ -459,7 +460,7 @@ export function AgreementForm({
                 checked={form.bc_same}
                 onChange={(e) => patch("bc_same", e.target.checked)}
               />
-              <span>Same as management contact</span>
+              <span>Same as Management Contact</span>
             </label>
             {!form.bc_same && (
               <>
@@ -485,7 +486,7 @@ export function AgreementForm({
                   />
                 </div>
                 <div className={styles.agF}>
-                  <label>Phone (optional)</label>
+                  <label>Phone (Optional)</label>
                   <input
                     type="tel"
                     value={form.bc_phone}
@@ -499,7 +500,7 @@ export function AgreementForm({
           {/* Onsite contact */}
           <div className={styles.agContact}>
             <div className={styles.agContactH}>
-              <b>Onsite contact</b>
+              <b>Onsite Contact</b>
               <span>Day-to-day, service-related communication</span>
             </div>
             <label
@@ -510,7 +511,7 @@ export function AgreementForm({
                 checked={form.oc_same}
                 onChange={(e) => patch("oc_same", e.target.checked)}
               />
-              <span>Same as management contact</span>
+              <span>Same as Management Contact</span>
             </label>
             {!form.oc_same && (
               <>
@@ -546,7 +547,7 @@ export function AgreementForm({
       {/* SECTION 3 — Services covered (read-only summary) */}
       <div className={styles.agSec}>
         <div className={styles.agSecH}>
-          <span className={styles.agSecHN}>3</span> Services covered
+          <span className={styles.agSecHN}>3</span> Services Covered
         </div>
         <div className={styles.agRead}>
           {modes.map((m) => {
@@ -568,7 +569,7 @@ export function AgreementForm({
           <table className={styles.ptable} style={{ marginTop: 14 }}>
             <thead>
               <tr>
-                <th>Service line</th>
+                <th>Service Line</th>
                 <th>Detail</th>
                 <th>Schedule</th>
               </tr>
@@ -599,12 +600,12 @@ export function AgreementForm({
       {/* SECTION 4 — Rate */}
       <div className={styles.agSec}>
         <div className={styles.agSecH}>
-          <span className={styles.agSecHN}>4</span> Service rate
+          <span className={styles.agSecHN}>4</span> Service Rate
         </div>
         <div className={styles.pprice} style={{ margin: 0 }}>
           <div className={styles.prateMain}>
             <span className={styles.plabel} style={{ margin: "0 0 3px" }}>
-              Service rate
+              Service Rate
             </span>
             <span className={styles.pamount}>
               {usd(weeklyPrice)}
@@ -613,7 +614,7 @@ export function AgreementForm({
           </div>
           <div className={styles.prateMo}>
             <span className={styles.prateMoAmt}>{usd(monthlyPrice)}</span>
-            <span className={styles.prateMoLbl}>billed monthly</span>
+            <span className={styles.prateMoLbl}>Billed Monthly</span>
           </div>
         </div>
         <div className={styles.prateNote} style={{ marginTop: 10 }}>
@@ -625,7 +626,7 @@ export function AgreementForm({
       {/* SECTION 5 — Terms */}
       <div className={styles.agSec}>
         <div className={styles.agSecH}>
-          <span className={styles.agSecHN}>5</span> Terms &amp; conditions
+          <span className={styles.agSecHN}>5</span> Terms &amp; Conditions
         </div>
         <div className={styles.agTerms}>
           <div className={styles.agTermsScroll}>
@@ -648,7 +649,7 @@ export function AgreementForm({
       {/* SECTION 6 — Acknowledge + sign */}
       <div className={styles.agSec}>
         <div className={styles.agSecH}>
-          <span className={styles.agSecHN}>6</span> Acknowledge &amp; sign
+          <span className={styles.agSecHN}>6</span> Acknowledge &amp; Sign
         </div>
         <label className={styles.agAck}>
           <input
@@ -669,14 +670,14 @@ export function AgreementForm({
             className={`${styles.agSigTab} ${sigMode === "draw" ? styles.agSigTabOn : ""}`}
             onClick={() => setSigMode("draw")}
           >
-            Draw signature
+            Draw Signature
           </button>
           <button
             type="button"
             className={`${styles.agSigTab} ${sigMode === "typed" ? styles.agSigTabOn : ""}`}
             onClick={() => setSigMode("typed")}
           >
-            Type signature
+            Type Signature
           </button>
         </div>
         <div className={styles.agSigWrap}>
@@ -723,7 +724,7 @@ export function AgreementForm({
         <div className={styles.agSignRow}>
           <div className={styles.agF}>
             <label>
-              Printed name <span className={styles.req}>*</span>
+              Printed Name <span className={styles.req}>*</span>
             </label>
             <input
               className={isBad("signer") ? styles.bad : ""}
@@ -748,7 +749,7 @@ export function AgreementForm({
           onClick={submit}
           disabled={submitting}
         >
-          {submitting ? "Submitting…" : "Sign & accept agreement"}
+          {submitting ? "Submitting…" : "Sign & Accept Agreement"}
         </button>
         {error && <div className={styles.agErr}>{error}</div>}
       </div>

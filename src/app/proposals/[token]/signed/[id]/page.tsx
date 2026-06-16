@@ -101,7 +101,7 @@ export default async function SignedAgreementPage({
         <div className={styles.agSignedBanner}>
           <div className={styles.agSignedTick}>✓</div>
           <div>
-            <b>Agreement signed</b>
+            <b>Agreement Signed</b>
             <span>
               Use &ldquo;Download / Save as PDF&rdquo; above to keep a copy of
               this signed agreement.
@@ -124,31 +124,31 @@ export default async function SignedAgreementPage({
         </header>
 
         <div className={styles.agSec}>
-          <div className={styles.agSecH}>Property information</div>
+          <div className={styles.agSecH}>Property Information</div>
           <div className={styles.agKv}>
             {fd.pname && (
               <>
-                <div className="k">Property / account</div>
+                <div className="k">Property / Account</div>
                 <div className="v">{fd.pname}</div>
               </>
             )}
             {fd.ctype && (
               <>
-                <div className="k">Customer type</div>
+                <div className="k">Customer Type</div>
                 <div className="v">{fd.ctype}</div>
               </>
             )}
             {fd.svcaddr && (
               <>
-                <div className="k">Service address</div>
+                <div className="k">Service Address</div>
                 <div className="v">{fd.svcaddr}</div>
               </>
             )}
-            <div className="k">Start date</div>
+            <div className="k">Start Date</div>
             <div className="v">{startStr}</div>
             {fd.access && (
               <>
-                <div className="k">Access notes</div>
+                <div className="k">Access Notes</div>
                 <div className="v">{fd.access}</div>
               </>
             )}
@@ -160,25 +160,25 @@ export default async function SignedAgreementPage({
           <div className={styles.agKv}>
             {fd.managed && fd.company && (
               <>
-                <div className="k">Management company</div>
+                <div className="k">Management Company</div>
                 <div className="v">{fd.company}</div>
               </>
             )}
             {mcContact && (
               <>
-                <div className="k">Management contact</div>
+                <div className="k">Management Contact</div>
                 <div className="v">{mcContact}</div>
               </>
             )}
             {bc && (
               <>
-                <div className="k">Billing contact</div>
+                <div className="k">Billing Contact</div>
                 <div className="v">{bc}</div>
               </>
             )}
             {oc && (
               <>
-                <div className="k">Onsite contact</div>
+                <div className="k">Onsite Contact</div>
                 <div className="v">{oc}</div>
               </>
             )}
@@ -186,7 +186,7 @@ export default async function SignedAgreementPage({
         </div>
 
         <div className={styles.agSec}>
-          <div className={styles.agSecH}>Services &amp; schedule</div>
+          <div className={styles.agSecH}>Services &amp; Schedule</div>
           <div className={styles.agRead}>
             {modes.map((m) => {
               if (m === "sow") {
@@ -207,7 +207,7 @@ export default async function SignedAgreementPage({
             <table className={styles.ptable} style={{ marginTop: 14 }}>
               <thead>
                 <tr>
-                  <th>Service line</th>
+                  <th>Service Line</th>
                   <th>Detail</th>
                   <th>Schedule</th>
                 </tr>
@@ -236,11 +236,11 @@ export default async function SignedAgreementPage({
         </div>
 
         <div className={styles.agSec}>
-          <div className={styles.agSecH}>Service rate</div>
+          <div className={styles.agSecH}>Service Rate</div>
           <div className={styles.pprice} style={{ margin: 0 }}>
             <div className={styles.prateMain}>
               <span className={styles.plabel} style={{ margin: "0 0 3px" }}>
-                Service rate
+                Service Rate
               </span>
               <span className={styles.pamount}>
                 {usd(p.weeklyPrice)}
@@ -249,13 +249,13 @@ export default async function SignedAgreementPage({
             </div>
             <div className={styles.prateMo}>
               <span className={styles.prateMoAmt}>{usd(p.monthlyPrice)}</span>
-              <span className={styles.prateMoLbl}>billed monthly</span>
+              <span className={styles.prateMoLbl}>Billed Monthly</span>
             </div>
           </div>
         </div>
 
         <div className={styles.agSec}>
-          <div className={styles.agSecH}>Terms &amp; conditions</div>
+          <div className={styles.agSecH}>Terms &amp; Conditions</div>
           <div className={styles.agTerms}>
             <div
               className={styles.agTermsScroll}

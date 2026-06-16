@@ -91,7 +91,7 @@ export default async function PropertyPricingPage({
   return (
     <div>
       <Link href="/admin" className="text-sm text-zinc-500 hover:underline">
-        ← All properties
+        ← All Properties
       </Link>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-2">
         <div>
@@ -107,7 +107,7 @@ export default async function PropertyPricingPage({
             href={`/admin/properties/${property.id}`}
             className="btn-secondary"
           >
-            Edit property
+            Edit Property
           </Link>
           <Link
             href={`/admin/properties/${property.id}/qr`}
@@ -119,13 +119,13 @@ export default async function PropertyPricingPage({
             href={`/admin/pricing?property=${property.id}`}
             className="btn-primary"
           >
-            + New quote
+            + New Quote
           </Link>
         </div>
       </div>
 
       <h2 className="mt-6 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-        Sent proposals &amp; signed agreements
+        Sent Proposals &amp; Signed Agreements
       </h2>
       <div className="mt-3">
         <SentProposalsList
@@ -135,7 +135,7 @@ export default async function PropertyPricingPage({
       </div>
 
       <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-        Saved pricing quotes
+        Saved Pricing Quotes
       </h2>
 
       {quotes.length === 0 ? (
@@ -145,7 +145,7 @@ export default async function PropertyPricingPage({
             href={`/admin/pricing?property=${property.id}`}
             className="font-medium text-brand-dark hover:underline"
           >
-            Build one →
+            Build One →
           </Link>
         </div>
       ) : (

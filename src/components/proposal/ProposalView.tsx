@@ -68,14 +68,14 @@ export function ProposalView(props: ProposalViewProps) {
           {props.preparedDate}
           <br />
           <span className={styles.pmetaValid}>
-            Pricing valid through {props.validUntil}
+            Pricing Valid Through {props.validUntil}
           </span>
         </div>
       </header>
 
       <div className={styles.pfor}>
         <div>
-          <span className={styles.plabel}>Prepared for</span>
+          <span className={styles.plabel}>Prepared For</span>
           {props.clientName || "Prospective Client"}
           {props.clientAddress && (
             <span className={styles.pforAddr}>{props.clientAddress}</span>
@@ -83,7 +83,7 @@ export function ProposalView(props: ProposalViewProps) {
         </div>
         {props.preparedBy && (
           <div>
-            <span className={styles.plabel}>Prepared by</span>
+            <span className={styles.plabel}>Prepared By</span>
             {props.preparedBy}
           </div>
         )}
@@ -133,9 +133,9 @@ export function ProposalView(props: ProposalViewProps) {
         <table className={styles.ptable}>
           <thead>
             <tr>
-              <th>Service line</th>
+              <th>Service Line</th>
               <th>Detail</th>
-              <th>Service schedule</th>
+              <th>Service Schedule</th>
             </tr>
           </thead>
           <tbody>
@@ -189,7 +189,7 @@ export function ProposalView(props: ProposalViewProps) {
         <div className={styles.pprice}>
           <div className={styles.prateMain}>
             <span className={styles.plabel} style={{ margin: "0 0 3px" }}>
-              Service rate
+              Service Rate
             </span>
             <span className={styles.pamount}>
               {usd(props.weeklyPrice)}
@@ -200,7 +200,7 @@ export function ProposalView(props: ProposalViewProps) {
             <span className={styles.prateMoAmt}>
               {usd(props.monthlyPrice)}
             </span>
-            <span className={styles.prateMoLbl}>billed monthly</span>
+            <span className={styles.prateMoLbl}>Billed Monthly</span>
           </div>
         </div>
         <div className={styles.prateNote}>
