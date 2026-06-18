@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import {
@@ -38,6 +39,13 @@ export default async function PublicProposalPage({
   return (
     <div className={styles.shell}>
       <div className={styles.actions}>
+        <Link
+          href={`/proposals/${token}/agreement/printable`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Download Printable Agreement
+        </Link>
         <PrintButton />
       </div>
       {expired && !accepted && (

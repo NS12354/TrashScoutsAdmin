@@ -774,10 +774,36 @@ export function PricingTool({
 
         {sentProposals.length > 0 && (
           <div className={styles.card} style={{ marginBottom: 16 }}>
-            <div className={styles.sectLabel} style={{ marginBottom: 10 }}>
-              Sent Proposals &amp; Signed Agreements
+            <div
+              className={styles.sectLabel}
+              style={{
+                marginBottom: 10,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10,
+              }}
+            >
+              <span>Recent Proposals &amp; Signed Agreements</span>
+              <a
+                href="/admin/proposals"
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "var(--green)",
+                  textDecoration: "none",
+                  textTransform: "none",
+                  letterSpacing: 0,
+                }}
+              >
+                View all{sentProposals.length > 5 ? ` (${sentProposals.length})` : ""}{" "}
+                →
+              </a>
             </div>
-            <SentProposalsList proposals={sentProposals} showProperty />
+            <SentProposalsList
+              proposals={sentProposals.slice(0, 5)}
+              showProperty
+            />
           </div>
         )}
 
@@ -2005,6 +2031,11 @@ function SendProposalButton({
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [thankYou, setThankYou] = useState("");
+  // Comma-separated string of POC emails. Parsed + validated on
+  // submit. Showing as a single field keeps the UI compact; admins
+  // typically have 1–3 POCs per proposal.
+  const [pocEmails, setPocEmails] = useState("");
   const [sending, setSending] = useState(false);
   const [sentLink, setSentLink] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -2032,6 +2063,11 @@ function SendProposalButton({
           weeklyPrice,
           breakEvenCost,
           message: message.trim() || null,
+          thankYouMessage: thankYou.trim() || null,
+          pocEmails: pocEmails
+            .split(/[,\s;]+/)
+            .map((e) => e.trim())
+            .filter(Boolean),
         }),
       });
       if (!res.ok) {
@@ -2116,9 +2152,20 @@ function SendProposalButton({
         gap: 8,
       }}
     >
+      <label
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          color: "#8A9384",
+        }}
+      >
+        Client Email
+      </label>
       <input
         type="email"
-        placeholder="Client email"
+        placeholder="client@company.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         style={{
@@ -2129,11 +2176,52 @@ function SendProposalButton({
           fontFamily: "inherit",
         }}
       />
+      <label
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          color: "#8A9384",
+          marginTop: 4,
+        }}
+      >
+        Internal Point-of-Contact Emails
+      </label>
+      <input
+        type="text"
+        placeholder="manager@trashscouts.com, ops@trashscouts.com"
+        value={pocEmails}
+        onChange={(e) => setPocEmails(e.target.value)}
+        style={{
+          padding: "9px 11px",
+          borderRadius: 8,
+          border: "1px solid #C7C5BB",
+          fontSize: 14,
+          fontFamily: "inherit",
+        }}
+      />
+      <div style={{ fontSize: 11.5, color: "#8A9384", marginTop: -4 }}>
+        Comma- or space-separated. These addresses get notified the
+        moment the client signs — no shared ops inbox is copied.
+      </div>
+      <label
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          color: "#8A9384",
+          marginTop: 4,
+        }}
+      >
+        Proposal Email — Note to Client
+      </label>
       <textarea
-        placeholder="Optional note to include in the email…"
+        placeholder="Optional. e.g. 'Hi Lisa, please find the proposal attached. Let me know if anything looks off.'"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        rows={2}
+        rows={3}
         style={{
           padding: "9px 11px",
           borderRadius: 8,
@@ -2141,7 +2229,34 @@ function SendProposalButton({
           fontSize: 13.5,
           fontFamily: "inherit",
           resize: "vertical",
-          minHeight: 50,
+          minHeight: 60,
+        }}
+      />
+      <label
+        style={{
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          color: "#8A9384",
+          marginTop: 4,
+        }}
+      >
+        Signed Agreement Email — Thank-You Message
+      </label>
+      <textarea
+        placeholder="Optional. Sent automatically once they sign. e.g. 'Thanks for signing! Your first service day will be confirmed by Monday.'"
+        value={thankYou}
+        onChange={(e) => setThankYou(e.target.value)}
+        rows={3}
+        style={{
+          padding: "9px 11px",
+          borderRadius: 8,
+          border: "1px solid #C7C5BB",
+          fontSize: 13.5,
+          fontFamily: "inherit",
+          resize: "vertical",
+          minHeight: 60,
         }}
       />
       {err && (

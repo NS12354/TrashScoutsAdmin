@@ -1,0 +1,493 @@
+/* Print-targeted fill-by-hand agreement. Designed to be opened in the
+ * browser, optionally typed-into, then Save-as-PDF or printed. Typed
+ * input values flatten into the printed output. */
+
+.shell {
+  --green-deep: #0e3f27;
+  --green-bright: #1fa864;
+  --green-soft: #e7f1ea;
+  --ink: #15201a;
+  --muted: #6a7368;
+  --line: rgba(21, 32, 26, 0.12);
+  background: #fff;
+  color: var(--ink);
+  font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  padding: 28px 18px 64px;
+  min-height: 100vh;
+}
+
+.paper {
+  max-width: 760px;
+  margin: 0 auto;
+  background: #fff;
+  color: #1a1a1a;
+  padding: 44px 52px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.actions button,
+.actions a {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 13.5px;
+  border-radius: 9px;
+  padding: 10px 16px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.pprint {
+  background: var(--green-deep) !important;
+  border-color: var(--green-deep) !important;
+  color: #fff !important;
+}
+
+.intro {
+  font-size: 13px;
+  color: #777;
+  margin: 0 0 14px;
+  max-width: 64ch;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid var(--green-deep);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+
+.logo {
+  height: 50px;
+  width: auto;
+  display: block;
+}
+
+.meta {
+  text-align: right;
+  font-size: 12px;
+  color: #777;
+  line-height: 1.5;
+}
+
+.sec {
+  margin-top: 22px;
+}
+
+.secH {
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--green-deep);
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e4e2d9;
+  margin-bottom: 12px;
+}
+
+.fill {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 18px;
+}
+
+.fillFull {
+  grid-column: 1 / -1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fieldLabel {
+  font-size: 9.5px;
+  color: #8a9384;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fieldInput {
+  border: 1px solid #c7c5bb;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  color: #1a1a1a;
+  padding: 7px 9px;
+  width: 100%;
+}
+
+.fieldInput:focus {
+  outline: none;
+  border-color: var(--green-bright);
+}
+
+.ctypes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 3px;
+}
+
+.ctype {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  color: #3f5347;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.ctype input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  flex: 0 0 auto;
+  accent-color: var(--green-bright);
+}
+
+.cgrid {
+  display: grid;
+  grid-template-columns: 110px 1.3fr 1.7fr 1fr;
+  gap: 8px 11px;
+  align-items: center;
+}
+
+.cgH {
+  font-size: 9px;
+  color: #8a9384;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cgL {
+  font-size: 11px;
+  color: #3f5347;
+  font-weight: 600;
+}
+
+.read {
+  background: #f7f6f1;
+  border: 1px solid #ecead0;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.pservice {
+  margin-top: 8px;
+}
+
+.pservice:first-child {
+  margin-top: 0;
+}
+
+.psvcH {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--green-deep);
+  margin-bottom: 4px;
+}
+
+.pintro {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #4a4a4a;
+}
+
+.ptable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 0;
+}
+
+.ptable th {
+  text-align: left;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a0a0a0;
+  font-weight: 700;
+  padding: 0 0 5px;
+  border-bottom: 1px solid #ddd;
+}
+
+.ptable td {
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 11px;
+  vertical-align: top;
+}
+
+.pname {
+  font-weight: 600;
+}
+
+.optBox {
+  margin-top: 12px;
+  border-top: 1px dashed #d5dad0;
+  padding-top: 9px;
+}
+
+.optH {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #8a9184;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.optList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.optList li {
+  font-size: 11px;
+  color: #4a4a4a;
+  line-height: 1.45;
+  padding-left: 14px;
+  position: relative;
+}
+
+.optList li::before {
+  content: "+";
+  position: absolute;
+  left: 0;
+  top: -1px;
+  color: var(--green-bright);
+  font-weight: 800;
+}
+
+.price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--green-soft);
+  border-radius: 10px;
+  padding: 14px 18px;
+  gap: 14px;
+}
+
+.priceAmt {
+  font-weight: 800;
+  font-size: 26px;
+  color: var(--green-deep);
+}
+
+.pricePer {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--green-deep);
+}
+
+.priceMo {
+  text-align: right;
+}
+
+.priceMoAmt {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--green-deep);
+}
+
+.priceMoLbl {
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--green-deep);
+  margin-top: 2px;
+}
+
+.terms {
+  border: 1px solid #e4e2d9;
+  border-radius: 10px;
+  background: #fbfbf8;
+  padding: 14px 16px;
+}
+
+.termsCols {
+  column-count: 2;
+  column-gap: 18px;
+}
+
+.term {
+  break-inside: avoid;
+  margin-bottom: 6px;
+}
+
+.term h4 {
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--green-deep);
+  margin: 0 0 2px;
+}
+
+.term p {
+  font-size: 10px;
+  line-height: 1.45;
+  color: #555;
+  margin: 0;
+}
+
+.sigBlock {
+  margin-top: 28px;
+}
+
+.sigRow {
+  display: flex;
+  gap: 40px;
+  margin-top: 24px;
+}
+
+.sigF {
+  flex: 1;
+}
+
+.sigSig {
+  flex: 2.2;
+}
+
+.sigLine {
+  border-bottom: 1.5px solid #1a1a1a;
+  height: 30px;
+}
+
+.sigCap {
+  font-size: 10px;
+  color: #8a9384;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 5px;
+}
+
+.foot {
+  margin-top: 26px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+  text-align: center;
+  font-size: 11px;
+  color: #b0b0b0;
+}
+
+.footName {
+  font-weight: 600;
+  color: #888;
+}
+
+@page {
+  size: letter portrait;
+  margin: 0.5in;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    margin: 0;
+    padding: 0;
+  }
+  .shell {
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .paper {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  .actions {
+    display: none !important;
+  }
+  /* Form inputs print as plain text — readers see whatever was typed
+   * in, with a thin underline below to retain the "fill-in" look. */
+  .fieldInput {
+    border: none !important;
+    border-bottom: 1px solid #c7c5bb !important;
+    border-radius: 0;
+    padding: 4px 2px;
+    background: transparent;
+  }
+  .ctype input {
+    width: 10px;
+    height: 10px;
+  }
+  .sec,
+  .read,
+  .price,
+  .terms,
+  .sigBlock,
+  .foot {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .terms {
+    break-before: page;
+    page-break-before: always;
+  }
+  .termsCols {
+    column-count: 3;
+    column-gap: 14px;
+  }
+  .sigBlock {
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .shell {
+    padding: 18px 14px 40px;
+  }
+  .paper {
+    padding: 24px 20px;
+  }
+  .fill {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .cgrid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .cgH {
+    display: none;
+  }
+  .termsCols {
+    column-count: 1;
+  }
+  .sigRow {
+    flex-direction: column;
+    gap: 0;
+  }
+  .sigF {
+    margin-top: 22px;
+  }
+  .price {
+    flex-wrap: wrap;
+  }
+  .priceMo {
+    text-align: left;
+  }
+}

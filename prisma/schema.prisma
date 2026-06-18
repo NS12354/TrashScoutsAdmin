@@ -245,6 +245,21 @@ model Proposal {
   breakEvenCost  Float
   validUntil     DateTime
 
+  // Custom email body the admin sets at send time. `message` shows up
+  // in the "proposal ready" email the client gets when the link is
+  // sent. `thankYouMessage` shows up in the "signed copy" email after
+  // the client signs. Both optional — fall back to the default
+  // template copy when null.
+  message         String?
+  thankYouMessage String?
+
+  // Point-of-contact emails to notify when the client signs. Stored
+  // as a Postgres text[] so each proposal can have its own set of
+  // recipients (account exec, ops lead, account manager, etc.) —
+  // replacing the previous NOTIFICATION_EMAIL fallback for this
+  // specific flow.
+  pocEmails       String[] @default([])
+
   sentAt         DateTime?
   viewedAt       DateTime?
   acceptedAt     DateTime?

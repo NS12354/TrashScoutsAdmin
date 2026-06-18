@@ -70,6 +70,8 @@ export async function sendSignedAgreementEmails({
   signerName,
   token,
   agreementId,
+  thankYouMessage,
+  pocEmails,
 }: {
   clientEmail: string;
   clientName: string;
@@ -78,14 +80,25 @@ export async function sendSignedAgreementEmails({
   signerName: string;
   token: string;
   agreementId: string;
+  thankYouMessage?: string | null;
+  // Internal points-of-contact set by the admin at proposal-send
+  // time. They get a CC-style notification when the client signs.
+  // Replaces the previous NOTIFICATION_EMAIL fallback — no longer
+  // sends to any default ops inbox.
+  pocEmails: string[];
 }) {
   const url = `${publicBaseUrl()}/proposals/${encodeURIComponent(token)}/signed/${encodeURIComponent(agreementId)}`;
-  const opsEmail = process.env.NOTIFICATION_EMAIL;
+
+  // Admin-provided thank-you note replaces the canned "thanks + we'll
+  // be in touch" copy when set. Plain text → linebreaks become <br>.
+  const thankYou = thankYouMessage?.trim()
+    ? `<p style="font-size:15px;line-height:1.6;color:#333">${escapeHtml(thankYouMessage.trim()).replace(/\n/g, "<br>")}</p>`
+    : `<p style="font-size:15px;line-height:1.6;color:#333">Thanks for accepting your ${BRAND_NAME} service proposal. Your signed agreement is attached at the link below — open it and use <b>Save as PDF</b> in your browser to keep a copy.</p>`;
 
   const clientHtml = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#fff;color:#1A1A1A">
     <h1 style="font-size:22px;margin:0 0 12px;color:#0E3F27">Your signed service agreement</h1>
     <p style="font-size:15px;line-height:1.6;color:#333">Hi ${escapeHtml(clientName)},</p>
-    <p style="font-size:15px;line-height:1.6;color:#333">Thanks for accepting your ${BRAND_NAME} service proposal. Your signed agreement is attached at the link below — open it and use <b>Save as PDF</b> in your browser to keep a copy.</p>
+    ${thankYou}
     <ul style="font-size:14px;line-height:1.7;color:#444;padding-left:18px;margin:14px 0">
       <li>Monthly service rate: <b>${usd(monthlyPrice)}/mo</b> (${usd(weeklyPrice)}/wk)</li>
       <li>Signed by: ${escapeHtml(signerName)}</li>
@@ -93,7 +106,6 @@ export async function sendSignedAgreementEmails({
     <p style="text-align:center;margin:28px 0">
       <a href="${url}" style="display:inline-block;background:#0E3F27;color:#fff;text-decoration:none;font-weight:700;padding:14px 26px;border-radius:10px;font-size:15px">View signed agreement</a>
     </p>
-    <p style="font-size:13px;line-height:1.55;color:#666">We'll be in touch to confirm next steps and your start date.</p>
     ${brandFooter()}
   </div>`;
 
@@ -111,22 +123,39 @@ export async function sendSignedAgreementEmails({
     ${brandFooter()}
   </div>`;
 
-  const results = await Promise.allSettled([
+  // Deduplicate against the client's own address — if the admin
+  // accidentally lists the client as a POC, don't send them two copies.
+  const clientLower = clientEmail.trim().toLowerCase();
+  const cleanedPocs = Array.from(
+    new Set(
+      pocEmails
+        .map((e) => e.trim())
+        .filter((e) => e && e.toLowerCase() !== clientLower),
+    ),
+  );
+
+  const sends: Array<Promise<{ ok: boolean; skipped?: boolean }>> = [
     sendEmail({
       to: clientEmail,
       subject: `Your signed ${BRAND_NAME} service agreement`,
       html: clientHtml,
     }),
-    opsEmail
-      ? sendEmail({
-          to: opsEmail,
-          subject: `New signed agreement: ${clientName}`,
-          html: opsHtml,
-        })
-      : Promise.resolve({ ok: true, skipped: true }),
-  ]);
+  ];
+  for (const poc of cleanedPocs) {
+    sends.push(
+      sendEmail({
+        to: poc,
+        subject: `New signed agreement: ${clientName}`,
+        html: opsHtml,
+      }),
+    );
+  }
+  const results = await Promise.allSettled(sends);
   return {
-    client: results[0].status === "fulfilled" ? results[0].value : { ok: false },
-    ops: results[1].status === "fulfilled" ? results[1].value : { ok: false },
+    client:
+      results[0]?.status === "fulfilled" ? results[0].value : { ok: false },
+    poc: results.slice(1).map((r) =>
+      r.status === "fulfilled" ? r.value : { ok: false },
+    ),
   };
 }

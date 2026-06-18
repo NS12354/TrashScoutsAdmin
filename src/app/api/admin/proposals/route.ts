@@ -21,6 +21,8 @@ type CreateBody = {
   weeklyPrice: number;
   breakEvenCost: number;
   message?: string | null;
+  thankYouMessage?: string | null;
+  pocEmails?: string[] | null;
 };
 
 function isEmail(s: string): boolean {
@@ -81,6 +83,19 @@ export async function POST(req: NextRequest) {
       weeklyPrice: body.weeklyPrice,
       breakEvenCost: body.breakEvenCost,
       validUntil,
+      message: body.message?.trim().slice(0, 2000) || null,
+      thankYouMessage: body.thankYouMessage?.trim().slice(0, 2000) || null,
+      pocEmails: Array.isArray(body.pocEmails)
+        ? body.pocEmails
+            .map((e) => e.trim())
+            .filter(
+              (e) =>
+                e &&
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) &&
+                e.length <= 200,
+            )
+            .slice(0, 10)
+        : [],
       sentAt: new Date(),
     },
     select: {

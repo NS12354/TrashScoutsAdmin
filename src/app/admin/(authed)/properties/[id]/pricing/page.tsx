@@ -124,12 +124,22 @@ export default async function PropertyPricingPage({
         </div>
       </div>
 
-      <h2 className="mt-6 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-        Sent Proposals &amp; Signed Agreements
-      </h2>
+      <div className="mt-6 flex items-baseline justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          Sent Proposals &amp; Signed Agreements
+        </h2>
+        {proposalRows.length > 5 && (
+          <Link
+            href="/admin/proposals"
+            className="text-xs font-semibold text-brand-dark hover:underline"
+          >
+            View all ({proposalRows.length}) →
+          </Link>
+        )}
+      </div>
       <div className="mt-3">
         <SentProposalsList
-          proposals={proposalRows}
+          proposals={proposalRows.slice(0, 5)}
           emptyMessage="No proposals sent to clients yet for this property."
         />
       </div>

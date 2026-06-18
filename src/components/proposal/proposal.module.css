@@ -1028,31 +1028,214 @@
 }
 
 @media print {
-  .shell {
-    background: #fff;
+  /* Strip the cream shell + paper card entirely — print should look
+   * like a plain document, not a screen page. */
+  html,
+  body {
+    background: #fff !important;
+    margin: 0;
     padding: 0;
+  }
+  .shell {
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0;
+  }
+  .paper {
+    border: none !important;
+    border-radius: 0;
+    padding: 0;
+    max-width: none;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .actions,
   .noPrint,
   .acceptCta {
     display: none !important;
   }
-  .paper {
-    border: none;
-    border-radius: 0;
-    padding: 0;
-    max-width: none;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+
+  /* Compact proposal for one-page fit. */
+  .phead {
+    padding-bottom: 8px;
   }
+  .plogo {
+    height: 38px;
+  }
+  .pmeta {
+    font-size: 10.5px;
+    line-height: 1.35;
+  }
+  .pmetaValid {
+    margin-top: 2px;
+    font-size: 9.5px;
+  }
+  .pfor {
+    gap: 32px;
+    margin: 8px 0 4px;
+  }
+  .plabel {
+    font-size: 9px;
+    margin-bottom: 1px;
+  }
+  .pforAddr {
+    font-size: 11px;
+  }
+  .psecH {
+    font-size: 10.5px;
+    margin: 9px 0 5px;
+    padding-bottom: 3px;
+    letter-spacing: 0.04em;
+  }
+  .pservice {
+    margin-top: 5px;
+  }
+  .psvcH {
+    font-size: 12px;
+    margin-bottom: 2px;
+  }
+  .pintro {
+    font-size: 10.5px;
+    line-height: 1.4;
+    max-width: none;
+  }
+  .pwhy {
+    margin: 5px 0 0;
+    padding: 7px 11px;
+  }
+  .pwhyList {
+    gap: 2px 18px;
+  }
+  .pwhyList li {
+    font-size: 10px;
+    line-height: 1.3;
+    padding-left: 14px;
+  }
+  .pwhyList li::before {
+    top: 4px;
+    width: 5px;
+    height: 5px;
+  }
+  .pwhyGive {
+    font-size: 9.5px;
+    line-height: 1.35;
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+  .ptable {
+    margin: 6px 0;
+  }
+  .ptable th {
+    font-size: 9px;
+    padding: 0 0 4px;
+  }
+  .ptable td {
+    padding: 4px 8px 4px 0;
+    font-size: 10.5px;
+  }
+  .pprice {
+    padding: 8px 14px;
+    margin: 6px 0;
+  }
+  .pamount {
+    font-size: 22px;
+  }
+  .ppermo {
+    font-size: 11px;
+  }
+  .prateMoAmt {
+    font-size: 14px;
+  }
+  .prateMoLbl {
+    font-size: 8.5px;
+  }
+  .prateNote {
+    font-size: 9px;
+    margin: -5px 0 0;
+  }
+  .pbenefits li {
+    padding: 0 0 4px 16px;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+  .pbenefits li::before {
+    top: 4px;
+    width: 5px;
+    height: 5px;
+  }
+  .poptList {
+    gap: 3px 16px;
+    margin: 5px 0 0;
+  }
+  .poptList li {
+    font-size: 9.5px;
+    line-height: 1.3;
+    padding-left: 12px;
+  }
+  .poptList li::before {
+    font-size: 11px;
+  }
+  .pterms {
+    font-size: 9px;
+    line-height: 1.35;
+    margin-top: 5px;
+  }
+  .pfoot {
+    margin-top: 12px;
+    padding-top: 8px;
+    font-size: 9px;
+  }
+
+  /* Agreement-specific print sizing — already tight, leave terms in
+   * 3 columns so they fit on pages 2-3 cleanly. */
   .agTermsScroll {
     max-height: none;
     overflow: visible;
+    padding: 8px 12px;
   }
   .agTermsCols {
     column-count: 3;
-    column-gap: 18px;
+    column-gap: 16px;
   }
+  .agTerm h4 {
+    font-size: 9.5px;
+    margin: 0 0 1px;
+  }
+  .agTerm p {
+    font-size: 8.5px;
+    line-height: 1.32;
+  }
+  .agSec {
+    margin-top: 10px;
+  }
+  .agSecH {
+    font-size: 10.5px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+  }
+  .agRead {
+    padding: 8px 10px;
+  }
+  .agKv {
+    font-size: 11px;
+  }
+  .agSignedSig {
+    min-height: 38px;
+  }
+  .agSignedTyped {
+    font-size: 22px;
+  }
+  .agSignedMeta {
+    font-size: 10px;
+    margin-top: 5px;
+  }
+  .agSignedBanner {
+    display: none !important;
+  }
+
+  /* Keep logical units together across page breaks. */
   .pservice,
   .ptable,
   .pprice,
@@ -1060,8 +1243,14 @@
   .pterms,
   .pfoot,
   .agSec,
-  .agRead {
+  .agRead,
+  .agKv {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+  .psecH,
+  .agSecH {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 }

@@ -50,6 +50,8 @@ export async function POST(
       monthlyPrice: true,
       weeklyPrice: true,
       validUntil: true,
+      thankYouMessage: true,
+      pocEmails: true,
     },
   });
   if (!proposal) {
@@ -110,6 +112,8 @@ export async function POST(
     signerName: body.signerName.trim(),
     token,
     agreementId: agreement.id,
+    thankYouMessage: proposal.thankYouMessage,
+    pocEmails: proposal.pocEmails ?? [],
   }).catch((err) => {
     console.error("[sign] email send failed", err);
   });

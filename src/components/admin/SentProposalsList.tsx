@@ -1,5 +1,12 @@
 import Link from "next/link";
 
+export type SentProposalStatusFilter =
+  | "all"
+  | "sent"
+  | "viewed"
+  | "signed"
+  | "expired";
+
 export type SentProposalRow = {
   id: string;
   token: string;
