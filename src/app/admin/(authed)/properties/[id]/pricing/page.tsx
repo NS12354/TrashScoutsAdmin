@@ -5,6 +5,7 @@ import {
   SentProposalsList,
   type SentProposalRow,
 } from "@/components/admin/SentProposalsList";
+import { DeleteProposalButton } from "@/components/admin/DeleteProposalButton";
 
 export const dynamic = "force-dynamic";
 
@@ -196,6 +197,12 @@ export default async function PropertyPricingPage({
             >
               Reuse to Build a New Proposal
             </Link>
+            <DeleteProposalButton
+              proposalId={currentAgreement.id}
+              signed={!!currentAgreement.latestAgreement}
+              clientName={currentAgreement.clientName}
+              variant="text"
+            />
           </div>
         </div>
       ) : (

@@ -43,3 +43,18 @@ export async function GET(
     createdAt: p.createdAt.toISOString(),
   });
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  if (!(await getSession())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const { id } = await params;
+  // The Proposal → SignedAgreement relation is onDelete: Cascade, so
+  // dropping the proposal also drops its signed agreement(s). Admin
+  // is warned in the UI when the proposal has a signed copy.
+  await prisma.proposal.delete({ where: { id } }).catch(() => null);
+  return NextResponse.json({ ok: true });
+}

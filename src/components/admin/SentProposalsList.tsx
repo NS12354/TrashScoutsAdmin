@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DeleteProposalButton } from "./DeleteProposalButton";
 
 export type SentProposalStatusFilter =
   | "all"
@@ -205,6 +206,11 @@ export function SentProposalsList({
                       Reuse
                     </Link>
                   )}
+                  <DeleteProposalButton
+                    proposalId={p.id}
+                    signed={!!p.latestAgreement}
+                    clientName={p.clientName}
+                  />
                 </td>
               </tr>
             );
