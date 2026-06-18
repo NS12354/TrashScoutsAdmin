@@ -72,10 +72,19 @@ export function SentProposalsList({
   proposals,
   showProperty = false,
   emptyMessage = "No proposals sent yet.",
+  highlightCurrentId,
+  showReuse = true,
 }: {
   proposals: SentProposalRow[];
   showProperty?: boolean;
   emptyMessage?: string;
+  // When set, the row matching this proposal id gets a "Current"
+  // green badge in the Status column. Used on the per-property page
+  // to mark the latest signed agreement as the active one.
+  highlightCurrentId?: string | null;
+  // Whether to show the "Reuse" button per row that deep-links the
+  // calculator at /admin/pricing?proposal=<id> for iteration.
+  showReuse?: boolean;
 }) {
   if (proposals.length === 0) {
     return (
@@ -150,6 +159,11 @@ export function SentProposalsList({
                   >
                     {s.label}
                   </span>
+                  {highlightCurrentId === p.id && (
+                    <span className="ml-1.5 inline-flex items-center rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                      Current
+                    </span>
+                  )}
                   {p.latestAgreement && (
                     <div className="mt-1 text-xs text-zinc-500">
                       by {p.latestAgreement.signerName}
@@ -179,10 +193,18 @@ export function SentProposalsList({
                     href={`/proposals/${p.token}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-block rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+                    className="mr-1 inline-block rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
                   >
                     Open
                   </Link>
+                  {showReuse && (
+                    <Link
+                      href={`/admin/pricing?proposal=${p.id}`}
+                      className="inline-block rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+                    >
+                      Reuse
+                    </Link>
+                  )}
                 </td>
               </tr>
             );

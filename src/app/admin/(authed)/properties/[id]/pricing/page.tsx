@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { PropertyPricingDeleteButton } from "@/components/admin/PropertyPricingDeleteButton";
 import {
   SentProposalsList,
   type SentProposalRow,
@@ -10,9 +9,15 @@ import {
 export const dynamic = "force-dynamic";
 
 function usd(n: number): string {
-  return (
-    "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 })
-  );
+  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+
+function fmtDate(d: Date): string {
+  return d.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 export default async function PropertyPricingPage({
@@ -27,46 +32,30 @@ export default async function PropertyPricingPage({
   });
   if (!property) return notFound();
 
-  const [quotes, proposals] = await Promise.all([
-    prisma.pricingQuote.findMany({
-      where: { propertyId: id },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        clientName: true,
-        preparedBy: true,
-        monthlyPrice: true,
-        weeklyPrice: true,
-        createdByName: true,
-        createdAt: true,
+  const proposals = await prisma.proposal.findMany({
+    where: { propertyId: id },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      token: true,
+      clientName: true,
+      clientEmail: true,
+      monthlyPrice: true,
+      weeklyPrice: true,
+      sentAt: true,
+      viewedAt: true,
+      acceptedAt: true,
+      validUntil: true,
+      createdByName: true,
+      agreements: {
+        orderBy: { signedAt: "desc" },
+        take: 1,
+        select: { id: true, signerName: true, signedAt: true },
       },
-    }),
-    prisma.proposal.findMany({
-      where: { propertyId: id },
-      orderBy: { createdAt: "desc" },
-      take: 30,
-      select: {
-        id: true,
-        token: true,
-        clientName: true,
-        clientEmail: true,
-        monthlyPrice: true,
-        weeklyPrice: true,
-        sentAt: true,
-        viewedAt: true,
-        acceptedAt: true,
-        validUntil: true,
-        createdByName: true,
-        agreements: {
-          orderBy: { signedAt: "desc" },
-          take: 1,
-          select: { id: true, signerName: true, signedAt: true },
-        },
-      },
-    }),
-  ]);
+    },
+  });
 
-  const proposalRows: SentProposalRow[] = proposals.map((p) => ({
+  const rows: SentProposalRow[] = proposals.map((p) => ({
     id: p.id,
     token: p.token,
     clientName: p.clientName,
@@ -87,6 +76,28 @@ export default async function PropertyPricingPage({
         }
       : null,
   }));
+
+  // "Current" = the most-recently-signed proposal. There's only one
+  // active agreement per property: when a newer signed proposal
+  // arrives it automatically becomes current and the prior signed one
+  // slides into history.
+  const signedRows = rows.filter((r) => !!r.latestAgreement);
+  const currentAgreement = signedRows[0] ?? null;
+
+  const now = new Date();
+  const pendingRows = rows.filter(
+    (r) =>
+      !r.acceptedAt &&
+      new Date(r.validUntil) >= now &&
+      // Don't double-list a proposal that's already the current one.
+      r.id !== currentAgreement?.id,
+  );
+
+  const historyRows = rows.filter(
+    (r) =>
+      r.id !== currentAgreement?.id &&
+      !pendingRows.some((p) => p.id === r.id),
+  );
 
   return (
     <div>
@@ -119,102 +130,108 @@ export default async function PropertyPricingPage({
             href={`/admin/pricing?property=${property.id}`}
             className="btn-primary"
           >
-            + New Quote
+            + New Proposal
           </Link>
         </div>
       </div>
 
-      <div className="mt-6 flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
-          Sent Proposals &amp; Signed Agreements
-        </h2>
-        {proposalRows.length > 5 && (
-          <Link
-            href="/admin/proposals"
-            className="text-xs font-semibold text-brand-dark hover:underline"
-          >
-            View all ({proposalRows.length}) →
-          </Link>
-        )}
-      </div>
-      <div className="mt-3">
-        <SentProposalsList
-          proposals={proposalRows.slice(0, 5)}
-          emptyMessage="No proposals sent to clients yet for this property."
-        />
-      </div>
-
-      <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-        Saved Pricing Quotes
+      {/* ─── Current Agreement ─── */}
+      <h2 className="mt-6 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        Current Agreement
       </h2>
-
-      {quotes.length === 0 ? (
-        <div className="mt-3 rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-10 text-center text-sm text-zinc-500">
-          No quotes saved for this property yet.{" "}
+      {currentAgreement ? (
+        <div className="mt-3 overflow-hidden rounded-2xl border-2 border-emerald-200 bg-emerald-50/50">
+          <div className="flex flex-wrap items-start justify-between gap-4 p-5">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                  Signed
+                </span>
+                <span className="text-xs text-zinc-600">
+                  by {currentAgreement.latestAgreement!.signerName} on{" "}
+                  {fmtDate(
+                    new Date(currentAgreement.latestAgreement!.signedAt),
+                  )}
+                </span>
+              </div>
+              <div className="mt-2 text-lg font-semibold text-zinc-900">
+                {currentAgreement.clientName}
+              </div>
+              <div className="text-xs text-zinc-500">
+                {currentAgreement.clientEmail}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-emerald-700">
+                {usd(currentAgreement.monthlyPrice)}
+                <span className="text-sm font-normal text-emerald-600">
+                  {" "}/mo
+                </span>
+              </div>
+              <div className="text-xs text-zinc-500">
+                {usd(currentAgreement.weeklyPrice)}/wk
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 border-t border-emerald-100 bg-white/60 px-5 py-3">
+            <Link
+              href={`/proposals/${currentAgreement.token}/signed/${currentAgreement.latestAgreement!.id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+            >
+              View Signed Agreement
+            </Link>
+            <Link
+              href={`/proposals/${currentAgreement.token}`}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              Open Proposal
+            </Link>
+            <Link
+              href={`/admin/pricing?proposal=${currentAgreement.id}`}
+              className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              Reuse to Build a New Proposal
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 rounded-2xl border border-dashed border-zinc-300 bg-white px-4 py-8 text-center text-sm text-zinc-500">
+          No signed agreement yet for this property.{" "}
           <Link
             href={`/admin/pricing?property=${property.id}`}
             className="font-medium text-brand-dark hover:underline"
           >
-            Build One →
+            Build a proposal →
           </Link>
         </div>
-      ) : (
-        <div className="mt-3 overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
-              <tr>
-                <th className="px-4 py-2.5 text-left font-semibold">Client</th>
-                <th className="px-4 py-2.5 text-left font-semibold">Monthly</th>
-                <th className="px-4 py-2.5 text-left font-semibold">Weekly</th>
-                <th className="px-4 py-2.5 text-left font-semibold">Saved</th>
-                <th className="px-4 py-2.5"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {quotes.map((q) => (
-                <tr key={q.id}>
-                  <td className="px-4 py-3 align-top">
-                    <div className="font-medium text-zinc-900">
-                      {q.clientName}
-                    </div>
-                    {q.preparedBy && (
-                      <div className="text-xs text-zinc-500">
-                        Prepared by {q.preparedBy}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 align-top font-semibold text-zinc-900">
-                    {usd(q.monthlyPrice)}
-                    <span className="ml-0.5 text-xs font-normal text-zinc-500">
-                      /mo
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 align-top text-zinc-700">
-                    {usd(q.weeklyPrice)}
-                    <span className="ml-0.5 text-xs text-zinc-500">/wk</span>
-                  </td>
-                  <td className="px-4 py-3 align-top text-zinc-600">
-                    {new Date(q.createdAt).toLocaleDateString()}
-                    {q.createdByName && (
-                      <div className="text-xs text-zinc-400">
-                        {q.createdByName}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 align-top text-right whitespace-nowrap">
-                    <Link
-                      href={`/admin/pricing?quote=${q.id}`}
-                      className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
-                    >
-                      Open
-                    </Link>
-                    <PropertyPricingDeleteButton quoteId={q.id} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      )}
+
+      {/* ─── Pending (sent but not signed, not expired) ─── */}
+      {pendingRows.length > 0 && (
+        <>
+          <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+            Pending Proposals ({pendingRows.length})
+          </h2>
+          <div className="mt-3">
+            <SentProposalsList proposals={pendingRows} />
+          </div>
+        </>
+      )}
+
+      {/* ─── History (older signed + expired + superseded) ─── */}
+      {historyRows.length > 0 && (
+        <>
+          <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+            History ({historyRows.length})
+          </h2>
+          <div className="mt-3">
+            <SentProposalsList proposals={historyRows} />
+          </div>
+        </>
       )}
     </div>
   );

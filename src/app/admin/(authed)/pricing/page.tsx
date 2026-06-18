@@ -2,17 +2,15 @@ import { prisma } from "@/lib/db";
 import {
   PricingTool,
   type PricingPropertyOption,
-  type SavedPricingQuote,
 } from "@/components/admin/PricingTool";
 import { type SentProposalRow } from "@/components/admin/SentProposalsList";
 
 export const dynamic = "force-dynamic";
 
-const SAVED_QUOTE_LIMIT = 30;
 const PROPOSAL_LIMIT = 30;
 
 export default async function PricingPage() {
-  const [properties, quotes, proposals] = await Promise.all([
+  const [properties, proposals] = await Promise.all([
     prisma.property.findMany({
       orderBy: { name: "asc" },
       select: {
@@ -28,21 +26,6 @@ export default async function PricingPage() {
             dayOfWeek: true,
           },
         },
-      },
-    }),
-    prisma.pricingQuote.findMany({
-      orderBy: { createdAt: "desc" },
-      take: SAVED_QUOTE_LIMIT,
-      select: {
-        id: true,
-        propertyId: true,
-        clientName: true,
-        preparedBy: true,
-        monthlyPrice: true,
-        weeklyPrice: true,
-        createdByName: true,
-        createdAt: true,
-        property: { select: { name: true } },
       },
     }),
     prisma.proposal.findMany({
@@ -83,18 +66,6 @@ export default async function PricingPage() {
     })),
   }));
 
-  const savedQuotes: SavedPricingQuote[] = quotes.map((q) => ({
-    id: q.id,
-    propertyId: q.propertyId,
-    propertyName: q.property.name,
-    clientName: q.clientName,
-    preparedBy: q.preparedBy,
-    monthlyPrice: q.monthlyPrice,
-    weeklyPrice: q.weeklyPrice,
-    createdByName: q.createdByName,
-    createdAt: q.createdAt.toISOString(),
-  }));
-
   const proposalRows: SentProposalRow[] = proposals.map((p) => ({
     id: p.id,
     token: p.token,
@@ -118,10 +89,6 @@ export default async function PricingPage() {
   }));
 
   return (
-    <PricingTool
-      properties={propertyOptions}
-      savedQuotes={savedQuotes}
-      sentProposals={proposalRows}
-    />
+    <PricingTool properties={propertyOptions} sentProposals={proposalRows} />
   );
 }
