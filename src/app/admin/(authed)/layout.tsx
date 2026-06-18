@@ -14,7 +14,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900">
-      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
+      <header className="print:hidden sticky top-0 z-10 border-b border-zinc-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <Link href="/admin" aria-label={BRAND_NAME}>
             {BRAND_LOGO ? (
@@ -53,7 +53,7 @@ export default async function AdminLayout({
           {canManageAdmins && <NavLink href="/admin/admins">Admins</NavLink>}
         </nav>
       </header>
-      <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
+      <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 print:max-w-none print:px-0 print:py-0">
         {children}
       </main>
     </div>

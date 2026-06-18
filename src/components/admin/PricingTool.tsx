@@ -8,6 +8,13 @@ import {
   SentProposalsList,
   type SentProposalRow,
 } from "@/components/admin/SentProposalsList";
+import {
+  formatProposalDates,
+  ProposalView,
+} from "@/components/proposal/ProposalView";
+import { PROPOSAL_VALIDITY_DAYS } from "@/lib/proposalConstants";
+import type { ProposalData } from "@/lib/proposalData";
+import proposalStyles from "@/components/proposal/proposal.module.css";
 import styles from "./PricingTool.module.css";
 
 export type PricingPropertyOption = {
@@ -78,28 +85,6 @@ const FULLDAYS = [
   "Friday",
   "Saturday",
 ];
-
-const SERVICE_COPY: Record<
-  Mode,
-  { title: string; body?: string; lead?: string }
-> = {
-  both: {
-    title: "Push & pull valet service",
-    body: "Before each scheduled pickup, we move your full carts and dumpsters from the enclosure to the curb for your hauler, then return them once they've been serviced. Every visit includes up to five minutes of cleanup to collect any waste left behind.",
-  },
-  pull: {
-    title: "Pull-out service",
-    body: "Before each scheduled pickup, we move your full carts and dumpsters out to the curb, staged and ready for your hauler. Every visit includes up to five minutes of cleanup.",
-  },
-  cycle: {
-    title: "Bin cycle & swap service",
-    body: "Dedicated on-site support that keeps your trash room flowing — cycling, swapping, and rotating containers so no single bin overfills and capacity stays balanced. Every visit includes the same cleanup, issue reporting, and service recommendations.",
-  },
-  sow: {
-    title: "Monitor & maintenance service",
-    lead: "A custom scope of work, tailored to what your property needs:",
-  },
-};
 
 /* ─── Types ─────────────────────────────────────────────────────── */
 
@@ -277,33 +262,6 @@ function fmtDays(set: Set<number>, full = false): string {
     return ds.slice(0, -1).join(", ") + " & " + ds[ds.length - 1];
   }
   return sorted.map((d) => names[d]).join(", ");
-}
-
-function binText(s: Stream): string {
-  if (s.mode === "sow") return s.sowMin + " min on site";
-  const p: string[] = [];
-  if (s.dumpsters)
-    p.push(
-      s.dumpsters +
-        (s.dumpIsCompactor && s.mode !== "cycle"
-          ? " compactor dumpster"
-          : " dumpster") +
-        (s.dumpsters > 1 ? "s" : ""),
-    );
-  if (s.carts) p.push(s.carts + " cart" + (s.carts > 1 ? "s" : ""));
-  return p.join(", ");
-}
-
-function schedText(s: Stream): string {
-  if (s.mode !== "sow" && s.splitSched) {
-    const pp: string[] = [];
-    if (s.carts > 0 && s.cartDays.size)
-      pp.push("Carts: " + fmtDays(s.cartDays, true));
-    if (s.dumpsters > 0 && s.dumpDays.size)
-      pp.push("Dumpsters: " + fmtDays(s.dumpDays, true));
-    return pp.join(" · ");
-  }
-  return fmtDays(s.days, true);
 }
 
 function streamDisplayName(s: Stream): string {
@@ -1378,7 +1336,6 @@ function ProposalOutput({
   propName,
   propAddress,
   propBy,
-  streams,
   monthlyPrice,
   weeklyPrice,
   breakEvenCost,
@@ -1399,210 +1356,50 @@ function ProposalOutput({
 }) {
   const name = propName.trim() || "Prospective Client";
   const address = propAddress.trim();
-  const today = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const order: Mode[] = ["both", "pull", "cycle", "sow"];
-  const present = order.filter((m) => streams.some((s) => s.mode === m));
-  const hauler = present.some((m) => m !== "sow");
-  const weekly = weeklyPrice;
-
-  const benefits: Array<{ title: string; body: string }> = [];
-  if (hauler) {
-    benefits.push({
-      title: "Dispatch & hauler coordination",
-      body: "we work directly with your hauler so you don't have to. If your hauler misses one of their scheduled pickups, our team is the one that contacts them, makes the calls, waits on hold, and arranges the return pickup — so a pickup your hauler missed gets resolved without you chasing it down. All at no extra charge.",
-    });
-  }
-  benefits.push(
-    {
-      title: "On-site waste monitoring",
-      body: "on every visit we watch for the things that quietly disrupt your pickups, like bulky items blocking the trash room, appliances dumped in a container, or a broken dumpster wheel — catching them early and helping get them resolved so your scheduled service stays on track.",
-    },
-    {
-      title: "Contamination & overflow watch",
-      body: "we watch usage for contamination and overflow and recommend right-sizing your service to help you avoid overflow fees and contamination fines.",
-    },
-    {
-      title: "Waste diversion reporting",
-      body: "clear, visual reports of the waste you generate, reviewed with you to track your diversion rate and reach your goals.",
-    },
+  const preparedDateObj = new Date();
+  const validUntilObj = new Date(
+    Date.now() + PROPOSAL_VALIDITY_DAYS * 24 * 60 * 60 * 1000,
   );
+  const dates = formatProposalDates(preparedDateObj, validUntilObj);
 
+  // Same ProposalView the client sees at /proposals/<token> — so the
+  // admin's "Print / Save as PDF" output matches the public proposal
+  // byte-for-byte, no copy drift between preview and what the client
+  // received. SerializedTool ↔ ProposalData are structurally identical.
   return (
-    <div className={styles.root}>
-      <div className={styles.paper}>
-        <div className={`${styles.proposalActions} ${styles.noPrint}`}>
-          <button type="button" onClick={onBack}>
-            ← Back to Calculator
-          </button>
-          <SendProposalButton
-            propertyId={propertyId}
-            clientName={name}
-            clientAddress={address}
-            preparedBy={propBy.trim() || null}
-            monthlyPrice={monthlyPrice}
-            weeklyPrice={weeklyPrice}
-            breakEvenCost={breakEvenCost}
-            data={proposalData}
-          />
-          <button
-            type="button"
-            className={styles.pprint}
-            onClick={() => window.print()}
-          >
-            Print / Save as PDF
-          </button>
-        </div>
-
-        <header className={styles.phead}>
-          <BrandMark height={60} />
-          <div className={styles.pmeta}>
-            Service Proposal
-            <br />
-            {today}
-          </div>
-        </header>
-
-        <div className={styles.pfor}>
-          <div>
-            <span className={styles.plabel}>Prepared for</span>
-            {name}
-            {address && (
-              <div
-                style={{
-                  fontSize: 13,
-                  color: "#777",
-                  marginTop: 2,
-                  fontWeight: 400,
-                }}
-              >
-                {address}
-              </div>
-            )}
-          </div>
-          {propBy && (
-            <div>
-              <span className={styles.plabel}>Prepared by</span>
-              {propBy}
-            </div>
-          )}
-        </div>
-
-        <h2 className={styles.ptitle}>Onsite Waste Service</h2>
-
-        {present.map((m) => {
-          if (m === "sow") {
-            return (
-              <div key={m} className={styles.pservice}>
-                <h3 className={styles.psvcH}>{SERVICE_COPY.sow.title}</h3>
-                <p className={styles.pintro}>{SERVICE_COPY.sow.lead}</p>
-                {streams
-                  .filter((s) => s.mode === "sow")
-                  .map((s) => (
-                    <p
-                      key={s.id}
-                      className={`${styles.pintro} ${styles.pscope}`}
-                    >
-                      {s.sowScope.trim() ||
-                        "Custom scope of work as discussed with your team."}
-                    </p>
-                  ))}
-              </div>
-            );
-          }
-          return (
-            <div key={m} className={styles.pservice}>
-              <h3 className={styles.psvcH}>{SERVICE_COPY[m].title}</h3>
-              <p className={styles.pintro}>{SERVICE_COPY[m].body}</p>
-            </div>
-          );
-        })}
-
-        <table className={styles.ptable}>
-          <thead>
-            <tr>
-              <th>Service line</th>
-              <th>Detail</th>
-              <th>Service schedule</th>
-            </tr>
-          </thead>
-          <tbody>
-            {streams.map((s) => (
-              <tr key={s.id}>
-                <td className={styles.pname}>{streamDisplayName(s)}</td>
-                <td>{binText(s)}</td>
-                <td>{schedText(s)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <div className={styles.pincl}>
-          <div className={styles.plabel} style={{ marginBottom: 12 }}>
-            Included with your service
-          </div>
-          <ul className={styles.pbenefits}>
-            {benefits.map((b) => (
-              <li key={b.title}>
-                <span className={styles.pbT}>{b.title}</span> — {b.body}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className={styles.pprice}>
-          <div className={styles.prateMain}>
-            <span className={styles.plabel} style={{ margin: "0 0 3px" }}>
-              Service rate
-            </span>
-            <span className={styles.pamount}>
-              {usd(weekly)}
-              <span className={styles.ppermo}> / week</span>
-            </span>
-          </div>
-          <div className={styles.prateMo}>
-            <span className={styles.prateMoAmt}>{usd(monthlyPrice)}</span>
-            <span className={styles.prateMoLbl}>billed monthly</span>
-          </div>
-        </div>
-        <div className={styles.prateNote}>
-          Weekly rate billed monthly, based on an average of 4.33 service
-          weeks per month.
-        </div>
-
-        <div className={styles.popt}>
-          <span className={styles.plabel}>Optional add-on services</span>
-          <ul className={styles.poptList}>
-            <li>Junk removal of bulky waste</li>
-            <li>Pressure washing for trash room grounds</li>
-            <li>
-              Additional on-site cleanup beyond the scope of work — billed at
-              $2 per minute (15-minute increments)
-            </li>
-          </ul>
-        </div>
-
-        <p className={styles.pterms}>
-          This proposal is valid for 30 days from the date above. Service
-          begins upon a signed agreement. Pricing reflects the schedule
-          shown; changes to container count or collection frequency may
-          adjust the rate.
-        </p>
-
-        <div className={styles.pfoot}>
-          <div className={styles.pfootName}>
-            {BRAND_NAME}® · Onsite Waste Services
-          </div>
-          <div className={styles.pfootContact}>
-            520 3rd St #201, Oakland, CA 94607 &nbsp;·&nbsp; (510) 788-0462
-            &nbsp;·&nbsp;{" "}
-            <a href="https://www.trashscouts.com">www.trashscouts.com</a>
-          </div>
-        </div>
+    <div className={proposalStyles.shell}>
+      <div className={`${proposalStyles.actions} ${proposalStyles.noPrint}`}>
+        <button type="button" onClick={onBack}>
+          ← Back to Calculator
+        </button>
+        <SendProposalButton
+          propertyId={propertyId}
+          clientName={name}
+          clientAddress={address}
+          preparedBy={propBy.trim() || null}
+          monthlyPrice={monthlyPrice}
+          weeklyPrice={weeklyPrice}
+          breakEvenCost={breakEvenCost}
+          data={proposalData}
+        />
+        <button
+          type="button"
+          className={proposalStyles.pprint}
+          onClick={() => window.print()}
+        >
+          Print / Save as PDF
+        </button>
       </div>
+      <ProposalView
+        clientName={name}
+        clientAddress={address || null}
+        preparedBy={propBy.trim() || null}
+        preparedDate={dates.preparedDate}
+        validUntil={dates.validUntil}
+        monthlyPrice={monthlyPrice}
+        weeklyPrice={weeklyPrice}
+        data={proposalData as unknown as ProposalData}
+      />
     </div>
   );
 }
