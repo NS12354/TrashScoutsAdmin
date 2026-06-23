@@ -418,7 +418,8 @@
     padding: 0 !important;
     max-width: none !important;
   }
-  .actions {
+  .actions,
+  .intro {
     display: none !important;
   }
   /* Form inputs print as plain text — readers see whatever was typed
@@ -434,25 +435,108 @@
     width: 10px;
     height: 10px;
   }
-  .sec,
-  .read,
-  .price,
-  .terms,
-  .sigBlock,
-  .foot {
-    break-inside: avoid;
-    page-break-inside: avoid;
+  /* Tighten section spacing so two short sections (e.g. Property
+   * Information + Contacts) fit alongside Services & Schedule on
+   * page 1 instead of pushing it to page 2. */
+  .head {
+    padding-bottom: 8px;
+    margin-bottom: 10px;
   }
+  .sec {
+    margin-top: 12px;
+  }
+  .secH {
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    font-size: 10.5px;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+  .read {
+    padding: 9px 11px;
+  }
+  .psvcH {
+    font-size: 11.5px;
+  }
+  .pintro {
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+  .ptable {
+    margin-top: 8px;
+  }
+  .ptable th {
+    font-size: 9px;
+    padding-bottom: 4px;
+  }
+  .ptable td {
+    padding: 4px 8px 4px 0;
+    font-size: 10.5px;
+  }
+  .price {
+    padding: 10px 14px;
+  }
+  .priceAmt {
+    font-size: 22px;
+  }
+  .pricePer {
+    font-size: 11px;
+  }
+  .priceMoAmt {
+    font-size: 14px;
+  }
+  .priceMoLbl {
+    font-size: 8.5px;
+  }
+  /* Don't force a page break before Terms — let it flow naturally
+   * if there's room on the previous page. Three-column layout still
+   * compresses it across 1–2 pages. */
   .terms {
-    break-before: page;
-    page-break-before: always;
+    padding: 10px 12px;
   }
   .termsCols {
     column-count: 3;
     column-gap: 14px;
   }
+  .term h4 {
+    font-size: 9.5px;
+    margin-bottom: 1px;
+  }
+  .term p {
+    font-size: 9px;
+    line-height: 1.36;
+  }
   .sigBlock {
+    margin-top: 14px;
+  }
+  .sigRow {
     margin-top: 18px;
+  }
+  .foot {
+    margin-top: 14px;
+    padding-top: 8px;
+    font-size: 9.5px;
+  }
+
+  /* Keep small atomic units together. Terms intentionally allowed
+   * to flow across pages (it's a long block); per-term entries
+   * stay whole. */
+  .sec,
+  .read,
+  .price,
+  .sigBlock,
+  .foot {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .term {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .sigBlock .secH,
+  .sec .secH {
+    break-after: avoid;
+    page-break-after: avoid;
   }
 }
 

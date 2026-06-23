@@ -552,10 +552,20 @@ export function AgreementForm({
         <div className={styles.agRead}>
           {modes.map((m) => {
             if (m === "sow") {
+              const sowStreams = streams.filter((s) => s.mode === "sow");
               return (
                 <div key={m} className={styles.pservice}>
                   <h3 className={styles.psvcH}>{SERVICE_COPY.sow.title}</h3>
                   <p className={styles.pintro}>{SERVICE_COPY.sow.lead}</p>
+                  {sowStreams.map((s) => (
+                    <p
+                      key={s.id}
+                      className={`${styles.pintro} ${styles.pscope}`}
+                    >
+                      {s.sowScope.trim() ||
+                        "Custom scope of work as discussed with your team."}
+                    </p>
+                  ))}
                 </div>
               );
             }

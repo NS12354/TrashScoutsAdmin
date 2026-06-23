@@ -142,10 +142,30 @@ export default async function PrintableAgreementPage({
           <div className={styles.read}>
             {modes.map((m) => {
               if (m === "sow") {
+                // Carry each SOW stream's per-line scope text through
+                // to the printable agreement so a Custom SOW
+                // proposal doesn't lose its scope when downloaded.
+                const sowStreams = streams.filter((s) => s.mode === "sow");
                 return (
                   <div key={m} className={styles.pservice}>
                     <h3 className={styles.psvcH}>{SERVICE_COPY.sow.title}</h3>
                     <p className={styles.pintro}>{SERVICE_COPY.sow.lead}</p>
+                    {sowStreams.map((s) => (
+                      <p
+                        key={s.id}
+                        className={styles.pintro}
+                        style={{
+                          whiteSpace: "pre-line",
+                          borderLeft: "3px solid #E7F1EA",
+                          paddingLeft: 12,
+                          marginTop: 6,
+                          color: "#333",
+                        }}
+                      >
+                        {s.sowScope.trim() ||
+                          "Custom scope of work as discussed with your team."}
+                      </p>
+                    ))}
                   </div>
                 );
               }
