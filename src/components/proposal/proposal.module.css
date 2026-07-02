@@ -1025,6 +1025,25 @@
 @page {
   size: letter portrait;
   margin: 0.5in;
+
+  /* Page number footer, right-aligned. Only meaningful on multi-page
+   * proposals — Chrome hides the counter automatically on single-
+   * page prints. Use CSS Paged Media so the count is native and
+   * doesn't have to be baked into the HTML. */
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-family: Arial, sans-serif;
+    font-size: 9px;
+    color: #999;
+  }
+}
+
+/* The closing group holds Rate + Optional Add-Ons + pfoot together.
+ * In print mode, flex-based paper layout pushes it to the bottom of
+ * the last page so single-page proposals don't have a big gap of
+ * whitespace under the benefits list. */
+.pcloser {
+  display: contents;
 }
 
 @media print {
@@ -1050,6 +1069,19 @@
     background: #fff;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    /* Flex column so the closer group (Rate + Add-Ons + Footer)
+     * can margin-top:auto itself to the bottom of a short proposal.
+     * Letter size minus 0.5in margins = ~10in usable, but we use
+     * min-height:100vh so the browser's print viewport handles it
+     * and multi-page proposals still flow naturally. */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .pcloser {
+    display: flex !important;
+    flex-direction: column;
+    margin-top: auto;
   }
   .actions,
   .noPrint,

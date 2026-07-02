@@ -1584,7 +1584,19 @@ function SendProposalButton({
   const [err, setErr] = useState<string | null>(null);
 
   async function send() {
-    if (!email.trim()) {
+    // Client Email accepts comma-, semicolon-, or space-separated
+    // multiples. First entry is the primary, remaining are cc'd
+    // with the same message.
+    const rawEmails = email
+      .split(/[,;\s]+/)
+      .map((e) => e.trim())
+      .filter(Boolean);
+    if (rawEmails.length === 0) {
+      setErr("Enter the client's email.");
+      return;
+    }
+    const [primary, ...ccs] = rawEmails;
+    if (!primary) {
       setErr("Enter the client's email.");
       return;
     }
@@ -1598,7 +1610,8 @@ function SendProposalButton({
           propertyId: propertyId || null,
           clientName,
           clientAddress: clientAddress || null,
-          clientEmail: email.trim(),
+          clientEmail: primary,
+          clientEmailCcs: ccs,
           preparedBy,
           data,
           monthlyPrice,
@@ -1644,8 +1657,8 @@ function SendProposalButton({
           color: "#0E3F27",
         }}
       >
-        <b>✓ Proposal sent to {email}.</b> They&apos;ll receive a link to view
-        and accept it.
+        <b>✓ Proposal sent.</b> Recipients: <span style={{ wordBreak: "break-all" }}>{email}</span>.
+        They&apos;ll each receive a link to view and accept.
         {err && (
           <div style={{ color: "#7C4A00", marginTop: 6 }}>{err}</div>
         )}
@@ -1703,11 +1716,11 @@ function SendProposalButton({
           color: "#8A9384",
         }}
       >
-        Client Email
+        Client Email(s)
       </label>
       <input
-        type="email"
-        placeholder="client@company.com"
+        type="text"
+        placeholder="client@company.com, owner@company.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         style={{
@@ -1718,6 +1731,10 @@ function SendProposalButton({
           fontFamily: "inherit",
         }}
       />
+      <div style={{ fontSize: 11.5, color: "#8A9384", marginTop: -4 }}>
+        Comma- or space-separated for multiple. Every address gets the
+        full proposal email.
+      </div>
       <label
         style={{
           fontSize: 11,
@@ -1744,8 +1761,9 @@ function SendProposalButton({
         }}
       />
       <div style={{ fontSize: 11.5, color: "#8A9384", marginTop: -4 }}>
-        Comma- or space-separated. These addresses get notified the
-        moment the client signs — no shared ops inbox is copied.
+        Comma- or space-separated. These addresses get a copy of the
+        proposal email now, and a signed-agreement notification the
+        moment the client signs.
       </div>
       <label
         style={{

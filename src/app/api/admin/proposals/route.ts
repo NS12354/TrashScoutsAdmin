@@ -14,7 +14,10 @@ type CreateBody = {
   pricingQuoteId?: string | null;
   clientName: string;
   clientAddress?: string | null;
+  // Primary client email. Additional recipients may be listed in
+  // clientEmailCcs — they get the same message as the primary.
   clientEmail: string;
+  clientEmailCcs?: string[] | null;
   preparedBy?: string | null;
   data: unknown;
   monthlyPrice: number;
@@ -27,6 +30,14 @@ type CreateBody = {
 
 function isEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
+}
+
+function cleanEmailList(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((e) => (typeof e === "string" ? e.trim() : ""))
+    .filter((e) => e && isEmail(e) && e.length <= 200)
+    .slice(0, 10);
 }
 
 export async function POST(req: NextRequest) {
@@ -54,19 +65,26 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  let propertyName: string | null = null;
+  let propertyAddress: string | null = null;
   if (body.propertyId) {
-    const exists = await prisma.property.findUnique({
+    const property = await prisma.property.findUnique({
       where: { id: body.propertyId },
-      select: { id: true },
+      select: { id: true, name: true, address: true },
     });
-    if (!exists) {
+    if (!property) {
       return NextResponse.json({ error: "Unknown property" }, { status: 404 });
     }
+    propertyName = property.name;
+    propertyAddress = property.address;
   }
 
   const validUntil = new Date(
     Date.now() + PROPOSAL_VALIDITY_DAYS * 24 * 60 * 60 * 1000,
   );
+
+  const clientEmailCcs = cleanEmailList(body.clientEmailCcs);
+  const pocEmails = cleanEmailList(body.pocEmails);
 
   const proposal = await prisma.proposal.create({
     data: {
@@ -77,6 +95,7 @@ export async function POST(req: NextRequest) {
       clientName: body.clientName.trim().slice(0, 200),
       clientAddress: body.clientAddress?.trim().slice(0, 300) || null,
       clientEmail: body.clientEmail.trim().slice(0, 200),
+      clientEmailCcs,
       preparedBy: body.preparedBy?.trim().slice(0, 200) || null,
       data: body.data as object,
       monthlyPrice: body.monthlyPrice,
@@ -85,17 +104,7 @@ export async function POST(req: NextRequest) {
       validUntil,
       message: body.message?.trim().slice(0, 2000) || null,
       thankYouMessage: body.thankYouMessage?.trim().slice(0, 2000) || null,
-      pocEmails: Array.isArray(body.pocEmails)
-        ? body.pocEmails
-            .map((e) => e.trim())
-            .filter(
-              (e) =>
-                e &&
-                /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) &&
-                e.length <= 200,
-            )
-            .slice(0, 10)
-        : [],
+      pocEmails,
       sentAt: new Date(),
     },
     select: {
@@ -103,15 +112,21 @@ export async function POST(req: NextRequest) {
       token: true,
       clientName: true,
       clientEmail: true,
-      monthlyPrice: true,
+      clientEmailCcs: true,
       preparedBy: true,
+      pocEmails: true,
+      validUntil: true,
     },
   });
 
   const email = await sendProposalReadyEmail({
-    to: proposal.clientEmail,
+    primaryTo: proposal.clientEmail,
+    extraTos: proposal.clientEmailCcs,
+    pocEmails: proposal.pocEmails,
     clientName: proposal.clientName,
-    monthlyPrice: proposal.monthlyPrice,
+    propertyName: propertyName ?? body.clientName,
+    serviceAddress: propertyAddress ?? body.clientAddress ?? null,
+    validUntil: proposal.validUntil,
     token: proposal.token,
     preparedBy: proposal.preparedBy,
     message: body.message,
@@ -121,6 +136,6 @@ export async function POST(req: NextRequest) {
     id: proposal.id,
     token: proposal.token,
     emailOk: email.ok,
-    emailSkipped: email.skipped ?? false,
+    delivered: email.delivered,
   });
 }

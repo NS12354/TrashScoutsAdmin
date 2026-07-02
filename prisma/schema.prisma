@@ -232,8 +232,16 @@ model Proposal {
   // as a Postgres text[] so each proposal can have its own set of
   // recipients (account exec, ops lead, account manager, etc.) —
   // replacing the previous NOTIFICATION_EMAIL fallback for this
-  // specific flow.
+  // specific flow. POCs are also CC'd on the proposal-sent email
+  // so they know a proposal has gone out.
   pocEmails       String[] @default([])
+
+  // Additional primary-recipient emails beyond `clientEmail`. Both
+  // the proposal-sent email and the signed-agreement email are
+  // delivered to `clientEmail` plus every entry here, so multi-
+  // stakeholder clients (property manager + owner, etc.) can all
+  // receive the same copy without being demoted to CC.
+  clientEmailCcs  String[] @default([])
 
   sentAt         DateTime?
   viewedAt       DateTime?

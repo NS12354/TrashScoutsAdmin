@@ -184,44 +184,50 @@ export function ProposalView(props: ProposalViewProps) {
         </ul>
       </section>
 
-      <section>
-        <div className={styles.psecH}>Your Rate</div>
-        <div className={styles.pprice}>
-          <div className={styles.prateMain}>
-            <span className={styles.plabel} style={{ margin: "0 0 3px" }}>
-              Service Rate
-            </span>
-            <span className={styles.pamount}>
-              {usd(props.weeklyPrice)}
-              <span className={styles.ppermo}> / week</span>
-            </span>
+      {/* Closing group — Rate + Optional Add-Ons + footer. Flexes to
+          the bottom of the page in print mode so a short (one-page)
+          proposal doesn't have a big whitespace gap between the
+          benefits list and the pricing box. */}
+      <div className={styles.pcloser}>
+        <section>
+          <div className={styles.psecH}>Your Rate</div>
+          <div className={styles.pprice}>
+            <div className={styles.prateMain}>
+              <span className={styles.plabel} style={{ margin: "0 0 3px" }}>
+                Service Rate
+              </span>
+              <span className={styles.pamount}>
+                {usd(props.weeklyPrice)}
+                <span className={styles.ppermo}> / week</span>
+              </span>
+            </div>
+            <div className={styles.prateMo}>
+              <span className={styles.prateMoAmt}>
+                {usd(props.monthlyPrice)}
+              </span>
+              <span className={styles.prateMoLbl}>Billed Monthly</span>
+            </div>
           </div>
-          <div className={styles.prateMo}>
-            <span className={styles.prateMoAmt}>
-              {usd(props.monthlyPrice)}
-            </span>
-            <span className={styles.prateMoLbl}>Billed Monthly</span>
+          <div className={styles.prateNote}>
+            Weekly rate billed monthly, based on an average of 4.33 service
+            weeks per month.
           </div>
-        </div>
-        <div className={styles.prateNote}>
-          Weekly rate billed monthly, based on an average of 4.33 service
-          weeks per month.
-        </div>
-      </section>
+        </section>
 
-      <section>
-        <div className={styles.psecH}>Optional Add-Ons</div>
-        <ul className={styles.poptList}>
-          {OPTIONAL_SERVICES.map((o) => (
-            <li key={o}>{o}</li>
-          ))}
-        </ul>
-        <p className={styles.pterms}>
-          Service begins upon a signed agreement. Pricing reflects the
-          schedule shown; container or frequency changes may adjust the
-          rate.
-        </p>
-      </section>
+        <section>
+          <div className={styles.psecH}>Optional Add-Ons</div>
+          <ul className={styles.poptList}>
+            {OPTIONAL_SERVICES.map((o) => (
+              <li key={o}>{o}</li>
+            ))}
+          </ul>
+          <p className={styles.pterms}>
+            Service begins upon a signed agreement. Pricing reflects the
+            schedule shown; container or frequency changes may adjust the
+            rate.
+          </p>
+        </section>
+      </div>
 
       {props.acceptHref && !props.alreadyAccepted && (
         <div className={styles.acceptCta}>

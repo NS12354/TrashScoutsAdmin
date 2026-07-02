@@ -27,6 +27,22 @@ function getClientIp(req: NextRequest): string {
 
 const MAX_SIG_BYTES = 200_000;
 
+// Extract the property / start-date info the client entered on the
+// agreement form. Falls back to the proposal's stored values when
+// missing so the signed-agreement email still gets meaningful
+// context.
+function pickString(
+  fd: Record<string, unknown>,
+  key: string,
+): string | null {
+  const v = fd[key];
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+}
+
+function pickBool(fd: Record<string, unknown>, key: string): boolean {
+  return fd[key] === true;
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> },
@@ -46,12 +62,13 @@ export async function POST(
     select: {
       id: true,
       clientName: true,
+      clientAddress: true,
       clientEmail: true,
-      monthlyPrice: true,
-      weeklyPrice: true,
+      clientEmailCcs: true,
       validUntil: true,
       thankYouMessage: true,
       pocEmails: true,
+      property: { select: { name: true, address: true } },
     },
   });
   if (!proposal) {
@@ -102,14 +119,33 @@ export async function POST(
     data: { acceptedAt: new Date() },
   });
 
-  // Fire-and-forget emails — don't fail the submission if SendGrid is
-  // slow or the env isn't configured.
+  const fd = body.formData;
+  // Pull the form's own values first (client's canonical answer),
+  // then fall back to what was on the proposal when the admin sent
+  // it.
+  const propertyName =
+    pickString(fd, "pname") ??
+    proposal.property?.name ??
+    proposal.clientName;
+  const serviceAddress =
+    pickString(fd, "svcaddr") ??
+    proposal.property?.address ??
+    proposal.clientAddress;
+  const startDate = pickString(fd, "start");
+  const startTbd = pickBool(fd, "startTbd");
+
+  // Fire-and-forget emails — don't fail the submission if SendGrid
+  // is slow or the env isn't configured.
   void sendSignedAgreementEmails({
-    clientEmail: proposal.clientEmail,
+    primaryClientEmail: proposal.clientEmail,
+    extraClientEmails: proposal.clientEmailCcs,
     clientName: proposal.clientName,
-    monthlyPrice: proposal.monthlyPrice,
-    weeklyPrice: proposal.weeklyPrice,
     signerName: body.signerName.trim(),
+    signerTitle: body.signerTitle?.trim() || null,
+    startDate,
+    startTbd,
+    propertyName,
+    serviceAddress,
     token,
     agreementId: agreement.id,
     thankYouMessage: proposal.thankYouMessage,
