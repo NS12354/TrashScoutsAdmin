@@ -16,12 +16,22 @@ export function publicBaseUrl(): string {
   );
 }
 
-// Direct PDF URL for the client-facing brochure attached to every
-// proposal email. Set via BROCHURE_PDF_URL env var; if the URL 404s
-// or the env var is unset, the brochure attachment is silently
-// skipped and the rest of the email still sends.
+// Brochure delivery has two modes:
+// - BROCHURE_PDF_URL: direct .pdf URL → fetched and attached to the
+//   proposal email as a real file attachment.
+// - BROCHURE_URL: any URL (HTML page, PDF, Google Drive, etc.) → a
+//   green "Download Brochure" button is rendered in the email body
+//   that links out to it. Works even without a hosted PDF.
+// If both are set, the attachment wins and the button is skipped.
+// Either can be dropped in — the email still sends fine if both
+// are unset.
 function brochurePdfUrl(): string | null {
   const url = process.env.BROCHURE_PDF_URL?.trim();
+  return url && url.startsWith("http") ? url : null;
+}
+
+function brochureLinkUrl(): string | null {
+  const url = process.env.BROCHURE_URL?.trim();
   return url && url.startsWith("http") ? url : null;
 }
 
@@ -109,10 +119,16 @@ export async function sendProposalReadyEmail({
     ? `<p style="font-size:15px;line-height:1.6;color:#333">Your onsite waste service proposal for <b>${escapeHtml(property)}</b> is ready to review.</p>`
     : `<p style="font-size:15px;line-height:1.6;color:#333">Your onsite waste service proposal is ready to review.</p>`;
 
-  const brochure = brochurePdfUrl();
-  const brochureBlock = brochure
+  const attachmentBrochure = brochurePdfUrl();
+  const linkBrochure = brochureLinkUrl();
+  const brochureBlock = attachmentBrochure
     ? `<p style="font-size:14px;line-height:1.55;color:#444;margin-top:20px">Our brochure is attached to this email. It has a quick overview of what we do and how we work with properties like yours.</p>`
-    : "";
+    : linkBrochure
+      ? `<div style="margin-top:22px;padding:16px 18px;background:#FAFBF9;border:1px solid #E4ECE6;border-radius:10px">
+          <div style="font-size:13px;color:#4A5F50;line-height:1.55;margin-bottom:10px">Want a quick overview of what we do and how we work with properties like yours?</div>
+          <a href="${linkBrochure}" style="display:inline-block;background:#1FA864;color:#06281A;text-decoration:none;font-weight:700;padding:11px 20px;border-radius:8px;font-size:14px">Open our brochure →</a>
+        </div>`
+      : "";
 
   const html = `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#fff;color:#1A1A1A">
     <h1 style="font-size:22px;margin:0 0 12px;color:#0E3F27">Your service proposal from ${BRAND_NAME}</h1>
