@@ -5,7 +5,7 @@ export const BRAND_LOGO = process.env.NEXT_PUBLIC_BRAND_LOGO || "";
 export const BRAND_LEGAL_NAME =
   process.env.NEXT_PUBLIC_BRAND_LEGAL_NAME || BRAND_NAME;
 export const SUPPORT_EMAIL =
-  process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@trashscouts.example";
+  process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "hello@trashscouts.com";
 
 // Public site URL is needed for any link we put inside an email.
 // Falls back to localhost in dev so the app boots without it.
