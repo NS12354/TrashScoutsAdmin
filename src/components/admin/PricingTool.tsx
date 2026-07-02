@@ -14,6 +14,7 @@ import {
 } from "@/components/proposal/ProposalView";
 import { PROPOSAL_VALIDITY_DAYS } from "@/lib/proposalConstants";
 import type { ProposalData } from "@/lib/proposalData";
+import { parseEmailString } from "@/lib/emailValidation";
 import proposalStyles from "@/components/proposal/proposal.module.css";
 import styles from "./PricingTool.module.css";
 
@@ -1585,12 +1586,9 @@ function SendProposalButton({
 
   async function send() {
     // Client Email accepts comma-, semicolon-, or space-separated
-    // multiples. First entry is the primary, remaining are cc'd
-    // with the same message.
-    const rawEmails = email
-      .split(/[,;\s]+/)
-      .map((e) => e.trim())
-      .filter(Boolean);
+    // multiples via the shared parser. First entry is the primary,
+    // remaining are cc'd with the same message.
+    const rawEmails = parseEmailString(email);
     if (rawEmails.length === 0) {
       setErr("Enter the client's email.");
       return;

@@ -6,6 +6,7 @@ import {
   sendProposalReadyEmail,
 } from "@/lib/proposalEmails";
 import { PROPOSAL_VALIDITY_DAYS } from "@/lib/proposalConstants";
+import { cleanEmailList, isEmail } from "@/lib/emailValidation";
 
 export const runtime = "nodejs";
 
@@ -27,18 +28,6 @@ type CreateBody = {
   thankYouMessage?: string | null;
   pocEmails?: string[] | null;
 };
-
-function isEmail(s: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim());
-}
-
-function cleanEmailList(v: unknown): string[] {
-  if (!Array.isArray(v)) return [];
-  return v
-    .map((e) => (typeof e === "string" ? e.trim() : ""))
-    .filter((e) => e && isEmail(e) && e.length <= 200)
-    .slice(0, 10);
-}
 
 export async function POST(req: NextRequest) {
   const session = await getSession();

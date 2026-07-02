@@ -160,6 +160,41 @@ describe("sendProposalReadyEmail", () => {
     };
     expect(call.attachments).toBeUndefined();
   });
+
+  it("renders a button link when BROCHURE_URL is set (fallback for HTML page)", async () => {
+    process.env.BROCHURE_URL = "https://trashscoutsbrochure.netlify.app/";
+    await sendProposalReadyEmail(baseArgs);
+    const call = mockSendEmail.mock.calls[0]![0] as {
+      html: string;
+      attachments?: unknown;
+    };
+    expect(call.html).toContain(
+      "https://trashscoutsbrochure.netlify.app/",
+    );
+    expect(call.html).toMatch(/Open our brochure/i);
+    expect(call.attachments).toBeUndefined();
+    delete process.env.BROCHURE_URL;
+  });
+
+  it("prefers the PDF attachment when both env vars are set", async () => {
+    process.env.BROCHURE_PDF_URL = "https://example.com/brochure.pdf";
+    process.env.BROCHURE_URL = "https://fallback.example.com/";
+    globalThis.fetch = vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+    })) as unknown as typeof fetch;
+
+    await sendProposalReadyEmail(baseArgs);
+    const call = mockSendEmail.mock.calls[0]![0] as {
+      html: string;
+      attachments?: unknown;
+    };
+    expect(call.attachments).toBeDefined();
+    // Body should mention the attachment, not the link fallback.
+    expect(call.html).toMatch(/brochure is attached/i);
+    expect(call.html).not.toMatch(/Open our brochure/i);
+    delete process.env.BROCHURE_URL;
+  });
 });
 
 /* ─── Signed-agreement email ──────────────────────────────────── */
