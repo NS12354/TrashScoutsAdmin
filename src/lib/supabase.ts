@@ -8,6 +8,19 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 export const SUPABASE_BUCKET =
   process.env.SUPABASE_STORAGE_BUCKET || "uploads";
 
+// Bucket for login-gated files (the team document library). Those bytes are
+// only ever served through /api/admin/documents/[id]/download, which uses
+// the service-role key — and service-role reads bypass bucket privacy. So
+// pointing this at a PRIVATE bucket makes SOPs unreachable without a
+// session, with no other code change.
+//
+// Defaults to the shared public bucket so the feature works out of the box.
+// While it's on that default, a document is anonymously readable by anyone
+// who knows its storage key (unguessable, and never sent to the browser) —
+// set SUPABASE_DOCS_BUCKET to a private bucket to remove that exposure.
+export const SUPABASE_DOCS_BUCKET =
+  process.env.SUPABASE_DOCS_BUCKET || SUPABASE_BUCKET;
+
 export function isSupabaseConfigured(): boolean {
   return Boolean(
     process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY,

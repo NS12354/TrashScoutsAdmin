@@ -37,7 +37,9 @@ const SECURITY_HEADERS = [
       "font-src 'self' data: https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://*.supabase.co",
       "media-src 'self' blob:",
-      "connect-src 'self' https://nominatim.openstreetmap.org https://*.sentry.io",
+      // *.supabase.co: admin document uploads PUT straight from the browser
+      // to Supabase Storage, bypassing the 4.5 MB serverless body limit.
+      "connect-src 'self' https://nominatim.openstreetmap.org https://*.sentry.io https://*.supabase.co",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -49,6 +51,14 @@ const SECURITY_HEADERS = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // proxy.ts makes Next buffer every request body, capped at 10 MB by
+    // default — and it silently truncates past the cap rather than
+    // erroring, which shows up downstream as a FormData parse failure.
+    // Only the local-dev document upload path sends bodies this large;
+    // in prod those bytes go browser → Supabase and never reach us.
+    proxyClientMaxBodySize: "30mb",
+  },
   // Photos uploaded in admin live in Supabase Storage in prod (and on
   // /public/uploads locally). The Supabase project host must be allowlisted
   // for next/image optimization.

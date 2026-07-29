@@ -279,6 +279,35 @@ model SignedAgreement {
   @@index([proposalId])
 }
 
+// ─── Team documents (SOPs, forms, training material) ────────────────
+// Internal file library shown at /admin/documents. Any admin with a
+// login can upload and download; there is no resident-facing surface.
+//
+// `storageKey` is the object path inside the storage bucket (or under
+// the local private-uploads dir in dev) — deliberately NOT a public
+// URL, so every download has to go through the session-checked
+// /api/admin/documents/[id]/download route rather than being reachable
+// by anyone who happens to have the link.
+model Document {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  category       String // see DOCUMENT_CATEGORIES in lib/documents.ts
+  storageKey     String
+  filename       String // original upload name, restored on download
+  mimeType       String
+  size           Int // bytes
+  // Display name of the admin who uploaded it. A string rather than a
+  // User FK for the same reason as DiversionReport.createdByName — it's
+  // display-only and should survive the admin being removed.
+  uploadedByName String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([category])
+  @@index([createdAt])
+}
+
 // ─── Shared guides (waste + HHW) ────────────────────────────────────
 // Two seeded rows: slug="waste" and slug="hhw". Resident pages render
 // these via parseSections — see src/lib/parseSections.ts. Content is
