@@ -125,6 +125,9 @@ export async function POST(req: NextRequest) {
     id: proposal.id,
     token: proposal.token,
     emailOk: email.ok,
+    emailSkipped: email.skipped,
+    emailError: email.error,
     delivered: email.delivered,
+    attempted: email.attempted,
   });
 }

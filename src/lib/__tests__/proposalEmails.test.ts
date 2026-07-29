@@ -360,3 +360,98 @@ describe("proposal.module.css", () => {
     expect(printBlock).toMatch(/min-height:\s*100vh/);
   });
 });
+
+/* ─── Send-failure reporting ───────────────────────────────────── */
+// These lock in the bug that made bad sends invisible: the summary used to
+// report `delivered` as the number attempted and had no way to distinguish
+// "no API key" from "the provider rejected it", so the dashboard showed a
+// green success screen while nothing left the building.
+describe("send-failure reporting", () => {
+  const args = {
+    primaryTo: "client@a.com",
+    extraTos: [] as string[],
+    pocEmails: [] as string[],
+    clientName: "Pedritos Apts",
+    propertyName: "Pedritos Apts",
+    serviceAddress: "123 Main St",
+    validUntil: new Date("2025-07-22T00:00:00Z"),
+    token: "abc",
+  };
+
+  it("reports failure when the provider rejects the send", async () => {
+    mockSendEmail.mockResolvedValue({ ok: false, error: "Maximum credits exceeded" });
+    const r = await sendProposalReadyEmail(args);
+    expect(r.ok).toBe(false);
+    expect(r.delivered).toBe(0);
+    expect(r.error).toBe("Maximum credits exceeded");
+    expect(r.skipped).toBe(false);
+  });
+
+  it("counts only accepted messages, not attempted ones", async () => {
+    mockSendEmail
+      .mockResolvedValueOnce({ ok: true })
+      .mockResolvedValueOnce({ ok: false, error: "nope" })
+      .mockResolvedValueOnce({ ok: true });
+    const r = await sendProposalReadyEmail({
+      ...args,
+      extraTos: ["b@a.com"],
+      pocEmails: ["poc@a.com"],
+    });
+    expect(r.attempted).toBe(3);
+    expect(r.delivered).toBe(2);
+    expect(r.ok).toBe(false);
+  });
+
+  it("distinguishes a missing API key from a rejected send", async () => {
+    mockSendEmail.mockResolvedValue({ ok: true, skipped: true });
+    const r = await sendProposalReadyEmail(args);
+    expect(r.skipped).toBe(true);
+    expect(r.ok).toBe(true);
+    // Nothing actually went out, so it must not count as delivered.
+    expect(r.delivered).toBe(0);
+  });
+
+  it("is not marked skipped when only some sends lacked a key", async () => {
+    mockSendEmail
+      .mockResolvedValueOnce({ ok: true, skipped: true })
+      .mockResolvedValueOnce({ ok: true });
+    const r = await sendProposalReadyEmail({ ...args, extraTos: ["b@a.com"] });
+    expect(r.skipped).toBe(false);
+    expect(r.delivered).toBe(1);
+  });
+
+  it("treats a thrown send as a failure rather than crashing", async () => {
+    mockSendEmail.mockRejectedValue(new Error("socket hang up"));
+    const r = await sendProposalReadyEmail(args);
+    expect(r.ok).toBe(false);
+    expect(r.delivered).toBe(0);
+    expect(r.error).toBe("socket hang up");
+  });
+
+  it("reports success cleanly when everything sends", async () => {
+    mockSendEmail.mockResolvedValue({ ok: true });
+    const r = await sendProposalReadyEmail(args);
+    expect(r).toMatchObject({ ok: true, delivered: 1, attempted: 1, skipped: false });
+    expect(r.error).toBeUndefined();
+  });
+
+  it("applies the same reporting to signed-agreement emails", async () => {
+    mockSendEmail.mockResolvedValue({ ok: false, error: "Maximum credits exceeded" });
+    const r = await sendSignedAgreementEmails({
+      primaryClientEmail: "client@a.com",
+      extraClientEmails: [],
+      clientName: "The Mark",
+      signerName: "Jane Manager",
+      signerTitle: "Property Manager",
+      startDate: "2025-08-01",
+      startTbd: false,
+      propertyName: "The Mark",
+      serviceAddress: "24650 Amador St, Hayward",
+      pocEmails: [],
+      token: "abc",
+      agreementId: "a",
+    });
+    expect(r.ok).toBe(false);
+    expect(r.delivered).toBe(0);
+  });
+});

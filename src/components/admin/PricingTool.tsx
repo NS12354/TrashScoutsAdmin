@@ -1627,11 +1627,22 @@ function SendProposalButton({
         const j = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(j.error || `Send failed (${res.status})`);
       }
-      const j = (await res.json()) as { token: string; emailSkipped?: boolean };
+      const j = (await res.json()) as {
+        token: string;
+        emailOk?: boolean;
+        emailSkipped?: boolean;
+        emailError?: string;
+      };
       setSentLink(`/proposals/${j.token}`);
+      // The proposal is saved either way; the link below always works. But
+      // never let a failed send look like a delivered one.
       if (j.emailSkipped) {
         setErr(
-          "Saved, but email wasn't sent (SENDGRID_API_KEY not set). Copy the link below.",
+          "Saved, but email wasn't sent (SENDGRID_API_KEY not set). Copy the link below and send it yourself.",
+        );
+      } else if (j.emailOk === false) {
+        setErr(
+          `Saved, but the email didn't go out${j.emailError ? ` — ${j.emailError}` : ""}. Copy the link below and send it yourself.`,
         );
       }
     } catch (e) {

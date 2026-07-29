@@ -174,11 +174,36 @@ export async function sendProposalReadyEmail({
       sendEmail({ to, subject, html, attachments }),
     ),
   );
+  return summarize(results, targets.length);
+}
+
+type SendOutcome = Awaited<ReturnType<typeof sendEmail>>;
+
+// Collapses per-recipient results into something a caller can show a human.
+// `delivered` counts messages the provider actually accepted — it used to
+// report the number attempted, so a run where every send failed still looked
+// like a complete success.
+function summarize(
+  results: PromiseSettledResult<SendOutcome>[],
+  attempted: number,
+) {
+  const outcomes: SendOutcome[] = results.map((r) =>
+    r.status === "fulfilled"
+      ? r.value
+      : {
+          ok: false,
+          error: r.reason instanceof Error ? r.reason.message : "send failed",
+        },
+  );
+  const failure = outcomes.find((o) => !o.ok);
   return {
-    ok: results.every(
-      (r) => r.status === "fulfilled" && r.value.ok !== false,
-    ),
-    delivered: targets.length,
+    ok: outcomes.every((o) => o.ok !== false),
+    delivered: outcomes.filter((o) => o.ok && !o.skipped).length,
+    attempted,
+    // True only when nothing was even attempted for want of an API key —
+    // distinct from a send the provider rejected.
+    skipped: outcomes.length > 0 && outcomes.every((o) => o.skipped === true),
+    error: failure?.error,
   };
 }
 
@@ -319,10 +344,5 @@ export async function sendSignedAgreementEmails({
     sends.push(sendEmail({ to: poc, subject: opsSubject, html: opsHtml }));
   }
   const results = await Promise.allSettled(sends);
-  return {
-    ok: results.every(
-      (r) => r.status === "fulfilled" && r.value.ok !== false,
-    ),
-    delivered: results.length,
-  };
+  return summarize(results, sends.length);
 }
