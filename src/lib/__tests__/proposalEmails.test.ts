@@ -531,3 +531,73 @@ describe("sendSignedAgreementEmails — NOTIFICATION_EMAIL ops copy", () => {
     expect(recipients()).toEqual(["client@a.com"]);
   });
 });
+
+/* ─── NOTIFICATION_EMAIL as a list ───────────────────────────── */
+
+describe("sendSignedAgreementEmails — multiple ops addresses", () => {
+  const baseArgs = {
+    primaryClientEmail: "client@a.com",
+    extraClientEmails: [] as string[],
+    clientName: "The Mark",
+    signerName: "Jane Manager",
+    signerTitle: "Property Manager",
+    startDate: "2025-08-01",
+    startTbd: false,
+    propertyName: "The Mark",
+    serviceAddress: "24650 Amador St, Hayward",
+    token: "t",
+    agreementId: "a",
+    pocEmails: [] as string[],
+  };
+
+  const prev = process.env.NOTIFICATION_EMAIL;
+  afterEach(() => {
+    if (prev === undefined) delete process.env.NOTIFICATION_EMAIL;
+    else process.env.NOTIFICATION_EMAIL = prev;
+  });
+
+  function recipients() {
+    return mockSendEmail.mock.calls.map((c) => (c[0] as { to: string }).to);
+  }
+
+  it("notifies every address in a comma-separated list", async () => {
+    process.env.NOTIFICATION_EMAIL =
+      "nayan@revisent.com, pedrito@trashscouts.com";
+    await sendSignedAgreementEmails(baseArgs);
+    expect(recipients()).toContain("nayan@revisent.com");
+    expect(recipients()).toContain("pedrito@trashscouts.com");
+  });
+
+  it("sends one message per ops address, not one lumped recipient", async () => {
+    process.env.NOTIFICATION_EMAIL =
+      "nayan@revisent.com, pedrito@trashscouts.com";
+    await sendSignedAgreementEmails(baseArgs);
+    // client + 2 ops = 3 discrete sends; a lumped "a@x, b@y" string
+    // would show up as 2 and reach SendGrid as a bad address.
+    expect(recipients()).toHaveLength(3);
+    for (const to of recipients()) expect(to).not.toContain(",");
+  });
+
+  it("accepts semicolon and space separators", async () => {
+    process.env.NOTIFICATION_EMAIL =
+      "nayan@revisent.com; pedrito@trashscouts.com ops@trashscouts.com";
+    await sendSignedAgreementEmails(baseArgs);
+    expect(recipients()).toHaveLength(4);
+  });
+
+  it("drops malformed entries instead of sending to them", async () => {
+    process.env.NOTIFICATION_EMAIL = "pedrito@trashscouts.com, not-an-email";
+    await sendSignedAgreementEmails(baseArgs);
+    expect(recipients()).toEqual([
+      "client@a.com",
+      "pedrito@trashscouts.com",
+    ]);
+  });
+
+  it("dedupes a repeated address in the list", async () => {
+    process.env.NOTIFICATION_EMAIL =
+      "pedrito@trashscouts.com, PEDRITO@trashscouts.com";
+    await sendSignedAgreementEmails(baseArgs);
+    expect(recipients()).toHaveLength(2);
+  });
+});

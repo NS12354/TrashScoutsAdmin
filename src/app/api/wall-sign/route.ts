@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { escapeHtml, sendEmail } from "@/lib/email";
 import { BRAND_NAME } from "@/lib/brand";
 import { rateLimit } from "@/lib/rateLimit";
+import { notificationEmails } from "@/lib/emailValidation";
 import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -77,8 +78,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unknown property" }, { status: 404 });
   }
 
-  const opsEmail = process.env.NOTIFICATION_EMAIL;
-  if (opsEmail) {
+  // NOTIFICATION_EMAIL may list several addresses — parse it the same
+  // way the signed-agreement notification does so a comma-separated
+  // value doesn't reach SendGrid as one malformed recipient.
+  const opsEmails = notificationEmails();
+  if (opsEmails.length) {
     const subject = `[${BRAND_NAME}] Wall Sign request — ${property.name}`;
     const body = `
       <p style="margin:0 0 12px;color:#3f3f46">
@@ -107,7 +111,7 @@ export async function POST(req: NextRequest) {
     const text = `New Wall Sign request at ${property.name} (${property.address}).\n\nRequester: ${requesterName} · ${requesterContact}${notes ? `\n\nNotes: ${notes}` : ""}`;
 
     const result = await sendEmail({
-      to: opsEmail,
+      to: opsEmails,
       subject,
       html,
       text,

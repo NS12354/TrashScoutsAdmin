@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { BRAND_NAME } from "@/lib/brand";
 import { escapeHtml, sendEmail } from "@/lib/email";
+import { notificationEmails } from "@/lib/emailValidation";
 
 // 26 char base64url — ~155 bits of entropy. Unguessable, URL-safe,
 // no padding chars, copy-pastable.
@@ -338,15 +339,16 @@ export async function sendSignedAgreementEmails({
   // Relying on pocEmails alone meant a proposal sent with that box empty
   // notified nobody internally — the client got their welcome email and
   // the signature only showed up if someone opened the dashboard.
-  const opsEmail = process.env.NOTIFICATION_EMAIL?.trim();
   const opsRecipients = Array.from(pocs);
-  if (
-    opsEmail &&
-    opsEmail.toLowerCase() !== primaryLower &&
-    !extras.some((x) => x.toLowerCase() === opsEmail.toLowerCase()) &&
-    !pocs.some((x) => x.toLowerCase() === opsEmail.toLowerCase())
-  ) {
-    opsRecipients.push(opsEmail);
+  for (const opsEmail of notificationEmails()) {
+    const lower = opsEmail.toLowerCase();
+    if (
+      lower !== primaryLower &&
+      !extras.some((x) => x.toLowerCase() === lower) &&
+      !opsRecipients.some((x) => x.toLowerCase() === lower)
+    ) {
+      opsRecipients.push(opsEmail);
+    }
   }
 
   const sends: Array<Promise<{ ok: boolean; skipped?: boolean }>> = [];

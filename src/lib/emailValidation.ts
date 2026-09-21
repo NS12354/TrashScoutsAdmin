@@ -60,3 +60,12 @@ export function excludeAddress(
   const lower = primary.trim().toLowerCase();
   return list.filter((e) => e.toLowerCase() !== lower);
 }
+
+// The house ops inbox(es) from NOTIFICATION_EMAIL. Accepts a single
+// address or a comma/semicolon/space-separated list, so the same env
+// var can notify one person or the whole ops team. Runs through
+// cleanEmailList, so a malformed entry is dropped rather than handed
+// to SendGrid as a bad recipient.
+export function notificationEmails(): string[] {
+  return cleanEmailList(parseEmailString(process.env.NOTIFICATION_EMAIL ?? ""));
+}
