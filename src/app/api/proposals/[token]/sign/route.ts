@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { rateLimit } from "@/lib/rateLimit";
 import { sendSignedAgreementEmails } from "@/lib/proposalEmails";
@@ -134,24 +134,44 @@ export async function POST(
   const startDate = pickString(fd, "start");
   const startTbd = pickBool(fd, "startTbd");
 
-  // Fire-and-forget emails — don't fail the submission if SendGrid
-  // is slow or the env isn't configured.
-  void sendSignedAgreementEmails({
-    primaryClientEmail: proposal.clientEmail,
-    extraClientEmails: proposal.clientEmailCcs,
-    clientName: proposal.clientName,
-    signerName: body.signerName.trim(),
-    signerTitle: body.signerTitle?.trim() || null,
-    startDate,
-    startTbd,
-    propertyName,
-    serviceAddress,
-    token,
-    agreementId: agreement.id,
-    thankYouMessage: proposal.thankYouMessage,
-    pocEmails: proposal.pocEmails ?? [],
-  }).catch((err) => {
-    console.error("[sign] email send failed", err);
+  // Don't block the client's "signed!" response on SendGrid, but do
+  // keep the invocation alive until the sends finish. A bare
+  // `void sendSignedAgreementEmails(...)` gets frozen mid-flight when
+  // the serverless function is suspended right after the response —
+  // which is exactly how the signed-agreement notifications went
+  // missing while the (awaited) proposal-send emails kept working.
+  after(async () => {
+    try {
+      const result = await sendSignedAgreementEmails({
+        primaryClientEmail: proposal.clientEmail,
+        extraClientEmails: proposal.clientEmailCcs,
+        clientName: proposal.clientName,
+        signerName: body.signerName.trim(),
+        signerTitle: body.signerTitle?.trim() || null,
+        startDate,
+        startTbd,
+        propertyName,
+        serviceAddress,
+        token,
+        agreementId: agreement.id,
+        thankYouMessage: proposal.thankYouMessage,
+        pocEmails: proposal.pocEmails ?? [],
+      });
+      if (!result.ok) {
+        console.error(
+          "[sign] signed-agreement email failed",
+          JSON.stringify({
+            proposalId: proposal.id,
+            agreementId: agreement.id,
+            delivered: result.delivered,
+            attempted: result.attempted,
+            error: result.error,
+          }),
+        );
+      }
+    } catch (err) {
+      console.error("[sign] email send threw", err);
+    }
   });
 
   return NextResponse.json({ id: agreement.id });

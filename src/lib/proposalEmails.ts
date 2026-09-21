@@ -333,15 +333,31 @@ export async function sendSignedAgreementEmails({
     ? `New signed agreement: ${clientName} (${property})`
     : `New signed agreement: ${clientName}`;
 
+  // The house ops inbox always gets a copy of the signature, whether or
+  // not the admin remembered to fill in the per-proposal POC field.
+  // Relying on pocEmails alone meant a proposal sent with that box empty
+  // notified nobody internally — the client got their welcome email and
+  // the signature only showed up if someone opened the dashboard.
+  const opsEmail = process.env.NOTIFICATION_EMAIL?.trim();
+  const opsRecipients = Array.from(pocs);
+  if (
+    opsEmail &&
+    opsEmail.toLowerCase() !== primaryLower &&
+    !extras.some((x) => x.toLowerCase() === opsEmail.toLowerCase()) &&
+    !pocs.some((x) => x.toLowerCase() === opsEmail.toLowerCase())
+  ) {
+    opsRecipients.push(opsEmail);
+  }
+
   const sends: Array<Promise<{ ok: boolean; skipped?: boolean }>> = [];
   // Client + additional client recipients get the full welcome
   // message (with onboarding notes + welcome link).
   for (const to of [primaryClientEmail, ...extras]) {
     sends.push(sendEmail({ to, subject, html: clientHtml }));
   }
-  // POCs get the concise ops-style summary.
-  for (const poc of pocs) {
-    sends.push(sendEmail({ to: poc, subject: opsSubject, html: opsHtml }));
+  // POCs and the ops inbox get the concise ops-style summary.
+  for (const to of opsRecipients) {
+    sends.push(sendEmail({ to, subject: opsSubject, html: opsHtml }));
   }
   const results = await Promise.allSettled(sends);
   return summarize(results, sends.length);

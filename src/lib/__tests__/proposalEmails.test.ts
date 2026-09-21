@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -453,5 +453,81 @@ describe("send-failure reporting", () => {
     });
     expect(r.ok).toBe(false);
     expect(r.delivered).toBe(0);
+  });
+});
+
+/* ─── Ops inbox notification on signature ─────────────────────── */
+
+describe("sendSignedAgreementEmails — NOTIFICATION_EMAIL ops copy", () => {
+  const baseArgs = {
+    primaryClientEmail: "client@a.com",
+    extraClientEmails: [] as string[],
+    clientName: "The Mark",
+    signerName: "Jane Manager",
+    signerTitle: "Property Manager",
+    startDate: "2025-08-01",
+    startTbd: false,
+    propertyName: "The Mark",
+    serviceAddress: "24650 Amador St, Hayward",
+    token: "t",
+    agreementId: "a",
+    pocEmails: [] as string[],
+  };
+
+  const prev = process.env.NOTIFICATION_EMAIL;
+  afterEach(() => {
+    if (prev === undefined) delete process.env.NOTIFICATION_EMAIL;
+    else process.env.NOTIFICATION_EMAIL = prev;
+  });
+
+  function recipients() {
+    return mockSendEmail.mock.calls.map(
+      (c) => (c[0] as { to: string }).to,
+    );
+  }
+
+  // The regression this guards: pocEmails replaced the ops inbox
+  // entirely, so a proposal sent with an empty POC field notified
+  // nobody internally when the client signed.
+  it("notifies the ops inbox even when no POCs are set", async () => {
+    process.env.NOTIFICATION_EMAIL = "ops@trashscouts.com";
+    await sendSignedAgreementEmails(baseArgs);
+    expect(recipients()).toContain("ops@trashscouts.com");
+  });
+
+  it("sends the ops inbox the summary, not the client welcome email", async () => {
+    process.env.NOTIFICATION_EMAIL = "ops@trashscouts.com";
+    await sendSignedAgreementEmails(baseArgs);
+    const opsCall = mockSendEmail.mock.calls.find(
+      (c) => (c[0] as { to: string }).to === "ops@trashscouts.com",
+    )!;
+    const { subject, html } = opsCall[0] as { subject: string; html: string };
+    expect(subject).toMatch(/New signed agreement/);
+    expect(html).toContain("just signed");
+    expect(html).not.toContain("Welcome aboard!");
+  });
+
+  it("does not double-send when the ops inbox is also a POC", async () => {
+    process.env.NOTIFICATION_EMAIL = "ops@trashscouts.com";
+    await sendSignedAgreementEmails({
+      ...baseArgs,
+      pocEmails: ["OPS@trashscouts.com"],
+    });
+    const hits = recipients().filter(
+      (to) => to.toLowerCase() === "ops@trashscouts.com",
+    );
+    expect(hits).toHaveLength(1);
+  });
+
+  it("does not double-send when the ops inbox is the client", async () => {
+    process.env.NOTIFICATION_EMAIL = "client@a.com";
+    await sendSignedAgreementEmails(baseArgs);
+    expect(recipients()).toHaveLength(1);
+  });
+
+  it("sends only to the client when NOTIFICATION_EMAIL is unset", async () => {
+    delete process.env.NOTIFICATION_EMAIL;
+    await sendSignedAgreementEmails(baseArgs);
+    expect(recipients()).toEqual(["client@a.com"]);
   });
 });
